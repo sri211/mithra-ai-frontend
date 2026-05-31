@@ -8,31 +8,45 @@ import {
 import { LinkedInIcon } from "@/components/ui/icons";
 import { api } from "@/lib/api/client";
 
-// ─── Mock Data ──────────────────────────────────────────────────────────────
-const MOCK_CONNECTIONS = [
+interface Connection {
+  id: string; name: string; role: string; company: string;
+  avatar: string; color: string; type: string; mutual: number;
+  why: string; draft: string;
+  linkedin_search?: string; email_pattern?: string;
+}
+
+const MOCK_CONNECTIONS: Connection[] = [
   {
     id: "c1", name: "Priya Sharma", role: "Engineering Manager", company: "Google",
     avatar: "PS", color: "#7c3aed", type: "hiring_manager", mutual: 12,
     why: "Direct hiring manager for the infrastructure team you're targeting. Has posted about new headcount.",
     draft: "Hi Priya! I noticed your team recently shipped the new Search infrastructure. I'm exploring senior engineering roles at Google and would love a 15-min chat. We're both connected to Rahul Mehta!",
+    linkedin_search: "https://www.linkedin.com/search/results/people/?keywords=Engineering+Manager+Google+India&origin=GLOBAL_SEARCH_HEADER",
+    email_pattern: "priya.sharma@google.com",
   },
   {
     id: "c2", name: "Arjun Nair", role: "Tech Recruiter", company: "Google",
     avatar: "AN", color: "#06b6d4", type: "recruiter", mutual: 5,
     why: "Active Google recruiter handling engineering hires in Bangalore. Specializes in infra and platform roles.",
     draft: "Hi Arjun, I'm a senior engineer with 6 years in distributed systems (ex-Swiggy). Actively exploring Google Bangalore roles. Would love to connect!",
+    linkedin_search: "https://www.linkedin.com/search/results/people/?keywords=Technical+Recruiter+Google+Bangalore&origin=GLOBAL_SEARCH_HEADER",
+    email_pattern: "arjun.nair@google.com",
   },
   {
     id: "c3", name: "Kavya Reddy", role: "Staff Engineer", company: "Google",
     avatar: "KR", color: "#10b981", type: "team_member", mutual: 8,
     why: "Team member who can share inside view of culture and interview process. Runs the internal referral program.",
     draft: "Hi Kavya! Your talk on Kubernetes optimization at KubeCon was brilliant. I'm exploring roles in your space and would love a quick coffee chat about the team culture.",
+    linkedin_search: "https://www.linkedin.com/search/results/people/?keywords=Staff+Software+Engineer+Google+India&origin=GLOBAL_SEARCH_HEADER",
+    email_pattern: "kavya.reddy@google.com",
   },
   {
-    id: "c4", name: "Vikram Patel", role: "SDE III → Googler Alumnus", company: "Razorpay",
+    id: "c4", name: "Vikram Patel", role: "Senior Engineer", company: "Razorpay",
     avatar: "VP", color: "#f59e0b", type: "alumnus", mutual: 15,
     why: "Former Googler who can give real interview insights and possibly provide a referral through their alumni network.",
     draft: "Hi Vikram! I see you made the transition from Google to fintech. I'm now looking to do the reverse! Would love your perspective on Google's interview process.",
+    linkedin_search: "https://www.linkedin.com/search/results/people/?keywords=Senior+Engineer+ex-Google+India&origin=GLOBAL_SEARCH_HEADER",
+    email_pattern: "vikram.patel@razorpay.com",
   },
 ];
 
