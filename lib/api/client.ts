@@ -1,7 +1,12 @@
 import axios from "axios";
 
+const API_BASE =
+  typeof window !== "undefined" && window.location.hostname !== "localhost"
+    ? "https://api.mithraai.in/api"
+    : process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api",
+  baseURL: API_BASE,
   headers: { "Content-Type": "application/json" },
 });
 
@@ -12,7 +17,7 @@ export async function streamSSE(
   onDone?: () => void
 ) {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}${url}`,
+    `${API_BASE}${url}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
