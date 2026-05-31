@@ -2,7 +2,7 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Upload, FileText, AlertCircle, Wand2, Check } from "lucide-react";
-import { api } from "@/lib/api/client";
+import { api, API_BASE } from "@/lib/api/client";
 import { ResumeData } from "@/lib/types";
 import { cn } from "@/lib/cn";
 
@@ -64,7 +64,7 @@ export function FileUploadModal({ isOpen, onClose, onResumeParsed }: FileUploadM
         const formData = new FormData();
         formData.append("file", file);
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/resume/upload`,
+          `${API_BASE}/resume/upload`,
           { method: "POST", body: formData }
         );
         if (response.status === 404) {

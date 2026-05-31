@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useId } from "react";
 import { useResumeStore } from "@/lib/stores/resumeStore";
 import { useAgentStore } from "@/lib/stores/agentStore";
 import { FileUploadModal } from "@/components/ui/FileUploadModal";
-import { api, streamSSE } from "@/lib/api/client";
+import { api, streamSSE, API_BASE } from "@/lib/api/client";
 import { ResumeData } from "@/lib/types";
 
 // ─── Templates ──────────────────────────────────────────────────────────────
@@ -661,8 +661,7 @@ export default function ResumeBuilderPage() {
     setPdfUploadStatus("Reading PDF...");
     setBuildError("");
 
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
-    const uploadUrl = `${apiBase}/resume/upload`;
+    const uploadUrl = `${API_BASE}/resume/upload`;
 
     try {
       const formData = new FormData();

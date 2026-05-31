@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import { API_BASE } from "@/lib/api/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, Globe, Upload, FileText, Check, Clock,
@@ -80,7 +81,7 @@ export default function JobApplicationPage() {
       } catch { /* ignore */ }
 
       await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/tracker/`,
+        `${API_BASE}/tracker/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -107,7 +108,7 @@ export default function JobApplicationPage() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/apply/start`,
+        `${API_BASE}/apply/start`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE =
+export const API_BASE =
   typeof window !== "undefined" && window.location.hostname !== "localhost"
     ? "https://api.mithraai.in/api"
     : process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
