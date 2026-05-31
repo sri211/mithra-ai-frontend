@@ -147,23 +147,24 @@ export default function TrackerPage() {
     setIsLoading(true);
     try {
       const { data } = await api.get("/tracker/");
-      const board = data.board as Record<string, AppCard[]>;
+      const board = data.board as Record<string, Record<string, unknown>[]>;
       const allApps: AppCard[] = [];
       for (const stage of STAGES) {
         const stageApps = board[stage.id] || [];
         for (const app of stageApps) {
+          const raw = app as Record<string, unknown>;
           allApps.push({
-            id: app.id,
-            company: app.company || "",
-            role: app.role || "",
-            location: (app as Record<string, string>).location || "",
-            salary: (app as Record<string, string>).salary || "",
-            status: (app.status || "applied") as AppStatus,
-            appliedDate: (app as Record<string, string>).applied_date || (app as Record<string, string>).appliedDate || "—",
-            nextStep: (app as Record<string, string>).next_step || (app as Record<string, string>).nextStep || "Awaiting response",
-            logo: app.company ? app.company[0].toUpperCase() : "?",
-            color: getCompanyColor(app.company || ""),
-            portal: (app as Record<string, string>).portal || "LinkedIn",
+            id: String(raw.id || ""),
+            company: String(raw.company || ""),
+            role: String(raw.role || ""),
+            location: String(raw.location || ""),
+            salary: String(raw.salary || ""),
+            status: (String(raw.status || "applied")) as AppStatus,
+            appliedDate: String(raw.applied_date || raw.appliedDate || "—"),
+            nextStep: String(raw.next_step || raw.nextStep || "Awaiting response"),
+            logo: raw.company ? String(raw.company)[0].toUpperCase() : "?",
+            color: getCompanyColor(String(raw.company || "")),
+            portal: String(raw.portal || "LinkedIn"),
           });
         }
       }
