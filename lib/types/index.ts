@@ -46,6 +46,7 @@ export interface Job {
   red_flags?: string[];
   apply_priority?: "high" | "medium" | "low";
   requirements?: string;
+  is_real_listing?: boolean;
 }
 
 export interface ChatMessage {

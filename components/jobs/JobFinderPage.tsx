@@ -14,7 +14,26 @@ import { useJobStore } from "@/lib/stores/jobStore";
 const PORTAL_COLORS: Record<string, string> = {
   LinkedIn: "#0a66c2", Indeed: "#2164f3", Glassdoor: "#0caa41",
   Naukri: "#ff7555", Instahyre: "#5c2d91", AngelList: "#ff4500",
+  JSearch: "#6366f1",
 };
+
+function formatPostedDate(dateStr: string): string {
+  if (!dateStr) return "";
+  try {
+    const posted = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - posted.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`;
+    return `${Math.floor(diffDays / 365)}y ago`;
+  } catch {
+    return dateStr;
+  }
+}
 
 const MOCK_JOBS: Job[] = [
   { id: "job_001", title: "Senior Software Engineer", company: "Google", location: "Bangalore, India", remote: "Hybrid", salary_min: 2500000, salary_max: 4500000, salary_currency: "INR", experience_required: "5-8 years", posted_date: "2024-01-15", description: "Join Google's infrastructure team building planet-scale distributed systems. You'll work on core platform features used by billions.", skills: ["Python", "Go", "Kubernetes", "Distributed Systems", "gRPC"], portal: "LinkedIn", portal_url: "#", job_type: "Full-time", seniority: "Senior", match_score: 91 },
@@ -118,9 +137,13 @@ function JobCard({ job, isSelected, onClick, onSave, onApply }: {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" as const }}>
               <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "12px", background: `${portalColor}20`, color: portalColor }}>{job.portal}</span>
-              <span style={{ fontSize: "10px", color: "#475569" }}>{job.posted_date}</span>
+              {job.is_real_listing
+                ? <span style={{ fontSize: "10px", padding: "2px 7px", borderRadius: "12px", background: "rgba(16,185,129,0.12)", color: "#10b981", border: "1px solid rgba(16,185,129,0.25)" }}>Real listing</span>
+                : <span style={{ fontSize: "10px", padding: "2px 7px", borderRadius: "12px", background: "rgba(148,163,184,0.1)", color: "#64748b", border: "1px solid rgba(148,163,184,0.2)" }}>Search result</span>
+              }
+              {job.posted_date && <span style={{ fontSize: "10px", color: "#475569" }}>{formatPostedDate(job.posted_date)}</span>}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <button
@@ -259,7 +282,11 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
             }}
             style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "10px", background: "none", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "10px", color: "#94a3b8", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}
           >
-            <ExternalLink style={{ width: "13px", height: "13px" }} />View Job
+            <ExternalLink style={{ width: "13px", height: "13px" }} />
+            {job.is_real_listing
+              ? `Apply on ${job.portal}`
+              : "Search on Google"
+            }
           </button>
         </div>
       </div>

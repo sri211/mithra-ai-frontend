@@ -130,7 +130,7 @@ function AdaptedResumePreview({ resume }: { resume: ResumeData }) {
 
 export default function ResumeAdaptorPage() {
   const router = useRouter();
-  const { resume, setResume, setAtsScore } = useResumeStore();
+  const { resume, setResume, setAtsScore, selectedTemplate } = useResumeStore();
   const { pendingAction, clearAction } = useAgentStore();
   const { selectedJob, clearSelectedJob } = useJobStore();
   const [inputMode, setInputMode] = useState<InputMode>("paste");
@@ -149,6 +149,7 @@ export default function ResumeAdaptorPage() {
   const [suggestedChanges, setSuggestedChanges] = useState<SuggestedChange[]>([]);
   const [selectedChangeIdxs, setSelectedChangeIdxs] = useState<Set<number>>(new Set());
   const [keepTemplate, setKeepTemplate] = useState(true);
+  const [previewTemplate, setPreviewTemplate] = useState<string>(selectedTemplate || "modern");
   const [jobBanner, setJobBanner] = useState<{ title: string; company: string } | null>(null);
   const [result, setResult] = useState<{
     ats_score_before: number; ats_score_after: number;
@@ -384,20 +385,33 @@ export default function ResumeAdaptorPage() {
             </div>
           </div>
           {/* Template toggle */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-            <span style={{ fontSize: "12px", color: "#94a3b8", flex: 1 }}>Template style</span>
-            <button
-              onClick={() => setKeepTemplate(true)}
-              style={{ fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "6px", border: "none", cursor: "pointer", background: keepTemplate ? "rgba(124,58,237,0.3)" : "transparent", color: keepTemplate ? "#a78bfa" : "#64748b" }}
-            >
-              Keep same
-            </button>
-            <button
-              onClick={() => setKeepTemplate(false)}
-              style={{ fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "6px", border: "none", cursor: "pointer", background: !keepTemplate ? "rgba(245,158,11,0.3)" : "transparent", color: !keepTemplate ? "#f59e0b" : "#64748b" }}
-            >
-              Change template
-            </button>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "8px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "12px", color: "#94a3b8", flex: 1 }}>Template style</span>
+              <button
+                onClick={() => { setKeepTemplate(true); setPreviewTemplate(selectedTemplate || "modern"); }}
+                style={{ fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "6px", border: "none", cursor: "pointer", background: keepTemplate ? "rgba(124,58,237,0.3)" : "transparent", color: keepTemplate ? "#a78bfa" : "#64748b" }}
+              >
+                Keep same
+              </button>
+              <button
+                onClick={() => setKeepTemplate(false)}
+                style={{ fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "6px", border: "none", cursor: "pointer", background: !keepTemplate ? "rgba(245,158,11,0.3)" : "transparent", color: !keepTemplate ? "#f59e0b" : "#64748b" }}
+              >
+                Change template
+              </button>
+            </div>
+            {!keepTemplate && (
+              <select
+                value={previewTemplate}
+                onChange={(e) => setPreviewTemplate(e.target.value)}
+                style={{ width: "100%", background: "rgba(15,8,30,0.8)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: "6px", padding: "6px 8px", color: "#f1f5f9", fontSize: "12px", outline: "none", fontFamily: "inherit" }}
+              >
+                {["modern", "classic", "minimal", "bold", "elegant"].map((t) => (
+                  <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                ))}
+              </select>
+            )}
           </div>
 
           <button onClick={analyze} disabled={isAnalyzing} style={isAnalyzing ? S.btnPrimaryDisabled : S.btnPrimary}>
@@ -470,7 +484,7 @@ export default function ResumeAdaptorPage() {
                             <div style={{ fontSize: "11px", fontWeight: 600, color: "#7c3aed", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{c.section}</div>
                             <div style={{ display: "flex", gap: "6px", fontSize: "12px", color: "#64748b", marginBottom: "4px" }}>
                               <span style={{ flexShrink: 0, color: "rgba(239,68,68,0.8)", fontWeight: 600 }}>Before:</span>
-                              <span style={{ wordBreak: "break-word" }}>{c.original}</span>
+                              <span style={{ wordBreak: "break-word" }}>{c.original && c.original.length > 120 ? c.original.slice(0, 120) + "..." : c.original}</span>
                             </div>
                             <div style={{ display: "flex", gap: "6px", fontSize: "12px", color: "#cbd5e1", marginBottom: "4px" }}>
                               <span style={{ flexShrink: 0, color: "#34d399", fontWeight: 600 }}>After:</span>
@@ -604,7 +618,7 @@ export default function ResumeAdaptorPage() {
                     <Edit3 style={{ width: "13px", height: "13px" }} />Edit in Builder
                   </button>
                 </div>
-                <div id="adapted-resume-preview" style={{ borderRadius: "8px", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
+                <div id="adapted-resume-preview" data-template={keepTemplate ? (selectedTemplate || "modern") : previewTemplate} style={{ borderRadius: "8px", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
                   <AdaptedResumePreview resume={adaptedResume || resume} />
                 </div>
               </motion.div>
