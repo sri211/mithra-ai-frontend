@@ -38,12 +38,14 @@ export interface Job {
   skills: string[];
   portal: string;
   portal_url: string;
+  url?: string;
   job_type: string;
   seniority: string;
   match_score?: number;
   why_match?: string;
   red_flags?: string[];
   apply_priority?: "high" | "medium" | "low";
+  requirements?: string;
 }
 
 export interface ChatMessage {

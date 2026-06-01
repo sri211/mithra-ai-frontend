@@ -1,5 +1,6 @@
 "use client";
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { ResumeData } from "@/lib/types";
 
 const defaultResume: ResumeData = {
@@ -26,16 +27,28 @@ interface ResumeStore {
   reset: () => void;
 }
 
-export const useResumeStore = create<ResumeStore>((set) => ({
-  resume: defaultResume,
-  selectedTemplate: "modern",
-  isBuilding: false,
-  atsScore: 0,
-  setResume: (resume) => set({ resume }),
-  updateSection: (section, value) =>
-    set((s) => ({ resume: { ...s.resume, [section]: value } })),
-  setTemplate: (selectedTemplate) => set({ selectedTemplate }),
-  setBuilding: (isBuilding) => set({ isBuilding }),
-  setAtsScore: (atsScore) => set({ atsScore }),
-  reset: () => set({ resume: defaultResume, atsScore: 0 }),
-}));
+export const useResumeStore = create<ResumeStore>()(
+  persist(
+    (set) => ({
+      resume: defaultResume,
+      selectedTemplate: "modern",
+      isBuilding: false,
+      atsScore: 0,
+      setResume: (resume) => set({ resume }),
+      updateSection: (section, value) =>
+        set((s) => ({ resume: { ...s.resume, [section]: value } })),
+      setTemplate: (selectedTemplate) => set({ selectedTemplate }),
+      setBuilding: (isBuilding) => set({ isBuilding }),
+      setAtsScore: (atsScore) => set({ atsScore }),
+      reset: () => set({ resume: defaultResume, atsScore: 0 }),
+    }),
+    {
+      name: "mithra-resume",
+      partialize: (state) => ({
+        resume: state.resume,
+        selectedTemplate: state.selectedTemplate,
+        atsScore: state.atsScore,
+      }),
+    }
+  )
+);

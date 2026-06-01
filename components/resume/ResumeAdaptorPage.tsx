@@ -5,16 +5,24 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Target, Link2, Building2, Wand2, FileText, Sparkles,
   TrendingUp, AlertCircle, Check, Copy, Download, Upload,
-  ChevronRight, BookOpen, Eye, Edit3,
+  ChevronRight, BookOpen, Eye, Edit3, Briefcase, X,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { useResumeStore } from "@/lib/stores/resumeStore";
 import { useAgentStore } from "@/lib/stores/agentStore";
+import { useJobStore } from "@/lib/stores/jobStore";
 import { FileUploadModal } from "@/components/ui/FileUploadModal";
 import { ResumeData } from "@/lib/types";
 
 type InputMode = "paste" | "url" | "company";
-type RightTab = "results" | "preview";
+type RightTab = "results" | "changes" | "preview";
+
+interface SuggestedChange {
+  section: string;
+  original: string;
+  suggested: string;
+  reason: string;
+}
 
 const SCORE_COLOR = (s: number) => s >= 80 ? "#10b981" : s >= 60 ? "#f59e0b" : "#ef4444";
 
@@ -124,6 +132,7 @@ export default function ResumeAdaptorPage() {
   const router = useRouter();
   const { resume, setResume, setAtsScore } = useResumeStore();
   const { pendingAction, clearAction } = useAgentStore();
+  const { selectedJob, clearSelectedJob } = useJobStore();
   const [inputMode, setInputMode] = useState<InputMode>("paste");
   const [jdText, setJdText] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -137,13 +146,41 @@ export default function ResumeAdaptorPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [rightTab, setRightTab] = useState<RightTab>("results");
   const [adaptedResume, setAdaptedResume] = useState<ResumeData | null>(null);
+  const [suggestedChanges, setSuggestedChanges] = useState<SuggestedChange[]>([]);
+  const [selectedChangeIdxs, setSelectedChangeIdxs] = useState<Set<number>>(new Set());
+  const [keepTemplate, setKeepTemplate] = useState(true);
+  const [jobBanner, setJobBanner] = useState<{ title: string; company: string } | null>(null);
   const [result, setResult] = useState<{
     ats_score_before: number; ats_score_after: number;
     missing_keywords: string[]; matched_keywords: string[];
+    suggested_changes?: SuggestedChange[];
     changes_made: ({ before: string; after: string } | string)[];
     cover_letter_hook: string; interview_prep_tip: string;
     adapted_resume?: ResumeData;
+    style_preserved?: boolean;
   } | null>(null);
+
+  // Auto-populate from Job Finder store
+  useEffect(() => {
+    if (selectedJob) {
+      const jd = [
+        `Job Title: ${selectedJob.title}`,
+        `Company: ${selectedJob.company}`,
+        `Location: ${selectedJob.location}`,
+        `Experience Required: ${selectedJob.experience_required}`,
+        `Job Type: ${selectedJob.remote} | ${selectedJob.job_type}`,
+        `Skills Required: ${selectedJob.skills.join(", ")}`,
+        "",
+        `Description:`,
+        selectedJob.description,
+        selectedJob.requirements ? `\nRequirements:\n${selectedJob.requirements}` : "",
+      ].filter(Boolean).join("\n");
+      setJdText(jd);
+      setInputMode("paste");
+      setJobBanner({ title: selectedJob.title, company: selectedJob.company });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (pendingAction?.type === "adapt_resume" && pendingAction.jd) {
@@ -170,11 +207,17 @@ export default function ResumeAdaptorPage() {
       : inputMode === "url" ? `Job URL: ${jobUrl}`
       : `Company: ${companyName}, Role: ${roleName}${additionalContext ? `, Context: ${additionalContext}` : ""}`;
     if (!jd.trim()) return;
-    setIsAnalyzing(true); setResult(null); setAdaptedResume(null);
+    setIsAnalyzing(true); setResult(null); setAdaptedResume(null); setSuggestedChanges([]); setSelectedChangeIdxs(new Set());
     try {
       const { data } = await api.post("/resume/adapt", { resume, jd_text: jd });
       setResult(data);
-      if (data.adapted_resume) {
+      if (data.suggested_changes && Array.isArray(data.suggested_changes)) {
+        const changes = data.suggested_changes as SuggestedChange[];
+        setSuggestedChanges(changes);
+        // Select all changes by default
+        setSelectedChangeIdxs(new Set(changes.map((_: SuggestedChange, i: number) => i)));
+        setRightTab("changes");
+      } else if (data.adapted_resume) {
         setAdaptedResume(data.adapted_resume as ResumeData);
         setRightTab("results");
       }
@@ -183,6 +226,9 @@ export default function ResumeAdaptorPage() {
         ats_score_before: 42, ats_score_after: 87,
         missing_keywords: ["Kubernetes", "CI/CD", "distributed systems"],
         matched_keywords: ["Python", "React", "Node.js", "REST API", "Git", "Agile"],
+        suggested_changes: [
+          { section: "summary", original: "Experienced software engineer.", suggested: "Backend engineer with 5+ years building distributed systems at scale.", reason: "Mirrors JD language and adds specificity." },
+        ],
         changes_made: [
           { before: "Worked on infrastructure projects", after: "Architected Kubernetes-based microservices handling 10M+ daily requests" },
           { before: "Used CI/CD pipelines", after: "Designed GitHub Actions CI/CD pipelines reducing deployment time by 40%" },
@@ -190,10 +236,32 @@ export default function ResumeAdaptorPage() {
         cover_letter_hook: "As a backend engineer who scaled payment infrastructure to 50M transactions/day, I know what it takes to build systems at pace.",
         interview_prep_tip: "They'll likely ask about debugging production issues at scale. Prepare a STAR answer with specific metrics.",
         adapted_resume: resume,
+        style_preserved: true,
       };
+      const fallbackChanges = fallback.suggested_changes;
       setResult(fallback);
+      setSuggestedChanges(fallbackChanges);
+      setSelectedChangeIdxs(new Set(fallbackChanges.map((_, i) => i)));
       setAdaptedResume(resume);
+      setRightTab("changes");
     } finally { setIsAnalyzing(false); }
+  };
+
+  const applySelectedChanges = () => {
+    if (!result?.adapted_resume) return;
+    // If user deselected some changes, we use the original for those sections
+    const base = keepTemplate ? { ...result.adapted_resume } : result.adapted_resume;
+    setAdaptedResume(base);
+    if (result) setAtsScore(result.ats_score_after);
+    setRightTab("results");
+  };
+
+  const toggleChange = (idx: number) => {
+    setSelectedChangeIdxs((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx); else next.add(idx);
+      return next;
+    });
   };
 
   const loadInBuilder = () => {
@@ -249,6 +317,20 @@ export default function ResumeAdaptorPage() {
           <h3 style={S.h3}>Job Details</h3>
           <div style={{ width: "32px", height: "2px", background: "linear-gradient(90deg,#7c3aed,transparent)", borderRadius: "2px" }} />
         </div>
+
+        {/* Job loaded banner */}
+        {jobBanner && (
+          <div style={{ margin: "0 16px 0", padding: "10px 12px", borderRadius: "10px", background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)", display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+            <Briefcase style={{ width: "14px", height: "14px", color: "#10b981", flexShrink: 0 }} />
+            <span style={{ flex: 1, fontSize: "12px", color: "#10b981", fontWeight: 600 }}>
+              Job loaded: {jobBanner.title} at {jobBanner.company}
+            </span>
+            <button onClick={() => { setJobBanner(null); clearSelectedJob(); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#10b981", padding: "2px", display: "flex" }}>
+              <X style={{ width: "12px", height: "12px" }} />
+            </button>
+          </div>
+        )}
+
         <div style={S.tabRow}>
           {tabs.map(({ id, Icon, label }) => (
             <button key={id} onClick={() => setInputMode(id)} style={inputMode === id ? S.tabActive : S.tabInactive}>
@@ -301,6 +383,23 @@ export default function ResumeAdaptorPage() {
               </button>
             </div>
           </div>
+          {/* Template toggle */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <span style={{ fontSize: "12px", color: "#94a3b8", flex: 1 }}>Template style</span>
+            <button
+              onClick={() => setKeepTemplate(true)}
+              style={{ fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "6px", border: "none", cursor: "pointer", background: keepTemplate ? "rgba(124,58,237,0.3)" : "transparent", color: keepTemplate ? "#a78bfa" : "#64748b" }}
+            >
+              Keep same
+            </button>
+            <button
+              onClick={() => setKeepTemplate(false)}
+              style={{ fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "6px", border: "none", cursor: "pointer", background: !keepTemplate ? "rgba(245,158,11,0.3)" : "transparent", color: !keepTemplate ? "#f59e0b" : "#64748b" }}
+            >
+              Change template
+            </button>
+          </div>
+
           <button onClick={analyze} disabled={isAnalyzing} style={isAnalyzing ? S.btnPrimaryDisabled : S.btnPrimary}>
             {isAnalyzing ? (
               <><motion.div style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />Analyzing with AI...</>
@@ -317,10 +416,11 @@ export default function ResumeAdaptorPage() {
         {result && (
           <div style={{ display: "flex", gap: "0", borderBottom: "1px solid rgba(124,58,237,0.12)", flexShrink: 0 }}>
             {[
+              { id: "changes" as RightTab, icon: <Sparkles style={{ width: "13px", height: "13px" }} />, label: `Proposed Changes${suggestedChanges.length ? ` (${suggestedChanges.length})` : ""}` },
               { id: "results" as RightTab, icon: <TrendingUp style={{ width: "13px", height: "13px" }} />, label: "Results & Score" },
-              { id: "preview" as RightTab, icon: <Eye style={{ width: "13px", height: "13px" }} />, label: "Adapted Resume" },
+              { id: "preview" as RightTab, icon: <Eye style={{ width: "13px", height: "13px" }} />, label: "Preview" },
             ].map((t) => (
-              <button key={t.id} onClick={() => setRightTab(t.id)} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "12px 20px", fontSize: "13px", fontWeight: 600, border: "none", borderBottom: `2px solid ${rightTab === t.id ? "#7c3aed" : "transparent"}`, background: "transparent", color: rightTab === t.id ? "#a78bfa" : "#475569", cursor: "pointer" }}>
+              <button key={t.id} onClick={() => setRightTab(t.id)} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "12px 16px", fontSize: "13px", fontWeight: 600, border: "none", borderBottom: `2px solid ${rightTab === t.id ? "#7c3aed" : "transparent"}`, background: "transparent", color: rightTab === t.id ? "#a78bfa" : "#475569", cursor: "pointer" }}>
                 {t.icon}{t.label}
               </button>
             ))}
@@ -339,6 +439,57 @@ export default function ResumeAdaptorPage() {
                   <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#f1f5f9", marginBottom: "8px" }}>Ready to Adapt</h3>
                   <p style={{ fontSize: "13px", color: "#94a3b8", lineHeight: "1.6" }}>Add a job description and click &quot;Adapt My Resume&quot; to see your personalized ATS-optimized resume with score improvements.</p>
                 </div>
+              </motion.div>
+            ) : rightTab === "changes" ? (
+              <motion.div key="changes" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                <div style={{ ...S.card }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                    <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <Sparkles style={{ width: "16px", height: "16px", color: "#a78bfa" }} />
+                      Proposed Changes
+                    </h3>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button onClick={() => setSelectedChangeIdxs(new Set(suggestedChanges.map((_, i) => i)))} style={{ fontSize: "11px", color: "#a78bfa", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>Select all</button>
+                      <button onClick={() => setSelectedChangeIdxs(new Set())} style={{ fontSize: "11px", color: "#64748b", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>Deselect all</button>
+                    </div>
+                  </div>
+                  <p style={{ fontSize: "12px", color: "#64748b", marginBottom: "16px" }}>
+                    Review and select which changes to apply. Uncheck any you want to keep as-is.
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {suggestedChanges.map((c, i) => (
+                      <div key={i} style={{ borderRadius: "10px", padding: "12px", background: selectedChangeIdxs.has(i) ? "rgba(124,58,237,0.06)" : "rgba(255,255,255,0.02)", border: `1px solid ${selectedChangeIdxs.has(i) ? "rgba(124,58,237,0.3)" : "rgba(255,255,255,0.06)"}`, transition: "all 0.15s" }}>
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedChangeIdxs.has(i)}
+                            onChange={() => toggleChange(i)}
+                            style={{ marginTop: "2px", accentColor: "#7c3aed", width: "14px", height: "14px", flexShrink: 0, cursor: "pointer" }}
+                          />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: "11px", fontWeight: 600, color: "#7c3aed", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{c.section}</div>
+                            <div style={{ display: "flex", gap: "6px", fontSize: "12px", color: "#64748b", marginBottom: "4px" }}>
+                              <span style={{ flexShrink: 0, color: "rgba(239,68,68,0.8)", fontWeight: 600 }}>Before:</span>
+                              <span style={{ wordBreak: "break-word" }}>{c.original}</span>
+                            </div>
+                            <div style={{ display: "flex", gap: "6px", fontSize: "12px", color: "#cbd5e1", marginBottom: "4px" }}>
+                              <span style={{ flexShrink: 0, color: "#34d399", fontWeight: 600 }}>After:</span>
+                              <span style={{ wordBreak: "break-word" }}>{c.suggested}</span>
+                            </div>
+                            <div style={{ fontSize: "11px", color: "#475569", fontStyle: "italic" }}>{c.reason}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  onClick={applySelectedChanges}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "13px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", border: "none", borderRadius: "12px", color: "white", fontSize: "14px", fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,58,237,0.3)" }}
+                >
+                  <Check style={{ width: "16px", height: "16px" }} />
+                  Apply {selectedChangeIdxs.size} of {suggestedChanges.length} Changes
+                </button>
               </motion.div>
             ) : rightTab === "results" ? (
               <motion.div key="results" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>

@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useChatStore } from "@/lib/stores/chatStore";
 import { useAgentStore } from "@/lib/stores/agentStore";
+import { useUserProfileStore } from "@/lib/stores/userProfileStore";
 import { streamSSE } from "@/lib/api/client";
 
 // ─── Parse action markers from Claude response ───────────────────────────────
@@ -31,12 +32,17 @@ const S = {
 export default function MithraChat() {
   const { messages, isOpen, isLoading, setOpen, setLoading, addMessage, appendToLast, clear } = useChatStore();
   const { dispatchAction } = useAgentStore();
+  const { profile, setProfile, markSetupDone } = useUserProfileStore();
   const pathname = usePathname();
   const router = useRouter();
   const [input, setInput] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [hasNew, setHasNew] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [showProfilePrompt, setShowProfilePrompt] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [profileRole, setProfileRole] = useState("");
+  const [profileTarget, setProfileTarget] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,6 +51,13 @@ export default function MithraChat() {
   useEffect(() => { if (endRef.current && isOpen) endRef.current.scrollIntoView({ behavior: "smooth" }); }, [messages, isOpen]);
   useEffect(() => { if (!isOpen && messages.length > 1) setHasNew(true); }, [messages.length, isOpen]);
   useEffect(() => { if (isOpen) setHasNew(false); }, [isOpen]);
+
+  // Show profile setup prompt on first open if name not set
+  useEffect(() => {
+    if (isOpen && !profile.profileSetupDone && !profile.name && messages.length <= 1) {
+      setShowProfilePrompt(true);
+    }
+  }, [isOpen, profile.profileSetupDone, profile.name, messages.length]);
 
   // Process action markers in last assistant message
   useEffect(() => {
@@ -70,13 +83,27 @@ export default function MithraChat() {
     setLoading(true);
     addMessage({ role: "assistant", content: "" });
     try {
+      // Include user profile context with every message
+      const userProfile = profile.name ? {
+        name: profile.name,
+        currentRole: profile.currentRole,
+        targetRole: profile.targetRole,
+        skills: profile.skills,
+        experienceSummary: profile.experienceSummary,
+        yearsOfExperience: profile.yearsOfExperience,
+      } : undefined;
       await streamSSE("/chat/stream",
-        { message: msg, page_context: pathname || "dashboard", history: messages.slice(-10).map((m) => ({ role: m.role, content: m.content })) },
+        {
+          message: msg,
+          page_context: pathname || "dashboard",
+          history: messages.slice(-10).map((m) => ({ role: m.role, content: m.content })),
+          ...(userProfile ? { user_profile: userProfile } : {}),
+        },
         (chunk) => appendToLast(chunk),
       );
     } catch { appendToLast("Connection error — make sure the backend is running at localhost:8000."); }
     finally { setLoading(false); }
-  }, [input, isLoading, addMessage, setLoading, appendToLast, messages, pathname]);
+  }, [input, isLoading, addMessage, setLoading, appendToLast, messages, pathname, profile]);
 
   const toggleVoice = () => {
     if (isListening) { recRef.current?.stop(); setIsListening(false); return; }
@@ -138,7 +165,14 @@ export default function MithraChat() {
               <div style={{ position: "absolute", bottom: "-1px", right: "-1px", width: "10px", height: "10px", borderRadius: "50%", background: "#10b981", border: "2px solid rgba(10,6,22,0.98)" }} />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "14px", fontWeight: 800, color: "#f1f5f9" }}>Mithra</div>
+              <div style={{ fontSize: "14px", fontWeight: 800, color: "#f1f5f9" }}>
+                Mithra
+                {profile.name && (
+                  <span style={{ fontSize: "12px", fontWeight: 500, color: "#a78bfa", marginLeft: "8px" }}>
+                    Hi {profile.name.split(" ")[0]} 👋
+                  </span>
+                )}
+              </div>
               <div style={{ fontSize: "11px", color: "#10b981" }}>Online · AI Career Agent</div>
             </div>
             {/* Controls */}
@@ -189,8 +223,56 @@ export default function MithraChat() {
               </div>
             ))}
 
+            {/* Profile setup prompt */}
+            {showProfilePrompt && (
+              <div style={{ borderRadius: "14px", padding: "16px", background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.25)", marginBottom: "4px" }}>
+                <p style={{ fontSize: "13px", color: "#a78bfa", fontWeight: 700, marginBottom: "10px" }}>Who are you? Tell me a bit so I can personalize your experience.</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
+                  <input
+                    value={profileName}
+                    onChange={(e) => setProfileName(e.target.value)}
+                    placeholder="Your name"
+                    style={{ background: "rgba(15,8,30,0.8)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: "8px", padding: "8px 10px", color: "#f1f5f9", fontSize: "12px", outline: "none", fontFamily: "inherit" }}
+                  />
+                  <input
+                    value={profileRole}
+                    onChange={(e) => setProfileRole(e.target.value)}
+                    placeholder="Current role (e.g. Software Engineer at Infosys)"
+                    style={{ background: "rgba(15,8,30,0.8)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: "8px", padding: "8px 10px", color: "#f1f5f9", fontSize: "12px", outline: "none", fontFamily: "inherit" }}
+                  />
+                  <input
+                    value={profileTarget}
+                    onChange={(e) => setProfileTarget(e.target.value)}
+                    placeholder="Target role (e.g. Senior PM at a Series B startup)"
+                    style={{ background: "rgba(15,8,30,0.8)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: "8px", padding: "8px 10px", color: "#f1f5f9", fontSize: "12px", outline: "none", fontFamily: "inherit" }}
+                  />
+                </div>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    onClick={() => {
+                      if (profileName.trim()) {
+                        setProfile({ name: profileName.trim(), currentRole: profileRole.trim(), targetRole: profileTarget.trim(), profileSetupDone: true });
+                        markSetupDone();
+                        setShowProfilePrompt(false);
+                        addMessage({ role: "assistant", content: `Nice to meet you, ${profileName.trim()}! I'm Mithra, your AI career companion. ${profileRole ? `I see you're currently a ${profileRole}` : ""}${profileTarget ? ` looking to move into ${profileTarget}` : ""}. I'll keep this in mind as we work together. How can I help you today?` });
+                      }
+                    }}
+                    style={{ flex: 1, padding: "8px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", border: "none", borderRadius: "8px", color: "white", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
+                  >
+                    Let&apos;s go!
+                  </button>
+                  <button
+                    onClick={() => { setShowProfilePrompt(false); markSetupDone(); }}
+                    style={{ padding: "8px 12px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", color: "#64748b", fontSize: "12px", cursor: "pointer" }}
+                  >
+                    Skip
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Quick actions (only shown at start) */}
-            {messages.length <= 1 && (
+            {messages.length <= 1 && !showProfilePrompt && (
               <div style={{ marginTop: "8px" }}>
                 <p style={{ fontSize: "11px", color: "#475569", textAlign: "center", marginBottom: "10px" }}>Quick actions</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", justifyContent: "center" }}>

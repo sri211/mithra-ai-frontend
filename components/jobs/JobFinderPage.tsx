@@ -9,6 +9,7 @@ import {
 import { api } from "@/lib/api/client";
 import { Job } from "@/lib/types";
 import { useAgentStore } from "@/lib/stores/agentStore";
+import { useJobStore } from "@/lib/stores/jobStore";
 
 const PORTAL_COLORS: Record<string, string> = {
   LinkedIn: "#0a66c2", Indeed: "#2164f3", Glassdoor: "#0caa41",
@@ -248,10 +249,17 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
             Adapt Resume
           </button>
           <button
-            onClick={() => window.open(job.portal_url || "#", "_blank")}
+            onClick={() => {
+              // Prefer job.url > portal_url, construct LinkedIn search if needed
+              const jobUrl = job.url || job.portal_url;
+              const finalUrl = (jobUrl && jobUrl !== "#" && jobUrl !== "https://linkedin.com/jobs")
+                ? jobUrl
+                : `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(job.title)}&location=${encodeURIComponent(job.location)}`;
+              window.open(finalUrl, "_blank");
+            }}
             style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "10px", background: "none", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "10px", color: "#94a3b8", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}
           >
-            <ExternalLink style={{ width: "13px", height: "13px" }} />Open Job
+            <ExternalLink style={{ width: "13px", height: "13px" }} />View Job
           </button>
         </div>
       </div>
@@ -262,6 +270,7 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
 export default function JobFinderPage() {
   const router = useRouter();
   const { pendingAction, clearAction } = useAgentStore();
+  const { setSelectedJob: storeSelectedJob } = useJobStore();
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
   const [remote, setRemote] = useState("");
@@ -402,7 +411,11 @@ export default function JobFinderPage() {
                 job={selectedJob}
                 onClose={() => setSelectedJob(null)}
                 onAutoApply={() => router.push("/job-application")}
-                onAdaptResume={() => router.push("/resume-adaptor")}
+                onAdaptResume={() => {
+                  // Store the full job details so ResumeAdaptorPage auto-populates
+                  storeSelectedJob(selectedJob);
+                  router.push("/resume-adaptor");
+                }}
               />
             </motion.div>
           )}
