@@ -67,63 +67,100 @@ function ScoreRing({ score, label }: { score: number; label: string }) {
   );
 }
 
-// Inline resume preview for adapted resume
-function AdaptedResumePreview({ resume }: { resume: ResumeData }) {
-  const accent = "#7c3aed";
+// Template-aware resume preview — matches the builder templates
+function AdaptedResumePreview({ resume, template = "modern" }: { resume: ResumeData; template?: string }) {
   const r = resume;
-  return (
-    <div style={{ width: "100%", background: "white", fontFamily: "Inter, sans-serif", fontSize: "11px", padding: "32px 40px" }}>
-      <div style={{ borderBottom: `2.5px solid ${accent}`, paddingBottom: "16px", marginBottom: "16px" }}>
-        <h1 style={{ fontSize: "22px", fontWeight: 900, color: "#111827", margin: "0 0 3px" }}>{r.personal.name || "Your Name"}</h1>
-        {r.personal.title && <p style={{ fontSize: "12px", color: accent, fontWeight: 700, margin: "0 0 8px" }}>{r.personal.title}</p>}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", fontSize: "10px", color: "#6b7280" }}>
-          {r.personal.email && <span>✉ {r.personal.email}</span>}
-          {r.personal.phone && <span>📞 {r.personal.phone}</span>}
-          {r.personal.location && <span>📍 {r.personal.location}</span>}
-          {r.personal.linkedin && <span>🔗 {r.personal.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "")}</span>}
+  const contact = [r.personal.email, r.personal.phone, r.personal.location, r.personal.linkedin?.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "")].filter(Boolean);
+
+  const Section = ({ title, children, accent }: { title: string; children: React.ReactNode; accent: string }) => (
+    <div style={{ marginBottom: "14px" }}>
+      <h2 style={{ fontSize: "9px", fontWeight: 800, color: accent, textTransform: "uppercase" as const, letterSpacing: "1.5px", margin: "0 0 4px" }}>{title}</h2>
+      <div style={{ borderTop: `1px solid ${accent}33`, marginBottom: "8px" }} />
+      {children}
+    </div>
+  );
+
+  const ExpList = ({ accent }: { accent: string }) => (
+    <>
+      {r.experience.map((exp, i) => (
+        <div key={i} style={{ marginBottom: "10px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+            <div><strong style={{ color: "#111827" }}>{exp.role}</strong><span style={{ color: accent }}> · {exp.company}</span></div>
+            <span style={{ color: "#9ca3af", fontSize: "10px", flexShrink: 0 }}>{exp.start}{exp.current ? " – Present" : exp.end ? ` – ${exp.end}` : ""}</span>
+          </div>
+          <ul style={{ margin: "3px 0 0", paddingLeft: 0, listStyle: "none" }}>
+            {exp.bullets.filter(Boolean).map((b, j) => (
+              <li key={j} style={{ display: "flex", gap: "6px", color: "#374151", lineHeight: 1.5, marginBottom: "2px", fontSize: "10.5px" }}><span style={{ color: accent, flexShrink: 0 }}>▸</span><span>{b}</span></li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </>
+  );
+
+  const EduList = () => (
+    <>
+      {r.education.map((ed, i) => (
+        <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
+          <div><strong>{ed.degree}{ed.field ? ` in ${ed.field}` : ""}</strong> · {ed.institution}</div>
+          <span style={{ color: "#9ca3af", fontSize: "10px" }}>{ed.end || ed.start}</span>
+        </div>
+      ))}
+    </>
+  );
+
+  if (template === "minimal" || template === "classic") {
+    return (
+      <div style={{ width: "100%", background: "white", fontFamily: template === "classic" ? "Georgia, serif" : "Arial, sans-serif", fontSize: "11px", padding: "36px 48px", color: "#1f2937" }}>
+        <div style={{ textAlign: "center", marginBottom: "20px", borderBottom: "1px solid #d1d5db", paddingBottom: "16px" }}>
+          <h1 style={{ fontSize: "24px", fontWeight: 700, margin: "0 0 4px", textTransform: "uppercase" as const, letterSpacing: "2px" }}>{r.personal.name}</h1>
+          {r.personal.title && <p style={{ margin: "0 0 8px", color: "#6b7280", fontSize: "12px" }}>{r.personal.title}</p>}
+          <div style={{ fontSize: "10px", color: "#6b7280" }}>{contact.join(" | ")}</div>
+        </div>
+        {r.summary && <Section title="Professional Summary" accent="#374151"><p style={{ color: "#374151", lineHeight: 1.6, margin: 0 }}>{r.summary}</p></Section>}
+        {r.experience.length > 0 && <Section title="Work Experience" accent="#374151"><ExpList accent="#374151" /></Section>}
+        {(r.skills.technical?.length > 0) && <Section title="Skills" accent="#374151"><p style={{ margin: 0, color: "#374151" }}>{[r.skills.technical, r.skills.soft, r.skills.certifications].flat().filter(Boolean).join(" • ")}</p></Section>}
+        {r.education.length > 0 && <Section title="Education" accent="#374151"><EduList /></Section>}
+      </div>
+    );
+  }
+
+  if (template === "tech" || template === "bold") {
+    const accent = template === "tech" ? "#0ea5e9" : "#ef4444";
+    return (
+      <div style={{ width: "100%", background: template === "tech" ? "#0f172a" : "white", fontFamily: template === "tech" ? "'Courier New', monospace" : "Inter, sans-serif", fontSize: "11px", color: template === "tech" ? "#e2e8f0" : "#1f2937", display: "flex", minHeight: "1000px" }}>
+        <div style={{ width: "200px", flexShrink: 0, background: accent, padding: "28px 16px", color: "white", fontSize: "10px" }}>
+          <h1 style={{ fontSize: "15px", fontWeight: 900, margin: "0 0 4px", lineHeight: 1.2 }}>{r.personal.name}</h1>
+          {r.personal.title && <p style={{ margin: "0 0 16px", opacity: 0.85, fontSize: "10px" }}>{r.personal.title}</p>}
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.3)", paddingTop: "12px", display: "flex", flexDirection: "column" as const, gap: "6px" }}>
+            {r.personal.email && <span style={{ wordBreak: "break-all" as const }}>{r.personal.email}</span>}
+            {r.personal.phone && <span>{r.personal.phone}</span>}
+            {r.personal.location && <span>{r.personal.location}</span>}
+          </div>
+          {r.skills.technical?.length > 0 && <div style={{ marginTop: "20px" }}><div style={{ fontWeight: 700, marginBottom: "6px", textTransform: "uppercase" as const, fontSize: "9px", letterSpacing: "1px" }}>Skills</div>{[r.skills.technical, r.skills.soft].flat().filter(Boolean).map((s, i) => <div key={i} style={{ marginBottom: "3px", opacity: 0.9 }}>• {s}</div>)}</div>}
+        </div>
+        <div style={{ flex: 1, padding: "28px 24px", color: template === "tech" ? "#e2e8f0" : "#1f2937" }}>
+          {r.summary && <div style={{ marginBottom: "16px" }}><p style={{ lineHeight: 1.6, margin: 0, color: template === "tech" ? "#cbd5e1" : "#374151" }}>{r.summary}</p></div>}
+          {r.experience.length > 0 && <Section title="Experience" accent={accent}><ExpList accent={accent} /></Section>}
+          {r.education.length > 0 && <Section title="Education" accent={accent}><EduList /></Section>}
         </div>
       </div>
-      {r.summary && <div style={{ marginBottom: "14px" }}><h2 style={{ fontSize: "9px", fontWeight: 800, color: accent, textTransform: "uppercase", letterSpacing: "1.5px", margin: "0 0 6px" }}>Summary</h2><div style={{ borderTop: `1px solid ${accent}30`, marginBottom: "8px" }} /><p style={{ color: "#374151", lineHeight: 1.6, margin: 0 }}>{r.summary}</p></div>}
-      {r.experience.length > 0 && (
-        <div style={{ marginBottom: "14px" }}>
-          <h2 style={{ fontSize: "9px", fontWeight: 800, color: accent, textTransform: "uppercase", letterSpacing: "1.5px", margin: "0 0 6px" }}>Experience</h2>
-          <div style={{ borderTop: `1px solid ${accent}30`, marginBottom: "8px" }} />
-          {r.experience.map((exp, i) => (
-            <div key={i} style={{ marginBottom: "12px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <div><span style={{ fontWeight: 800, color: "#111827", fontSize: "11px" }}>{exp.role}</span><span style={{ color: accent, fontWeight: 600 }}> · {exp.company}</span></div>
-                <span style={{ color: "#9ca3af", fontSize: "10px" }}>{exp.start}{exp.current ? " – Present" : exp.end ? ` – ${exp.end}` : ""}</span>
-              </div>
-              <ul style={{ margin: "4px 0 0", paddingLeft: 0, listStyle: "none" }}>
-                {exp.bullets.filter(Boolean).map((b, j) => (
-                  <li key={j} style={{ display: "flex", gap: "6px", color: "#374151", lineHeight: 1.5, marginBottom: "2px" }}><span style={{ color: accent, flexShrink: 0 }}>▸</span><span>{b}</span></li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
-      {(r.skills.technical.length > 0 || r.skills.certifications.length > 0) && (
-        <div style={{ marginBottom: "14px" }}>
-          <h2 style={{ fontSize: "9px", fontWeight: 800, color: accent, textTransform: "uppercase", letterSpacing: "1.5px", margin: "0 0 6px" }}>Skills</h2>
-          <div style={{ borderTop: `1px solid ${accent}30`, marginBottom: "8px" }} />
-          {r.skills.technical.length > 0 && <p style={{ margin: "0 0 3px", color: "#374151" }}><strong>Technical:</strong> {r.skills.technical.join(" · ")}</p>}
-          {r.skills.languages.length > 0 && <p style={{ margin: "0 0 3px", color: "#374151" }}><strong>Languages:</strong> {r.skills.languages.join(" · ")}</p>}
-          {r.skills.certifications.length > 0 && <p style={{ margin: 0, color: "#374151" }}><strong>Certifications:</strong> {r.skills.certifications.join(" · ")}</p>}
-        </div>
-      )}
-      {r.education.length > 0 && (
-        <div>
-          <h2 style={{ fontSize: "9px", fontWeight: 800, color: accent, textTransform: "uppercase", letterSpacing: "1.5px", margin: "0 0 6px" }}>Education</h2>
-          <div style={{ borderTop: `1px solid ${accent}30`, marginBottom: "8px" }} />
-          {r.education.map((ed, i) => (
-            <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-              <div><span style={{ fontWeight: 700, color: "#111827" }}>{ed.degree}{ed.field ? ` in ${ed.field}` : ""}</span><span style={{ color: accent }}> · {ed.institution}</span></div>
-              <span style={{ color: "#9ca3af", fontSize: "10px" }}>{ed.end || ed.start}</span>
-            </div>
-          ))}
-        </div>
-      )}
+    );
+  }
+
+  // Default: modern (violet)
+  const accent = "#7c3aed";
+  return (
+    <div style={{ width: "100%", background: "white", fontFamily: "Inter, sans-serif", fontSize: "11px", padding: "32px 40px" }}>
+      <div style={{ borderBottom: `2.5px solid ${accent}`, paddingBottom: "14px", marginBottom: "16px" }}>
+        <h1 style={{ fontSize: "22px", fontWeight: 900, color: "#111827", margin: "0 0 3px" }}>{r.personal.name || "Your Name"}</h1>
+        {r.personal.title && <p style={{ fontSize: "12px", color: accent, fontWeight: 700, margin: "0 0 8px" }}>{r.personal.title}</p>}
+        <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "12px", fontSize: "10px", color: "#6b7280" }}>{contact.map((c, i) => <span key={i}>{c}</span>)}</div>
+      </div>
+      {r.summary && <Section title="Summary" accent={accent}><p style={{ color: "#374151", lineHeight: 1.6, margin: 0 }}>{r.summary}</p></Section>}
+      {r.experience.length > 0 && <Section title="Experience" accent={accent}><ExpList accent={accent} /></Section>}
+      {(r.skills.technical?.length > 0) && <Section title="Skills" accent={accent}><p style={{ margin: 0, color: "#374151" }}>{[r.skills.technical, r.skills.soft, r.skills.certifications].flat().filter(Boolean).join(" · ")}</p></Section>}
+      {r.education.length > 0 && <Section title="Education" accent={accent}><EduList /></Section>}
     </div>
   );
 }
@@ -222,29 +259,21 @@ export default function ResumeAdaptorPage() {
         setAdaptedResume(data.adapted_resume as ResumeData);
         setRightTab("results");
       }
-    } catch {
-      const fallback = {
-        ats_score_before: 42, ats_score_after: 87,
-        missing_keywords: ["Kubernetes", "CI/CD", "distributed systems"],
-        matched_keywords: ["Python", "React", "Node.js", "REST API", "Git", "Agile"],
-        suggested_changes: [
-          { section: "summary", original: "Experienced software engineer.", suggested: "Backend engineer with 5+ years building distributed systems at scale.", reason: "Mirrors JD language and adds specificity." },
-        ],
-        changes_made: [
-          { before: "Worked on infrastructure projects", after: "Architected Kubernetes-based microservices handling 10M+ daily requests" },
-          { before: "Used CI/CD pipelines", after: "Designed GitHub Actions CI/CD pipelines reducing deployment time by 40%" },
-        ],
-        cover_letter_hook: "As a backend engineer who scaled payment infrastructure to 50M transactions/day, I know what it takes to build systems at pace.",
-        interview_prep_tip: "They'll likely ask about debugging production issues at scale. Prepare a STAR answer with specific metrics.",
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+        || (err as Error)?.message
+        || "Failed to adapt resume. Please try again.";
+      setResult({
+        ats_score_before: 0, ats_score_after: 0,
+        missing_keywords: [], matched_keywords: [],
+        suggested_changes: [],
+        changes_made: [],
+        cover_letter_hook: "",
+        interview_prep_tip: msg,
         adapted_resume: resume,
         style_preserved: true,
-      };
-      const fallbackChanges = fallback.suggested_changes;
-      setResult(fallback);
-      setSuggestedChanges(fallbackChanges);
-      setSelectedChangeIdxs(new Set(fallbackChanges.map((_, i) => i)));
-      setAdaptedResume(resume);
-      setRightTab("changes");
+      });
+      setRightTab("results");
     } finally { setIsAnalyzing(false); }
   };
 
@@ -618,8 +647,8 @@ export default function ResumeAdaptorPage() {
                     <Edit3 style={{ width: "13px", height: "13px" }} />Edit in Builder
                   </button>
                 </div>
-                <div id="adapted-resume-preview" data-template={keepTemplate ? (selectedTemplate || "modern") : previewTemplate} style={{ borderRadius: "8px", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
-                  <AdaptedResumePreview resume={adaptedResume || resume} />
+                <div id="adapted-resume-preview" style={{ borderRadius: "8px", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
+                  <AdaptedResumePreview resume={adaptedResume || resume} template={keepTemplate ? (selectedTemplate || "modern") : previewTemplate} />
                 </div>
               </motion.div>
             )}
