@@ -12,7 +12,9 @@ interface Connection {
   id: string; name: string; role: string; company: string;
   avatar: string; color: string; type: string; mutual: number;
   why: string; draft: string;
-  linkedin_search?: string; email_pattern?: string;
+  linkedin_search?: string; linkedin_url?: string;
+  email_pattern?: string; email_verified?: boolean;
+  is_real?: boolean; is_search_card?: boolean;
 }
 
 const MOCK_CONNECTIONS: Connection[] = [
@@ -105,11 +107,12 @@ export default function NetworkPage() {
     try {
       const { data } = await api.post("/network/find", { company, target_role: role, user_profile: {} });
       if (data.connections?.length) {
-        // Normalize field names — backend uses 'draft', frontend mock used 'draft' too
-        const normalized = data.connections.map((c: Record<string, string>) => ({
+        // Normalize field names
+        const normalized = data.connections.map((c: Record<string, unknown>) => ({
           ...c,
-          draft: c.draft || c.message_draft || "",
-          linkedin_search: c.linkedin_search || `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent((c.role || "") + " " + (c.company || company))}`,
+          draft: (c.draft as string) || (c.message_draft as string) || "",
+          // Prefer direct LinkedIn profile URL over search URL
+          linkedin_search: (c.linkedin_url as string) || (c.linkedin_search as string) || `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(((c.role as string) || "") + " " + ((c.company as string) || company))}`,
         }));
         setConnections(normalized);
       }
@@ -239,9 +242,13 @@ export default function NetworkPage() {
                         <Users style={{ width: "10px", height: "10px" }} />{conn.mutual} mutual connections
                       </div>
                     </div>
-                    <a href={conn.linkedin_search || `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(conn.role + ' ' + conn.company)}`} target="_blank" rel="noopener noreferrer" style={{ color: "#60a5fa", flexShrink: 0, textDecoration: "none" }} title="Search on LinkedIn">
-                      <ExternalLink style={{ width: "15px", height: "15px" }} />
-                    </a>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                      {conn.is_real && <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "4px", background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)", fontWeight: 600 }}>✓ Real</span>}
+                      {conn.is_search_card && <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "4px", background: "rgba(100,116,139,0.15)", color: "#94a3b8", border: "1px solid rgba(100,116,139,0.3)", fontWeight: 600 }}>Search</span>}
+                      <a href={conn.linkedin_search || `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(conn.role + ' ' + conn.company)}`} target="_blank" rel="noopener noreferrer" style={{ color: "#60a5fa", textDecoration: "none" }} title={conn.is_real ? "View LinkedIn Profile" : "Search on LinkedIn"}>
+                        <ExternalLink style={{ width: "15px", height: "15px" }} />
+                      </a>
+                    </div>
                   </div>
 
                   {/* Why connect */}
@@ -280,11 +287,17 @@ export default function NetworkPage() {
                   )}
                   <button
                     onClick={() => window.open(conn.linkedin_search || `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(conn.role + ' ' + conn.company)}`, "_blank")}
-                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "12px", padding: "10px", borderRadius: "10px", fontWeight: 600, color: "white", border: "none", cursor: "pointer", background: "linear-gradient(135deg,#0a66c2,#1a76c2)", boxShadow: "0 4px 12px rgba(10,102,194,0.3)" }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "12px", padding: "10px", borderRadius: "10px", fontWeight: 600, color: "white", border: "none", cursor: "pointer", background: conn.is_real ? "linear-gradient(135deg,#0a66c2,#1a76c2)" : "linear-gradient(135deg,#374151,#4b5563)", boxShadow: conn.is_real ? "0 4px 12px rgba(10,102,194,0.3)" : "none" }}
                   >
                     <LinkedInIcon style={{ width: "14px", height: "14px" }} />
-                    Find on LinkedIn →
+                    {conn.is_real ? "View LinkedIn Profile →" : "Search on LinkedIn →"}
                   </button>
+                  {conn.email_pattern && !conn.is_search_card && (
+                    <div style={{ fontSize: "11px", color: conn.email_verified ? "#10b981" : "#64748b", display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
+                      <span>{conn.email_verified ? "✓ Verified:" : "Likely:"}</span>
+                      <span style={{ fontFamily: "monospace" }}>{conn.email_pattern}</span>
+                    </div>
+                  )}
                 </motion.div>
               );
             })}
