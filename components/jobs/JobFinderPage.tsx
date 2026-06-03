@@ -309,7 +309,13 @@ export default function JobFinderPage() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    if (pendingAction?.type === "search_jobs") {
+    if (!pendingAction) return;
+    if (pendingAction.type === "search_jobs") {
+      setQuery(pendingAction.query);
+      if (pendingAction.location) setLocation(pendingAction.location);
+      clearAction();
+      setTimeout(() => search(), 300);
+    } else if (pendingAction.type === "trigger_job_search") {
       setQuery(pendingAction.query);
       if (pendingAction.location) setLocation(pendingAction.location);
       clearAction();

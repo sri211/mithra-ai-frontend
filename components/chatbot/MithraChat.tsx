@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useChatStore } from "@/lib/stores/chatStore";
 import { useAgentStore } from "@/lib/stores/agentStore";
 import { useUserProfileStore } from "@/lib/stores/userProfileStore";
+import { useResumeStore } from "@/lib/stores/resumeStore";
 import { streamSSE } from "@/lib/api/client";
 
 // ─── Parse action markers from Claude response ───────────────────────────────
@@ -12,6 +13,14 @@ function parseActions(text: string) {
   const actions: { type: string; value: string }[] = [];
   let m; while ((m = re.exec(text)) !== null) actions.push({ type: m[1], value: m[2] || "" });
   return { clean: text.replace(/\[ACTION:[^\]]+\]/g, "").trim(), actions };
+}
+
+// ─── Parse WORKFLOW markers ──────────────────────────────────────────────────
+function parseWorkflowActions(text: string) {
+  const re = /\[WORKFLOW:([a-z_]+):?([^\]]*)\]/g;
+  const actions: { action: string; value: string }[] = [];
+  let m; while ((m = re.exec(text)) !== null) actions.push({ action: m[1], value: m[2] || "" });
+  return { clean: text.replace(/\[WORKFLOW:[^\]]+\]/g, "").trim(), actions };
 }
 
 // ─── Quick actions ────────────────────────────────────────────────────────────
@@ -33,6 +42,7 @@ export default function MithraChat() {
   const { messages, isOpen, isLoading, setOpen, setLoading, addMessage, appendToLast, clear } = useChatStore();
   const { dispatchAction } = useAgentStore();
   const { profile, setProfile, markSetupDone } = useUserProfileStore();
+  const { resume } = useResumeStore();
   const pathname = usePathname();
   const router = useRouter();
   const [input, setInput] = useState("");
@@ -43,10 +53,14 @@ export default function MithraChat() {
   const [profileName, setProfileName] = useState("");
   const [profileRole, setProfileRole] = useState("");
   const [profileTarget, setProfileTarget] = useState("");
+  const [workflowExecuting, setWorkflowExecuting] = useState(false);
+  const [workflowSummary, setWorkflowSummary] = useState<{ role: string; company: string } | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recRef = useRef<any>(null);
+
+  const resumeLoaded = Boolean(resume?.personal?.name);
 
   useEffect(() => { if (endRef.current && isOpen) endRef.current.scrollIntoView({ behavior: "smooth" }); }, [messages, isOpen]);
   useEffect(() => { if (!isOpen && messages.length > 1) setHasNew(true); }, [messages.length, isOpen]);
@@ -59,10 +73,46 @@ export default function MithraChat() {
     }
   }, [isOpen, profile.profileSetupDone, profile.name, messages.length]);
 
+  const executeWorkflow = useCallback(async (action: string, value: string) => {
+    setWorkflowExecuting(true);
+    try {
+      if (action === "navigate") {
+        router.push(`/${value}`);
+      } else if (action === "fill_jd") {
+        dispatchAction({ type: "fill_jd", jd: value });
+        router.push("/resume-adaptor");
+      } else if (action === "fill_company_role") {
+        const [company, role] = value.split("|");
+        dispatchAction({ type: "fill_company_role", company: company || value, role: role || "" });
+        setWorkflowSummary({ company: company || value, role: role || "" });
+        router.push("/resume-adaptor");
+      } else if (action === "trigger_adapt") {
+        if (!resumeLoaded) {
+          addMessage({ role: "assistant", content: "Please upload your resume first using the Resume Builder tab before I can adapt it." });
+          return;
+        }
+        dispatchAction({ type: "trigger_adapt" });
+        router.push("/resume-adaptor");
+      } else if (action === "trigger_job_search") {
+        const [query, location] = value.split("|");
+        dispatchAction({ type: "trigger_job_search", query: query || value, location: location || "" });
+        router.push("/job-finder");
+      } else if (action === "show_toast") {
+        dispatchAction({ type: "show_toast", message: value, variant: "info" });
+      } else if (action === "ask_user") {
+        addMessage({ role: "assistant", content: value });
+      }
+    } finally {
+      setWorkflowExecuting(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router, dispatchAction, resumeLoaded, addMessage]);
+
   // Process action markers in last assistant message
   useEffect(() => {
     const last = messages[messages.length - 1];
     if (last?.role === "assistant" && last.content && !isLoading) {
+      // Process legacy [ACTION:...] markers
       const { actions } = parseActions(last.content);
       actions.forEach((a) => {
         if (a.type === "navigate") { dispatchAction({ type: "navigate", tab: a.value }); router.push(`/${a.value}`); }
@@ -70,6 +120,18 @@ export default function MithraChat() {
         else if (a.type === "adapt_resume") { dispatchAction({ type: "adapt_resume", jd: a.value }); router.push("/resume-adaptor"); }
         else if (a.type === "build_resume") { dispatchAction({ type: "build_resume" }); router.push("/resume-builder"); }
       });
+
+      // Process new [WORKFLOW:...] markers
+      const { actions: workflowActions } = parseWorkflowActions(last.content);
+      if (workflowActions.length > 0) {
+        (async () => {
+          for (const wa of workflowActions) {
+            await executeWorkflow(wa.action, wa.value);
+            // Small delay between sequential workflow steps
+            await new Promise((r) => setTimeout(r, 400));
+          }
+        })();
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, isLoading]);
@@ -97,6 +159,7 @@ export default function MithraChat() {
           message: msg,
           page_context: pathname || "dashboard",
           history: messages.slice(-10).map((m) => ({ role: m.role, content: m.content })),
+          resume_loaded: resumeLoaded,
           ...(userProfile ? { user_profile: userProfile } : {}),
         },
         (chunk) => appendToLast(chunk),
@@ -291,6 +354,30 @@ export default function MithraChat() {
                 </div>
               </div>
             )}
+            {/* Workflow executing indicator */}
+            {workflowExecuting && (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "10px", background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.25)", fontSize: "12px", color: "#a78bfa" }}>
+                <div style={{ width: "10px", height: "10px", borderRadius: "50%", border: "2px solid rgba(167,139,250,0.3)", borderTopColor: "#a78bfa", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
+                Executing workflow step...
+              </div>
+            )}
+
+            {/* Workflow summary card */}
+            {workflowSummary && !workflowExecuting && (
+              <div style={{ borderRadius: "12px", padding: "12px 14px", background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.25)", fontSize: "12px" }}>
+                <div style={{ fontWeight: 700, color: "#34d399", marginBottom: "4px" }}>Done!</div>
+                <div style={{ color: "#94a3b8", lineHeight: 1.5 }}>
+                  I&apos;ve set up your resume adaptation for <strong style={{ color: "#f1f5f9" }}>{workflowSummary.role}</strong> at <strong style={{ color: "#f1f5f9" }}>{workflowSummary.company}</strong>.
+                </div>
+                <button
+                  onClick={() => { router.push("/resume-adaptor"); setWorkflowSummary(null); }}
+                  style={{ marginTop: "8px", fontSize: "11px", fontWeight: 600, color: "#34d399", background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline" }}
+                >
+                  View in Resume Adaptor →
+                </button>
+              </div>
+            )}
+
             <div ref={endRef} />
           </div>
 

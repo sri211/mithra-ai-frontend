@@ -19,10 +19,19 @@ type RightTab = "results" | "changes" | "preview";
 
 interface SuggestedChange {
   section: string;
+  lens?: string;
   original: string;
   suggested: string;
   reason: string;
 }
+
+const LENS_COLORS: Record<string, { bg: string; color: string; border: string }> = {
+  "ATS":            { bg: "rgba(59,130,246,0.15)",  color: "#60a5fa", border: "rgba(59,130,246,0.4)" },
+  "HR Screener":    { bg: "rgba(16,185,129,0.15)",  color: "#34d399", border: "rgba(16,185,129,0.4)" },
+  "Hiring Manager": { bg: "rgba(124,58,237,0.15)",  color: "#a78bfa", border: "rgba(124,58,237,0.4)" },
+  "Domain Expert":  { bg: "rgba(245,158,11,0.15)",  color: "#fbbf24", border: "rgba(245,158,11,0.4)" },
+  "Cultural Fit":   { bg: "rgba(236,72,153,0.15)",  color: "#f472b6", border: "rgba(236,72,153,0.4)" },
+};
 
 const SCORE_COLOR = (s: number) => s >= 80 ? "#10b981" : s >= 60 ? "#f59e0b" : "#ef4444";
 
@@ -188,8 +197,10 @@ export default function ResumeAdaptorPage() {
   const [keepTemplate, setKeepTemplate] = useState(true);
   const [previewTemplate, setPreviewTemplate] = useState<string>(selectedTemplate || "modern");
   const [jobBanner, setJobBanner] = useState<{ title: string; company: string } | null>(null);
+  const [loadingStep, setLoadingStep] = useState<string>("");
   const [result, setResult] = useState<{
     ats_score_before: number; ats_score_after: number;
+    perspective_scores?: { ats: number; hr_screener: number; hiring_manager: number; domain_expert: number; cultural_fit: number };
     missing_keywords: string[]; matched_keywords: string[];
     suggested_changes?: SuggestedChange[];
     changes_made: ({ before: string; after: string } | string)[];
@@ -221,8 +232,16 @@ export default function ResumeAdaptorPage() {
   }, []);
 
   useEffect(() => {
-    if (pendingAction?.type === "adapt_resume" && pendingAction.jd) {
+    if (!pendingAction) return;
+    if (pendingAction.type === "adapt_resume" && pendingAction.jd) {
       setJdText(pendingAction.jd); setInputMode("paste"); clearAction();
+    } else if (pendingAction.type === "fill_jd") {
+      setJdText(pendingAction.jd); setInputMode("paste"); clearAction();
+    } else if (pendingAction.type === "fill_company_role") {
+      setCompanyName(pendingAction.company); setRoleName(pendingAction.role); setInputMode("company"); clearAction();
+    } else if (pendingAction.type === "trigger_adapt") {
+      clearAction();
+      analyze();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingAction]);
@@ -246,8 +265,18 @@ export default function ResumeAdaptorPage() {
       : `Company: ${companyName}, Role: ${roleName}${additionalContext ? `, Context: ${additionalContext}` : ""}`;
     if (!jd.trim()) return;
     setIsAnalyzing(true); setResult(null); setAdaptedResume(null); setSuggestedChanges([]); setSelectedChangeIdxs(new Set());
+
+    const requestBody: Record<string, unknown> = { resume, jd_text: jd };
+    if (inputMode === "company" && companyName.trim()) {
+      requestBody.company_name = companyName.trim();
+      requestBody.role_name = roleName.trim();
+      setLoadingStep(`Researching ${companyName.trim()} hiring patterns...`);
+      await new Promise((r) => setTimeout(r, 800));
+    }
+    setLoadingStep("Analyzing your resume...");
+
     try {
-      const { data } = await api.post("/resume/adapt", { resume, jd_text: jd });
+      const { data } = await api.post("/resume/adapt", requestBody);
       setResult(data);
       if (data.suggested_changes && Array.isArray(data.suggested_changes)) {
         const changes = data.suggested_changes as SuggestedChange[];
@@ -274,7 +303,7 @@ export default function ResumeAdaptorPage() {
         style_preserved: true,
       });
       setRightTab("results");
-    } finally { setIsAnalyzing(false); }
+    } finally { setIsAnalyzing(false); setLoadingStep(""); }
   };
 
   const applySelectedChanges = () => {
@@ -445,7 +474,7 @@ export default function ResumeAdaptorPage() {
 
           <button onClick={analyze} disabled={isAnalyzing} style={isAnalyzing ? S.btnPrimaryDisabled : S.btnPrimary}>
             {isAnalyzing ? (
-              <><motion.div style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />Analyzing with AI...</>
+              <><motion.div style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />{loadingStep || "Analyzing with AI..."}</>
             ) : (
               <><Wand2 style={{ width: "16px", height: "16px" }} />Adapt My Resume</>
             )}
@@ -510,7 +539,13 @@ export default function ResumeAdaptorPage() {
                             style={{ marginTop: "2px", accentColor: "#7c3aed", width: "14px", height: "14px", flexShrink: 0, cursor: "pointer" }}
                           />
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: "11px", fontWeight: 600, color: "#7c3aed", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{c.section}</div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px", flexWrap: "wrap" as const }}>
+                              <span style={{ fontSize: "11px", fontWeight: 600, color: "#7c3aed", textTransform: "uppercase" as const, letterSpacing: "0.5px" }}>{c.section}</span>
+                              {c.lens && (() => {
+                                const lc = LENS_COLORS[c.lens] || { bg: "rgba(100,116,139,0.15)", color: "#94a3b8", border: "rgba(100,116,139,0.3)" };
+                                return <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 7px", borderRadius: "20px", background: lc.bg, color: lc.color, border: `1px solid ${lc.border}` }}>{c.lens}</span>;
+                              })()}
+                            </div>
                             <div style={{ display: "flex", gap: "6px", fontSize: "12px", color: "#64748b", marginBottom: "4px" }}>
                               <span style={{ flexShrink: 0, color: "rgba(239,68,68,0.8)", fontWeight: 600 }}>Before:</span>
                               <span style={{ wordBreak: "break-word" }}>{c.original && c.original.length > 120 ? c.original.slice(0, 120) + "..." : c.original}</span>
@@ -554,6 +589,38 @@ export default function ResumeAdaptorPage() {
                     <ScoreRing score={result.ats_score_after} label="After" />
                   </div>
                 </div>
+
+                {/* Perspective scores */}
+                {result.perspective_scores && (
+                  <div style={S.card}>
+                    <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", marginBottom: "14px" }}>5-Perspective Analysis</h3>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      {(
+                        [
+                          { key: "ats", label: "ATS Algorithm", ...LENS_COLORS["ATS"] },
+                          { key: "hr_screener", label: "HR Screener", ...LENS_COLORS["HR Screener"] },
+                          { key: "hiring_manager", label: "Hiring Manager", ...LENS_COLORS["Hiring Manager"] },
+                          { key: "domain_expert", label: "Domain Expert", ...LENS_COLORS["Domain Expert"] },
+                          { key: "cultural_fit", label: "Cultural Fit", ...LENS_COLORS["Cultural Fit"] },
+                        ] as { key: keyof NonNullable<typeof result.perspective_scores>; label: string; bg: string; color: string; border: string }[]
+                      ).map(({ key, label, color }) => {
+                        const score = result.perspective_scores![key];
+                        return (
+                          <div key={key}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                              <span style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8" }}>{label}</span>
+                              <span style={{ fontSize: "11px", fontWeight: 700, color }}>{score}</span>
+                            </div>
+                            <div style={{ height: "6px", borderRadius: "4px", background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                              <motion.div initial={{ width: 0 }} animate={{ width: `${score}%` }} transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+                                style={{ height: "100%", borderRadius: "4px", background: color }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Keywords */}
                 <div style={S.card}>
