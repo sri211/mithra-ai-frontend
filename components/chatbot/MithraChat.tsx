@@ -398,7 +398,7 @@ export default function MithraChat() {
                   e.target.style.height = Math.min(e.target.scrollHeight, 96) + "px";
                 }}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-                placeholder="Ask Mithra anything… (build resume, find jobs, prep interview)"
+                placeholder="What story shall we tell today?"
                 style={{ ...S.input, minHeight: "20px", maxHeight: "96px" }}
               />
               <div style={{ display: "flex", gap: "4px", paddingBottom: "1px", flexShrink: 0 }}>

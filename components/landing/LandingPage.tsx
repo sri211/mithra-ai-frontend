@@ -7,37 +7,37 @@ import { FileText, Search, Zap, Users, Brain, BarChart3, Target, MessageSquare, 
 const AGENTS = [
   {
     num: "01", icon: FileText, label: "Resume Builder",
-    desc: "Build a world-class, ATS-ready resume through conversation, LinkedIn import, or guided forms.",
+    desc: "Every line you write is a promise to your future self. Build a resume that speaks before you enter the room.",
     color: "#8b5cf6", href: "/resume-builder",
   },
   {
     num: "02", icon: Target, label: "Resume Adaptor",
-    desc: "Paste any job description and AI rewrites your resume for maximum ATS score in seconds.",
+    desc: "A single role, seen through a thousand lenses — yours, theirs, and the one that matters most.",
     color: "#06b6d4", href: "/resume-adaptor",
   },
   {
     num: "03", icon: Search, label: "Job Finder",
-    desc: "Search LinkedIn, Naukri, Indeed, Glassdoor and 50+ portals at once. AI ranks by your fit.",
+    desc: "Somewhere in the noise of a million listings, one was written with you in mind.",
     color: "#10b981", href: "/job-finder",
   },
   {
     num: "04", icon: Zap, label: "Auto-Apply",
-    desc: "AI opens any job application, fills every field, uploads your documents, and submits — live.",
+    desc: "While you sleep, Mithra knocks on doors. Every application, every portal, handled for you.",
     color: "#f59e0b", href: "/job-application",
   },
   {
     num: "05", icon: Users, label: "Network Intel",
-    desc: "Find hiring managers, recruiters, and alumni at every target company with AI outreach drafts.",
+    desc: "Your next colleague exists. You just haven't met yet. Mithra finds the bridge.",
     color: "#ec4899", href: "/network",
   },
   {
     num: "06", icon: Brain, label: "Interview Prep",
-    desc: "Company-specific mock interviews with real-time STAR-method scoring and coaching.",
+    desc: "The question is asked once. The answer is prepared a thousand times. Be that person.",
     color: "#f97316", href: "/interview-prep",
   },
   {
     num: "07", icon: BarChart3, label: "App Tracker",
-    desc: "Kanban board tracking every application from bookmarked to offer. Never miss a follow-up.",
+    desc: "Every application is a seed. This is your garden. Watch each one grow toward the offer.",
     color: "#6366f1", href: "/tracker",
   },
 ];
@@ -110,7 +110,7 @@ export default function LandingPage() {
               </a>
             ))}
           </div>
-          <Link href="/resume-builder" style={{
+          <Link href="/register" style={{
             background: "linear-gradient(135deg,#7c3aed,#6d28d9)",
             color: "white", textDecoration: "none",
             padding: "10px 20px", borderRadius: "10px",
@@ -118,7 +118,7 @@ export default function LandingPage() {
             display: "flex", alignItems: "center", gap: "6px",
             boxShadow: "0 4px 16px rgba(124,58,237,0.4)",
           }}>
-            Get Started Free <ArrowRight style={{ width: "15px", height: "15px" }} />
+            Begin your story <ArrowRight style={{ width: "15px", height: "15px" }} />
           </Link>
         </div>
       </nav>
@@ -139,20 +139,19 @@ export default function LandingPage() {
           fontSize: "clamp(40px, 7vw, 72px)", fontWeight: 900,
           lineHeight: 1.05, marginBottom: "24px", letterSpacing: "-1.5px",
         }}>
-          <span style={{ color: "#f8fafc" }}>Land Your Dream Job</span>
+          <span style={{ color: "#f8fafc" }}>Your career isn&apos;t a document.</span>
           <br />
           <span style={{ background: "linear-gradient(135deg,#a78bfa 0%,#f59e0b 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            10× Faster with AI
+            It&apos;s a story waiting to find the right reader.
           </span>
         </h1>
 
         <p style={{ fontSize: "18px", color: "#94a3b8", lineHeight: 1.7, marginBottom: "40px", maxWidth: "560px", margin: "0 auto 40px" }}>
-          Mithra is your personal AI career companion — builds resumes, adapts them to job descriptions,
-          searches 50+ job portals, auto-applies, and coaches you through interviews.
+          Mithra shapes your narrative — from the first word of your resume to the handshake that closes the offer.
         </p>
 
         <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
-          <Link href="/resume-builder" style={{
+          <Link href="/register" style={{
             background: "linear-gradient(135deg,#f59e0b,#d97706)",
             color: "#0a0614", textDecoration: "none",
             padding: "14px 32px", borderRadius: "12px",
@@ -160,7 +159,7 @@ export default function LandingPage() {
             display: "flex", alignItems: "center", gap: "8px",
             boxShadow: "0 8px 24px rgba(245,158,11,0.35)",
           }}>
-            Start Building Free <ArrowRight style={{ width: "18px", height: "18px" }} />
+            Begin your story <ArrowRight style={{ width: "18px", height: "18px" }} />
           </Link>
           <a href="#features" style={{
             background: "transparent", color: "#a78bfa",
@@ -197,10 +196,10 @@ export default function LandingPage() {
             7 Specialist AI Agents
           </p>
           <h2 style={{ fontSize: "clamp(28px,4vw,42px)", fontWeight: 900, color: "#f8fafc", marginBottom: "14px" }}>
-            Every Tool You Need, Powered by AI
+            Seven chapters. One story.
           </h2>
           <p style={{ fontSize: "16px", color: "#64748b", maxWidth: "480px", margin: "0 auto" }}>
-            Seven specialized agents, each elite in their domain — all commanded by Mithra through a single conversation.
+            Seven specialist AI agents — each mastering a different act of your career journey, all commanded through a single conversation with Mithra.
           </p>
         </div>
 
@@ -358,13 +357,13 @@ export default function LandingPage() {
         }}>
           <div style={{ fontSize: "40px", marginBottom: "16px" }}>🚀</div>
           <h2 style={{ fontSize: "clamp(24px,4vw,36px)", fontWeight: 900, color: "#f8fafc", marginBottom: "12px" }}>
-            Ready to Land Your Dream Job?
+            Every great career began with a single step forward.
           </h2>
           <p style={{ fontSize: "16px", color: "#64748b", marginBottom: "32px" }}>
-            Join thousands of job seekers using Mithra to get hired 3× faster.
+            Join thousands of job seekers whose stories Mithra helped write.
           </p>
           <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/resume-builder" style={{
+            <Link href="/register" style={{
               background: "linear-gradient(135deg,#f59e0b,#d97706)",
               color: "#0a0614", textDecoration: "none",
               padding: "14px 32px", borderRadius: "12px",
@@ -372,7 +371,7 @@ export default function LandingPage() {
               display: "flex", alignItems: "center", gap: "8px",
               boxShadow: "0 8px 24px rgba(245,158,11,0.3)",
             }}>
-              Start Free Today <ArrowRight style={{ width: "18px", height: "18px" }} />
+              Begin your story <ArrowRight style={{ width: "18px", height: "18px" }} />
             </Link>
           </div>
           <p style={{ fontSize: "12px", color: "#475569", marginTop: "16px" }}>No credit card required</p>

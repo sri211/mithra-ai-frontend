@@ -7,7 +7,7 @@ import { nanoid } from "../nanoid";
 const WELCOME_MESSAGE: ChatMessage = {
   id: "welcome",
   role: "assistant",
-  content: "Hi! I'm **Mithra**, your AI career companion. I can help you build your resume, find jobs, prep for interviews, and more. What would you like to do today?",
+  content: "Hi! I'm **Mithra**, your AI career companion. What story shall we tell today?",
   timestamp: new Date(0),
 };
 
@@ -51,7 +51,7 @@ export const useChatStore = create<ChatStore>()(
             {
               id: "welcome",
               role: "assistant",
-              content: "Hi! I'm **Mithra**, your AI career companion. How can I help you today?",
+              content: "Hi! I'm **Mithra**, your AI career companion. What story shall we tell today?",
               timestamp: new Date(0),
             },
           ],

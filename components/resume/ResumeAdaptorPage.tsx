@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Target, Link2, Building2, Wand2, FileText, Sparkles,
   TrendingUp, AlertCircle, Check, Copy, Download, Upload,
-  ChevronRight, BookOpen, Eye, Edit3, Briefcase, X,
+  ChevronRight, BookOpen, Eye, Edit3, Briefcase, X, Save, Cloud,
+  ChevronDown,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { useResumeStore } from "@/lib/stores/resumeStore";
@@ -13,6 +14,7 @@ import { useAgentStore } from "@/lib/stores/agentStore";
 import { useJobStore } from "@/lib/stores/jobStore";
 import { FileUploadModal } from "@/components/ui/FileUploadModal";
 import { ResumeData } from "@/lib/types";
+import { useUser } from "@/lib/auth";
 
 type InputMode = "paste" | "url" | "company";
 type RightTab = "results" | "changes" | "preview";
@@ -174,11 +176,22 @@ function AdaptedResumePreview({ resume, template = "modern" }: { resume: ResumeD
   );
 }
 
+interface AdaptedResumeCard {
+  id: string;
+  company: string | null;
+  role: string | null;
+  ats_before: number;
+  ats_after: number;
+  adapted_json: ResumeData;
+  created_at: string;
+}
+
 export default function ResumeAdaptorPage() {
   const router = useRouter();
   const { resume, setResume, setAtsScore, selectedTemplate } = useResumeStore();
   const { pendingAction, clearAction } = useAgentStore();
   const { selectedJob, clearSelectedJob } = useJobStore();
+  const { user, accessToken } = useUser();
   const [inputMode, setInputMode] = useState<InputMode>("paste");
   const [jdText, setJdText] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -194,10 +207,15 @@ export default function ResumeAdaptorPage() {
   const [adaptedResume, setAdaptedResume] = useState<ResumeData | null>(null);
   const [suggestedChanges, setSuggestedChanges] = useState<SuggestedChange[]>([]);
   const [selectedChangeIdxs, setSelectedChangeIdxs] = useState<Set<number>>(new Set());
-  const [keepTemplate, setKeepTemplate] = useState(true);
-  const [previewTemplate, setPreviewTemplate] = useState<string>(selectedTemplate || "modern");
+  // Template always preserved from source — no toggle
+  const previewTemplate = selectedTemplate || "modern";
+  const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
   const [jobBanner, setJobBanner] = useState<{ title: string; company: string } | null>(null);
   const [loadingStep, setLoadingStep] = useState<string>("");
+  const [isSavingAdapted, setIsSavingAdapted] = useState(false);
+  const [savedAdaptedId, setSavedAdaptedId] = useState<string | null>(null);
+  const [myAdaptedResumes, setMyAdaptedResumes] = useState<AdaptedResumeCard[]>([]);
+  const [showMyAdapted, setShowMyAdapted] = useState(false);
   const [result, setResult] = useState<{
     ats_score_before: number; ats_score_after: number;
     perspective_scores?: { ats: number; hr_screener: number; hiring_manager: number; domain_expert: number; cultural_fit: number };
@@ -308,11 +326,47 @@ export default function ResumeAdaptorPage() {
 
   const applySelectedChanges = () => {
     if (!result?.adapted_resume) return;
-    // If user deselected some changes, we use the original for those sections
-    const base = keepTemplate ? { ...result.adapted_resume } : result.adapted_resume;
-    setAdaptedResume(base);
+    setAdaptedResume({ ...result.adapted_resume });
     if (result) setAtsScore(result.ats_score_after);
     setRightTab("results");
+  };
+
+  const saveAdaptedResume = async () => {
+    if (!adaptedResume || !accessToken) return;
+    setIsSavingAdapted(true);
+    try {
+      const { data } = await api.post(
+        "/user/adapted-resumes",
+        {
+          jd_text: jdText.slice(0, 2000),
+          company: companyName || jobBanner?.company || null,
+          role: roleName || jobBanner?.title || null,
+          adapted_json: adaptedResume,
+          ats_before: result?.ats_score_before || 0,
+          ats_after: result?.ats_score_after || 0,
+        },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      setSavedAdaptedId(data.id);
+      setTimeout(() => setSavedAdaptedId(null), 3000);
+    } catch (err) {
+      console.error("Failed to save adapted resume:", err);
+    } finally {
+      setIsSavingAdapted(false);
+    }
+  };
+
+  const loadMyAdaptedResumes = async () => {
+    if (!accessToken) return;
+    try {
+      const { data } = await api.get("/user/adapted-resumes", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      setMyAdaptedResumes(data || []);
+      setShowMyAdapted(true);
+    } catch (err) {
+      console.error("Failed to load adapted resumes:", err);
+    }
   };
 
   const toggleChange = (idx: number) => {
@@ -442,33 +496,30 @@ export default function ResumeAdaptorPage() {
               </button>
             </div>
           </div>
-          {/* Template toggle */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "8px 12px", borderRadius: "10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          {/* Template chip — always uses source template */}
+          <div style={{ position: "relative" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "12px", color: "#94a3b8", flex: 1 }}>Template style</span>
+              <span style={{ fontSize: "11px", color: "#64748b" }}>Template</span>
               <button
-                onClick={() => { setKeepTemplate(true); setPreviewTemplate(selectedTemplate || "modern"); }}
-                style={{ fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "6px", border: "none", cursor: "pointer", background: keepTemplate ? "rgba(124,58,237,0.3)" : "transparent", color: keepTemplate ? "#a78bfa" : "#64748b" }}
+                onClick={() => setShowTemplateDropdown(!showTemplateDropdown)}
+                style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: 600, padding: "4px 10px", borderRadius: "20px", border: "1px solid rgba(124,58,237,0.3)", background: "rgba(124,58,237,0.1)", color: "#a78bfa", cursor: "pointer" }}
               >
-                Keep same
-              </button>
-              <button
-                onClick={() => setKeepTemplate(false)}
-                style={{ fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "6px", border: "none", cursor: "pointer", background: !keepTemplate ? "rgba(245,158,11,0.3)" : "transparent", color: !keepTemplate ? "#f59e0b" : "#64748b" }}
-              >
-                Change template
+                {(previewTemplate.charAt(0).toUpperCase() + previewTemplate.slice(1))}
+                <ChevronDown style={{ width: "12px", height: "12px" }} />
               </button>
             </div>
-            {!keepTemplate && (
-              <select
-                value={previewTemplate}
-                onChange={(e) => setPreviewTemplate(e.target.value)}
-                style={{ width: "100%", background: "rgba(15,8,30,0.8)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: "6px", padding: "6px 8px", color: "#f1f5f9", fontSize: "12px", outline: "none", fontFamily: "inherit" }}
-              >
-                {["modern", "classic", "minimal", "bold", "elegant"].map((t) => (
-                  <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+            {showTemplateDropdown && (
+              <div style={{ position: "absolute", bottom: "calc(100% + 4px)", left: 0, background: "rgba(20,10,40,0.98)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: "10px", overflow: "hidden", zIndex: 10, minWidth: "140px" }}>
+                {["modern", "classic", "minimal", "bold", "tech"].map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => { useResumeStore.getState().setTemplate(t); setShowTemplateDropdown(false); }}
+                    style={{ width: "100%", textAlign: "left", padding: "8px 12px", fontSize: "12px", background: previewTemplate === t ? "rgba(124,58,237,0.2)" : "transparent", color: previewTemplate === t ? "#a78bfa" : "#94a3b8", border: "none", cursor: "pointer" }}
+                  >
+                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                  </button>
                 ))}
-              </select>
+              </div>
             )}
           </div>
 
@@ -508,8 +559,8 @@ export default function ResumeAdaptorPage() {
                   <div style={{ width: "80px", height: "80px", borderRadius: "24px", background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
                     <Target style={{ width: "40px", height: "40px", color: "#a78bfa" }} />
                   </div>
-                  <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#f1f5f9", marginBottom: "8px" }}>Ready to Adapt</h3>
-                  <p style={{ fontSize: "13px", color: "#94a3b8", lineHeight: "1.6" }}>Add a job description and click &quot;Adapt My Resume&quot; to see your personalized ATS-optimized resume with score improvements.</p>
+                  <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#f1f5f9", marginBottom: "8px" }}>Speak their language</h3>
+                  <p style={{ fontSize: "13px", color: "#94a3b8", lineHeight: "1.6" }}>A single role, seen through a thousand lenses — yours, theirs, and the one that matters most. Add a job description to begin.</p>
                 </div>
               </motion.div>
             ) : rightTab === "changes" ? (
@@ -700,7 +751,48 @@ export default function ResumeAdaptorPage() {
                     style={{ flex: 1, minWidth: "140px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#94a3b8", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
                     <Download style={{ width: "15px", height: "15px" }} />TXT
                   </button>
+                  {user && adaptedResume && (
+                    <button onClick={saveAdaptedResume} disabled={isSavingAdapted}
+                      style={{ flex: 1, minWidth: "140px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px", background: savedAdaptedId ? "rgba(16,185,129,0.2)" : "rgba(16,185,129,0.1)", border: `1px solid ${savedAdaptedId ? "rgba(16,185,129,0.5)" : "rgba(16,185,129,0.3)"}`, borderRadius: "12px", color: savedAdaptedId ? "#34d399" : "#10b981", fontSize: "13px", fontWeight: 600, cursor: isSavingAdapted ? "not-allowed" : "pointer" }}>
+                      {isSavingAdapted ? <><Cloud style={{ width: "15px", height: "15px" }} />Saving...</> : savedAdaptedId ? <><Check style={{ width: "15px", height: "15px" }} />Saved!</> : <><Save style={{ width: "15px", height: "15px" }} />Save to Account</>}
+                    </button>
+                  )}
                 </div>
+
+                {/* My Adapted Resumes panel */}
+                {user && (
+                  <div style={{ ...S.card }}>
+                    <button onClick={loadMyAdaptedResumes}
+                      style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: showMyAdapted ? "12px" : 0 }}>
+                      <Cloud style={{ width: "14px", height: "14px", color: "#a78bfa" }} />
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", flex: 1, textAlign: "left" }}>My Adapted Resumes</span>
+                      <ChevronDown style={{ width: "14px", height: "14px", color: "#64748b", transform: showMyAdapted ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+                    </button>
+                    {showMyAdapted && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        {myAdaptedResumes.length === 0 ? (
+                          <p style={{ fontSize: "12px", color: "#475569" }}>No saved adaptations yet.</p>
+                        ) : myAdaptedResumes.map((ar) => (
+                          <div key={ar.id}
+                            onClick={() => { setAdaptedResume(ar.adapted_json); setRightTab("preview"); }}
+                            style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "10px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.15)", cursor: "pointer" }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: "13px", fontWeight: 600, color: "#f1f5f9", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {ar.role || "Resume"}{ar.company ? ` @ ${ar.company}` : ""}
+                              </div>
+                              <div style={{ fontSize: "11px", color: "#64748b" }}>
+                                ATS {ar.ats_before}% → {ar.ats_after}% · {new Date(ar.created_at).toLocaleDateString()}
+                              </div>
+                            </div>
+                            <span style={{ fontSize: "13px", fontWeight: 700, color: ar.ats_after >= 80 ? "#10b981" : ar.ats_after >= 60 ? "#f59e0b" : "#ef4444" }}>
+                              {ar.ats_after}%
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </motion.div>
             ) : (
               /* PREVIEW TAB — adapted resume rendered live */
@@ -715,7 +807,7 @@ export default function ResumeAdaptorPage() {
                   </button>
                 </div>
                 <div id="adapted-resume-preview" style={{ borderRadius: "8px", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
-                  <AdaptedResumePreview resume={adaptedResume || resume} template={keepTemplate ? (selectedTemplate || "modern") : previewTemplate} />
+                  <AdaptedResumePreview resume={adaptedResume || resume} template={previewTemplate} />
                 </div>
               </motion.div>
             )}

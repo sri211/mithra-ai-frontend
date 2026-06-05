@@ -1,7 +1,8 @@
 "use client";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { ResumeData } from "@/lib/types";
+import { api } from "@/lib/api/client";
 
 const defaultResume: ResumeData = {
   personal: { name: "", email: "", phone: "", location: "", linkedin: "", github: "", website: "", title: "" },
@@ -19,21 +20,29 @@ interface ResumeStore {
   selectedTemplate: string;
   isBuilding: boolean;
   atsScore: number;
+  isSaving: boolean;
+  savedToastVisible: boolean;
   setResume: (r: ResumeData) => void;
   updateSection: (section: keyof ResumeData, value: unknown) => void;
   setTemplate: (t: string) => void;
   setBuilding: (b: boolean) => void;
   setAtsScore: (s: number) => void;
   reset: () => void;
+  saveToCloud: (accessToken: string, name?: string) => Promise<string | null>;
+  loadFromCloud: (accessToken: string) => Promise<void>;
+  dismissSavedToast: () => void;
 }
 
 export const useResumeStore = create<ResumeStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       resume: defaultResume,
       selectedTemplate: "modern",
       isBuilding: false,
       atsScore: 0,
+      isSaving: false,
+      savedToastVisible: false,
+
       setResume: (resume) => set({ resume }),
       updateSection: (section, value) =>
         set((s) => ({ resume: { ...s.resume, [section]: value } })),
@@ -41,9 +50,57 @@ export const useResumeStore = create<ResumeStore>()(
       setBuilding: (isBuilding) => set({ isBuilding }),
       setAtsScore: (atsScore) => set({ atsScore }),
       reset: () => set({ resume: defaultResume, atsScore: 0 }),
+      dismissSavedToast: () => set({ savedToastVisible: false }),
+
+      saveToCloud: async (accessToken: string, name?: string) => {
+        if (!accessToken) return null;
+        const { resume, selectedTemplate, atsScore } = get();
+        const resumeName = name || resume.personal.name || "My Resume";
+        set({ isSaving: true });
+        try {
+          const { data } = await api.post(
+            "/user/resumes",
+            {
+              name: resumeName,
+              resume_json: resume,
+              template: selectedTemplate,
+              ats_score: atsScore,
+            },
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+          );
+          set({ savedToastVisible: true });
+          setTimeout(() => set({ savedToastVisible: false }), 3000);
+          return data.id;
+        } catch (err) {
+          console.error("Failed to save resume to cloud:", err);
+          return null;
+        } finally {
+          set({ isSaving: false });
+        }
+      },
+
+      loadFromCloud: async (accessToken: string) => {
+        if (!accessToken) return;
+        try {
+          const { data } = await api.get("/user/resumes", {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          if (data && data.length > 0) {
+            const latest = data[0];
+            set({
+              resume: latest.resume_json,
+              selectedTemplate: latest.template || "modern",
+              atsScore: latest.ats_score || 0,
+            });
+          }
+        } catch (err) {
+          console.error("Failed to load resume from cloud:", err);
+        }
+      },
     }),
     {
       name: "mithra-resume",
+      storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         resume: state.resume,
         selectedTemplate: state.selectedTemplate,
