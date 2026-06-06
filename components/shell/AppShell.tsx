@@ -13,13 +13,13 @@ import MithraChat from "@/components/chatbot/MithraChat";
 import { useUser, logout } from "@/lib/auth";
 
 const NAV_ITEMS = [
-  { href: "/resume-builder", icon: FileText, label: "Craft your story", color: "#8b5cf6", description: "Every line you write is a promise to your future self." },
-  { href: "/resume-adaptor", icon: Target, label: "Speak their language", color: "#06b6d4", description: "A single role, seen through a thousand lenses." },
-  { href: "/job-finder", icon: Search, label: "Find where you belong", color: "#10b981", description: "Somewhere in the noise, one job was written for you." },
-  { href: "/job-application", icon: Zap, label: "Let doors open for you", color: "#f59e0b", description: "While you sleep, Mithra knocks on doors." },
-  { href: "/network", icon: Users, label: "Meet your next chapter", color: "#ec4899", description: "Your next colleague exists. You just haven't met yet." },
-  { href: "/interview-prep", icon: Brain, label: "Rehearse your moment", color: "#f97316", description: "The question is asked once. The answer is prepared a thousand times." },
-  { href: "/tracker", icon: BarChart3, label: "Map your journey", color: "#6366f1", description: "Every application is a seed. This is your garden." },
+  { href: "/resume-builder", icon: FileText, label: "Resume Builder", color: "#8b5cf6", description: "Every line you write is a promise to your future self." },
+  { href: "/resume-adaptor", icon: Target, label: "Resume Adaptor", color: "#06b6d4", description: "A single role, seen through a thousand lenses." },
+  { href: "/job-finder", icon: Search, label: "Job Finder", color: "#10b981", description: "Somewhere in the noise, one job was written for you." },
+  { href: "/job-application", icon: Zap, label: "Auto Apply", color: "#f59e0b", description: "While you sleep, Mithra knocks on doors." },
+  { href: "/network", icon: Users, label: "Network", color: "#ec4899", description: "Your next colleague exists. You just haven't met yet." },
+  { href: "/interview-prep", icon: Brain, label: "Interview Prep", color: "#f97316", description: "The question is asked once. The answer is prepared a thousand times." },
+  { href: "/tracker", icon: BarChart3, label: "Tracker", color: "#6366f1", description: "Every application is a seed. This is your garden." },
 ];
 
 const PLAN_COLORS: Record<string, { bg: string; color: string; label: string }> = {

@@ -19,7 +19,7 @@ const PLANS = [
   {
     plan: "pro" as const,
     name: "Pro",
-    price: "₹499/month",
+    price: "₹198/month",
     accent: "#7c3aed",
     isPopular: true,
     features: [
@@ -34,7 +34,7 @@ const PLANS = [
   {
     plan: "elite" as const,
     name: "Elite",
-    price: "₹999/month",
+    price: "₹498/month",
     accent: "#f59e0b",
     features: [
       "Everything in Pro",
