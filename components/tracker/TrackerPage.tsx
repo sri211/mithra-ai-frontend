@@ -3,6 +3,9 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X, MapPin, DollarSign, Calendar, Edit3, Trash2, RefreshCw } from "lucide-react";
 import { api } from "@/lib/api/client";
+import { useUser } from "@/lib/auth";
+import { getLimits } from "@/lib/planLimits";
+import UpgradeGate from "@/components/ui/UpgradeGate";
 
 // ─── Types & Constants ──────────────────────────────────────────────────────
 const STAGES = [
@@ -133,8 +136,24 @@ function KanbanCard({ app, onMove, onDelete }: {
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 export default function TrackerPage() {
+  const { user } = useUser();
+  const limits = getLimits(user?.plan ?? "free");
   const [apps, setApps] = useState<AppCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  if (!limits.trackerAccess) {
+    return (
+      <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 20px", background: "#0a0614" }}>
+        <div style={{ width: "100%", maxWidth: "420px" }}>
+          <UpgradeGate
+            requiredPlan="pro"
+            featureName="Application Tracker"
+            description="Track every application from bookmark to offer letter. Visualise your progress with a full Kanban board — available on Pro plan."
+          />
+        </div>
+      </div>
+    );
+  }
   const [showAdd, setShowAdd] = useState(false);
   const [newApp, setNewApp] = useState({ company: "", role: "", location: "", salary: "", portal: "", nextStep: "" });
 

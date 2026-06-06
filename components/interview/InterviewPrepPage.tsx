@@ -6,6 +6,9 @@ import {
   MessageSquare, Mic, Lightbulb, AlertCircle,
 } from "lucide-react";
 import { api, streamSSE } from "@/lib/api/client";
+import { useUser } from "@/lib/auth";
+import { getLimits } from "@/lib/planLimits";
+import UpgradeGate from "@/components/ui/UpgradeGate";
 
 type Phase = "setup" | "loading" | "practice" | "feedback";
 
@@ -109,7 +112,23 @@ function ScoreBar({ label: lbl, score }: { label: string; score: number }) {
 }
 
 export default function InterviewPrepPage() {
+  const { user } = useUser();
+  const limits = getLimits(user?.plan ?? "free");
   const [phase, setPhase] = useState<Phase>("setup");
+
+  if (!limits.interviewPrepAccess) {
+    return (
+      <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 20px", background: "#0a0614" }}>
+        <div style={{ width: "100%", maxWidth: "420px" }}>
+          <UpgradeGate
+            requiredPlan="pro"
+            featureName="Interview Prep"
+            description="AI mock interviews with STAR evaluation, live coaching, and company-specific question banks — unlock with Pro plan."
+          />
+        </div>
+      </div>
+    );
+  }
   const [role, setRole] = useState("");
   const [company, setCompany] = useState("");
   const [selectedType, setSelectedType] = useState("behavioral");

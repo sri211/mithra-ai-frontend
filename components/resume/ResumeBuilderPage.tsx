@@ -6,6 +6,8 @@ import { FileUploadModal } from "@/components/ui/FileUploadModal";
 import ResumeViewerModal from "@/components/ui/ResumeViewerModal";
 import { api, streamSSE, API_BASE } from "@/lib/api/client";
 import { ResumeData } from "@/lib/types";
+import { useUser } from "@/lib/auth";
+import { getLimits } from "@/lib/planLimits";
 
 // ── Format assistant messages with basic markdown ────────────────────────────
 function FormatMsg({ text }: { text: string }) {
@@ -581,6 +583,8 @@ function TabPill({ active, onClick, children }: { active: boolean; onClick: () =
 export default function ResumeBuilderPage() {
   const { resume, selectedTemplate, atsScore, setResume, setTemplate, updateSection, setAtsScore } = useResumeStore();
   const { pendingAction, clearAction } = useAgentStore();
+  const { user } = useUser();
+  const limits = getLimits(user?.plan ?? "free");
   const [mode, setMode] = useState<BuildMode>("linkedin");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([
@@ -1309,17 +1313,32 @@ The more text you paste, the more complete your resume will be.`}
           {/* Template picker */}
           {showTemplates && (
             <div style={{ display: "flex", gap: "12px", padding: "12px 20px", borderBottom: `1px solid ${C.border}`, overflowX: "auto", background: "rgba(10,6,20,0.5)", flexShrink: 0 }}>
-              {TEMPLATES.map((t) => (
-                <button key={t.id} onClick={() => { setTemplate(t.id); setShowTemplates(false); }}
-                  style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", background: "none", border: "none", cursor: "pointer" }}>
-                  <div style={{ width: "80px", height: "96px", borderRadius: "10px", border: `2px solid ${selectedTemplate === t.id ? t.accent : "rgba(255,255,255,0.08)"}`, background: selectedTemplate === t.id ? `${t.accent}12` : "rgba(255,255,255,0.04)", display: "flex", flexDirection: "column", padding: "8px", gap: "4px", transform: selectedTemplate === t.id ? "scale(1.06)" : "scale(1)", transition: "all 0.2s" }}>
-                    <div style={{ height: "8px", borderRadius: "3px", background: t.accent }} />
-                    <div style={{ height: "4px", borderRadius: "2px", background: `${t.accent}60`, width: "70%" }} />
-                    {[...Array(4)].map((_, i) => <div key={i} style={{ height: "3px", borderRadius: "2px", background: "rgba(255,255,255,0.12)", width: `${60 + i * 8}%` }} />)}
-                  </div>
-                  <span style={{ fontSize: "11px", fontWeight: 600, color: selectedTemplate === t.id ? t.accent : C.muted }}>{t.name}</span>
-                </button>
-              ))}
+              {TEMPLATES.map((t) => {
+                const locked = !limits.templates.includes(t.id);
+                return (
+                  <button key={t.id}
+                    onClick={() => {
+                      if (locked) { window.location.href = "/pricing"; return; }
+                      setTemplate(t.id); setShowTemplates(false);
+                    }}
+                    title={locked ? `${t.name} requires Pro plan` : t.name}
+                    style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", background: "none", border: "none", cursor: locked ? "pointer" : "pointer", opacity: locked ? 0.6 : 1, position: "relative" }}>
+                    <div style={{ width: "80px", height: "96px", borderRadius: "10px", border: `2px solid ${selectedTemplate === t.id ? t.accent : locked ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.08)"}`, background: selectedTemplate === t.id ? `${t.accent}12` : "rgba(255,255,255,0.04)", display: "flex", flexDirection: "column", padding: "8px", gap: "4px", transform: selectedTemplate === t.id ? "scale(1.06)" : "scale(1)", transition: "all 0.2s", overflow: "hidden" }}>
+                      <div style={{ height: "8px", borderRadius: "3px", background: t.accent }} />
+                      <div style={{ height: "4px", borderRadius: "2px", background: `${t.accent}60`, width: "70%" }} />
+                      {[...Array(4)].map((_, i) => <div key={i} style={{ height: "3px", borderRadius: "2px", background: "rgba(255,255,255,0.12)", width: `${60 + i * 8}%` }} />)}
+                      {locked && (
+                        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "8px" }}>
+                          <span style={{ fontSize: "18px" }}>🔒</span>
+                        </div>
+                      )}
+                    </div>
+                    <span style={{ fontSize: "11px", fontWeight: 600, color: selectedTemplate === t.id ? t.accent : locked ? "#334155" : C.muted }}>
+                      {t.name}{locked && <span style={{ fontSize: "9px", color: "#a78bfa", marginLeft: "3px" }}>Pro</span>}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           )}
 

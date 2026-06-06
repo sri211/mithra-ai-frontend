@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUser } from "@/lib/auth";
+import { getLimits } from "@/lib/planLimits";
 import {
   Users, Search, Building2, Copy, Sparkles, Check,
   TrendingUp, Clock, Star, UserCheck, ExternalLink,
@@ -136,6 +138,8 @@ function ConnectionCard({ conn, copiedId, onCopy }: { conn: Connection; copiedId
 }
 
 export default function NetworkPage() {
+  const { user } = useUser();
+  const limits = getLimits(user?.plan ?? "free");
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
   const [location, setLocation] = useState("India");
@@ -277,27 +281,46 @@ export default function NetworkPage() {
         )}
 
         {/* Results */}
-        {!isSearching && connections.length > 0 && (
-          <div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-              <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#f1f5f9" }}>
-                {connections.filter(c => !c.is_search_card).length} connections found at{" "}
-                <span style={{ color: "#a78bfa" }}>{company}</span>
-                <span style={{ color: "#64748b", fontWeight: 400 }}> · {role}</span>
-              </h3>
-              <button onClick={() => { setConnections([]); setHasSearched(false); }} style={{ fontSize: "12px", color: "#64748b", background: "none", border: "none", cursor: "pointer", padding: "4px 8px" }}>
-                Clear
-              </button>
+        {!isSearching && connections.length > 0 && (() => {
+          const maxVisible = limits.networkContacts === -1 ? connections.length : limits.networkContacts;
+          const visible = connections.slice(0, maxVisible);
+          const hidden = connections.length - visible.length;
+          return (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+                <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#f1f5f9" }}>
+                  {connections.filter(c => !c.is_search_card).length} connections at{" "}
+                  <span style={{ color: "#a78bfa" }}>{company}</span>
+                  <span style={{ color: "#64748b", fontWeight: 400 }}> · {role}</span>
+                  {limits.networkContacts !== -1 && (
+                    <span style={{ color: "#64748b", fontWeight: 400, fontSize: "12px" }}> (showing {Math.min(visible.length, maxVisible)} of {connections.length})</span>
+                  )}
+                </h3>
+                <button onClick={() => { setConnections([]); setHasSearched(false); }} style={{ fontSize: "12px", color: "#64748b", background: "none", border: "none", cursor: "pointer", padding: "4px 8px" }}>
+                  Clear
+                </button>
+              </div>
+              <div className="nw-connections-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
+                {visible.map((conn, i) => (
+                  <motion.div key={conn.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.06 }}>
+                    <ConnectionCard conn={conn} copiedId={copiedId} onCopy={copyDraft} />
+                  </motion.div>
+                ))}
+              </div>
+              {hidden > 0 && (
+                <div style={{ marginTop: "16px", padding: "16px 20px", borderRadius: "14px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.2)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" as const }}>
+                  <div>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", marginBottom: "3px" }}>+{hidden} more connections hidden</div>
+                    <div style={{ fontSize: "12px", color: "#64748b" }}>Upgrade to Pro to see all {connections.length} contacts with verified emails.</div>
+                  </div>
+                  <a href="/pricing" style={{ display: "flex", alignItems: "center", gap: "6px", padding: "9px 18px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", borderRadius: "10px", color: "white", fontSize: "13px", fontWeight: 700, textDecoration: "none", flexShrink: 0 }}>
+                    👑 Upgrade to Pro
+                  </a>
+                </div>
+              )}
             </div>
-            <div className="nw-connections-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
-              {connections.map((conn, i) => (
-                <motion.div key={conn.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.06 }}>
-                  <ConnectionCard conn={conn} copiedId={copiedId} onCopy={copyDraft} />
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* No results */}
         {!isSearching && hasSearched && connections.length === 0 && (

@@ -6,6 +6,9 @@ import {
   Zap, Globe, Upload, FileText, Check, Clock,
   ChevronRight, Play, Bell, AlertCircle, ExternalLink,
 } from "lucide-react";
+import { useUser } from "@/lib/auth";
+import { getLimits } from "@/lib/planLimits";
+import UpgradeGate from "@/components/ui/UpgradeGate";
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
   applied:   { label: "Applied",    color: "#6366f1", bg: "rgba(99,102,241,0.12)" },
@@ -57,7 +60,33 @@ const inputStyle: React.CSSProperties = {
 };
 
 export default function JobApplicationPage() {
+  const { user } = useUser();
+  const limits = getLimits(user?.plan ?? "free");
   const [jobUrl, setJobUrl] = useState("");
+
+  if (!limits.autoApplyAccess) {
+    return (
+      <div style={{ height: "100%", overflowY: "auto", background: "#0a0614", padding: "24px" }}>
+        {/* Beta banner still visible */}
+        <div style={{ maxWidth: "560px", margin: "0 auto 24px", display: "flex", alignItems: "center", gap: "12px", padding: "14px 18px", borderRadius: "14px", background: "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(124,58,237,0.08))", border: "1px solid rgba(245,158,11,0.25)" }}>
+          <span style={{ fontSize: "18px" }}>⚗️</span>
+          <div>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", marginBottom: "2px" }}>
+              Auto-Apply <span style={{ fontSize: "10px", padding: "1px 7px", borderRadius: "20px", background: "rgba(245,158,11,0.2)", color: "#f59e0b", marginLeft: "4px" }}>BETA</span>
+            </div>
+            <p style={{ fontSize: "12px", color: "#64748b" }}>Launching fully with Elite plan. Currently in development.</p>
+          </div>
+        </div>
+        <div style={{ maxWidth: "420px", margin: "0 auto" }}>
+          <UpgradeGate
+            requiredPlan="elite"
+            featureName="Auto-Apply"
+            description="AI opens, analyzes, fills and submits job applications automatically across all major portals. Available on the Elite plan when fully launched."
+          />
+        </div>
+      </div>
+    );
+  }
   const [isApplying, setIsApplying] = useState(false);
   const [steps, setSteps] = useState<ApplyStep[]>([]);
   const [currentProgress, setCurrentProgress] = useState(0);
