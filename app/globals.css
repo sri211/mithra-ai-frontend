@@ -320,10 +320,9 @@ body {
 
   /* ── Interview Prep ── */
   .ip-setup-grid         { grid-template-columns: 1fr !important; }
-  .ip-question-types     { flex-wrap: wrap !important; }
-  .ip-difficulty-row     { flex-wrap: wrap !important; }
+  .ip-practice-grid      { grid-template-columns: 1fr !important; }
   .ip-feedback-grid      { grid-template-columns: 1fr !important; }
-  .ip-page               { padding: 16px !important; }
+  .ip-page               { padding: 16px !important; gap: 16px !important; }
 
   /* ── Job Application ── */
   .ja-content-grid       { grid-template-columns: 1fr !important; }

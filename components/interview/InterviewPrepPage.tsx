@@ -248,7 +248,7 @@ export default function InterviewPrepPage() {
 
   return (
     <div style={{ height: "100%", overflowY: "auto", background: "#0a0614" }}>
-      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "24px", display: "flex", flexDirection: "column", gap: "24px" }}>
+      <div className="ip-page" style={{ maxWidth: "1100px", margin: "0 auto", padding: "24px", display: "flex", flexDirection: "column", gap: "24px" }}>
 
         {/* Page header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -275,7 +275,7 @@ export default function InterviewPrepPage() {
           {/* ── SETUP PHASE ── */}
           {phase === "setup" && (
             <motion.div key="setup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+              <div className="ip-setup-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div style={card}>
                     <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#f1f5f9", marginBottom: "4px" }}>Session Setup</h3>
@@ -410,7 +410,7 @@ export default function InterviewPrepPage() {
                 </div>
               )}
 
-              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px" }}>
+              <div className="ip-practice-grid" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   {/* Progress */}
                   <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -541,7 +541,7 @@ export default function InterviewPrepPage() {
                 <strong style={{ color: "#cbd5e1" }}>Q{currentQ + 1}:</strong> {questions[currentQ]?.question}
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+              <div className="ip-feedback-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
                 {/* Score */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div style={{ ...card, textAlign: "center" }}>

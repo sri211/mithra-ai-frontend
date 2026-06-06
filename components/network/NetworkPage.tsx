@@ -1,9 +1,10 @@
 "use client";
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Search, Building2, Copy, Sparkles, Check,
   TrendingUp, Clock, Star, UserCheck, ExternalLink,
+  MapPin, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { LinkedInIcon } from "@/components/ui/icons";
 import { api } from "@/lib/api/client";
@@ -18,38 +19,10 @@ interface Connection {
 }
 
 const MOCK_CONNECTIONS: Connection[] = [
-  {
-    id: "c1", name: "Priya Sharma", role: "Engineering Manager", company: "Google",
-    avatar: "PS", color: "#7c3aed", type: "hiring_manager", mutual: 12,
-    why: "Direct hiring manager for the infrastructure team you're targeting. Has posted about new headcount.",
-    draft: "Hi Priya! I noticed your team recently shipped the new Search infrastructure. I'm exploring senior engineering roles at Google and would love a 15-min chat. We're both connected to Rahul Mehta!",
-    linkedin_search: "https://www.linkedin.com/search/results/people/?keywords=Engineering+Manager+Google+India&origin=GLOBAL_SEARCH_HEADER",
-    email_pattern: "priya.sharma@google.com",
-  },
-  {
-    id: "c2", name: "Arjun Nair", role: "Tech Recruiter", company: "Google",
-    avatar: "AN", color: "#06b6d4", type: "recruiter", mutual: 5,
-    why: "Active Google recruiter handling engineering hires in Bangalore. Specializes in infra and platform roles.",
-    draft: "Hi Arjun, I'm a senior engineer with 6 years in distributed systems (ex-Swiggy). Actively exploring Google Bangalore roles. Would love to connect!",
-    linkedin_search: "https://www.linkedin.com/search/results/people/?keywords=Technical+Recruiter+Google+Bangalore&origin=GLOBAL_SEARCH_HEADER",
-    email_pattern: "arjun.nair@google.com",
-  },
-  {
-    id: "c3", name: "Kavya Reddy", role: "Staff Engineer", company: "Google",
-    avatar: "KR", color: "#10b981", type: "team_member", mutual: 8,
-    why: "Team member who can share inside view of culture and interview process. Runs the internal referral program.",
-    draft: "Hi Kavya! Your talk on Kubernetes optimization at KubeCon was brilliant. I'm exploring roles in your space and would love a quick coffee chat about the team culture.",
-    linkedin_search: "https://www.linkedin.com/search/results/people/?keywords=Staff+Software+Engineer+Google+India&origin=GLOBAL_SEARCH_HEADER",
-    email_pattern: "kavya.reddy@google.com",
-  },
-  {
-    id: "c4", name: "Vikram Patel", role: "Senior Engineer", company: "Razorpay",
-    avatar: "VP", color: "#f59e0b", type: "alumnus", mutual: 15,
-    why: "Former Googler who can give real interview insights and possibly provide a referral through their alumni network.",
-    draft: "Hi Vikram! I see you made the transition from Google to fintech. I'm now looking to do the reverse! Would love your perspective on Google's interview process.",
-    linkedin_search: "https://www.linkedin.com/search/results/people/?keywords=Senior+Engineer+ex-Google+India&origin=GLOBAL_SEARCH_HEADER",
-    email_pattern: "vikram.patel@razorpay.com",
-  },
+  { id: "c1", name: "Priya Sharma", role: "Engineering Manager", company: "Google", avatar: "PS", color: "#7c3aed", type: "hiring_manager", mutual: 12, why: "Direct hiring manager for the infrastructure team. Has posted about new headcount.", draft: "Hi Priya! I noticed your team recently shipped new Search infrastructure. I'm exploring senior engineering roles at Google and would love a 15-min chat!", linkedin_search: "https://www.linkedin.com/search/results/people/?keywords=Engineering+Manager+Google+India", email_pattern: "priya.sharma@google.com" },
+  { id: "c2", name: "Arjun Nair", role: "Tech Recruiter", company: "Google", avatar: "AN", color: "#06b6d4", type: "recruiter", mutual: 5, why: "Active Google recruiter handling engineering hires in Bangalore.", draft: "Hi Arjun, I'm a senior engineer with 6 years in distributed systems. Actively exploring Google Bangalore roles. Would love to connect!", linkedin_search: "https://www.linkedin.com/search/results/people/?keywords=Technical+Recruiter+Google+Bangalore", email_pattern: "arjun.nair@google.com" },
+  { id: "c3", name: "Kavya Reddy", role: "Staff Engineer", company: "Google", avatar: "KR", color: "#10b981", type: "team_member", mutual: 8, why: "Team member who can share inside view of culture and interview process.", draft: "Hi Kavya! Your talk on Kubernetes optimization was brilliant. I'm exploring roles in your space and would love a quick coffee chat!", linkedin_search: "https://www.linkedin.com/search/results/people/?keywords=Staff+Software+Engineer+Google+India", email_pattern: "kavya.reddy@google.com" },
+  { id: "c4", name: "Vikram Patel", role: "Senior Engineer", company: "Razorpay", avatar: "VP", color: "#f59e0b", type: "alumnus", mutual: 15, why: "Former Googler who can give real interview insights and possibly provide a referral.", draft: "Hi Vikram! I see you made the Google to fintech move. Would love your perspective on Google's interview process!", linkedin_search: "https://www.linkedin.com/search/results/people/?keywords=Senior+Engineer+ex-Google+India", email_pattern: "vikram.patel@razorpay.com" },
 ];
 
 const TYPE_LABELS: Record<string, { label: string; color: string; icon: string }> = {
@@ -58,66 +31,144 @@ const TYPE_LABELS: Record<string, { label: string; color: string; icon: string }
   team_member:    { label: "Team Member",     color: "#10b981", icon: "👥" },
   alumnus:        { label: "Alumnus",         color: "#f59e0b", icon: "🎓" },
   influencer:     { label: "Influencer",      color: "#ec4899", icon: "⭐" },
+  search_suggestion: { label: "Search More",  color: "#64748b", icon: "🔍" },
 };
 
-const COMPANY_INSIGHTS = [
-  { label: "Hiring Status", value: "Actively Hiring", color: "#10b981", Icon: TrendingUp },
-  { label: "Team Size",     value: "200-500 eng.",    color: "#6366f1", Icon: Users },
-  { label: "Culture Score", value: "4.3 / 5.0",       color: "#f59e0b", Icon: Star },
-  { label: "Time to Hire",  value: "4-6 weeks",       color: "#06b6d4", Icon: Clock },
-];
+function ConnectionCard({ conn, copiedId, onCopy }: { conn: Connection; copiedId: string | null; onCopy: (id: string, text: string) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const typeInfo = TYPE_LABELS[conn.type] || { label: conn.type, color: "#94a3b8", icon: "👤" };
+  const linkedinUrl = conn.linkedin_url || conn.linkedin_search || `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent((conn.role || "") + " " + conn.company)}`;
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
-const card: React.CSSProperties = {
-  background: "rgba(18,10,36,0.9)",
-  border: "1px solid rgba(124,58,237,0.15)",
-  borderRadius: "16px",
-  padding: "20px",
-};
-const inputBox: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  background: "rgba(15,8,30,0.8)",
-  border: "1px solid rgba(124,58,237,0.2)",
-  borderRadius: "10px",
-  padding: "10px 14px",
-  flex: 1,
-};
-const inputStyle: React.CSSProperties = {
-  flex: 1,
-  background: "transparent",
-  border: "none",
-  outline: "none",
-  fontSize: "13px",
-  color: "#f1f5f9",
-  fontFamily: "inherit",
-};
+  if (conn.is_search_card) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+        style={{ background: "rgba(15,9,28,0.7)", border: "1px dashed rgba(124,58,237,0.2)", borderRadius: "16px", padding: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
+          <div style={{ width: "44px", height: "44px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", background: "rgba(100,116,139,0.1)", flexShrink: 0 }}>🔍</div>
+          <div>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#94a3b8" }}>{conn.name}</div>
+            <div style={{ fontSize: "11px", color: "#475569" }}>{conn.role}</div>
+          </div>
+        </div>
+        <button onClick={() => window.open(linkedinUrl, "_blank")} style={{ width: "100%", padding: "10px", background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "10px", color: "#a78bfa", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+          <LinkedInIcon style={{ width: "14px", height: "14px" }} />Search on LinkedIn
+        </button>
+      </motion.div>
+    );
+  }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+      style={{ background: "rgba(18,10,36,0.9)", border: `1px solid ${conn.is_real ? "rgba(16,185,129,0.2)" : "rgba(124,58,237,0.15)"}`, borderRadius: "16px", overflow: "hidden" }}>
+
+      {/* Header — always visible */}
+      <div style={{ padding: "16px", display: "flex", gap: "12px", alignItems: "flex-start" }}>
+        <div style={{ width: "48px", height: "48px", borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", fontWeight: 800, color: "white", flexShrink: 0, background: `${conn.color}25`, border: `1px solid ${conn.color}40` }}>
+          {conn.avatar}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px", marginBottom: "4px" }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: "15px", fontWeight: 700, color: "#f1f5f9", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" as const }}>
+                {conn.name}
+                {conn.is_real && <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "4px", background: "rgba(16,185,129,0.15)", color: "#10b981", fontWeight: 600 }}>✓ Real</span>}
+              </div>
+              <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "2px" }}>{conn.role}</div>
+            </div>
+            <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" style={{ flexShrink: 0, width: "34px", height: "34px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,102,194,0.15)", border: "1px solid rgba(10,102,194,0.25)", color: "#60a5fa", textDecoration: "none" }}>
+              <LinkedInIcon style={{ width: "16px", height: "16px" }} />
+            </a>
+          </div>
+          <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "10px", fontWeight: 600, background: `${typeInfo.color}15`, color: typeInfo.color, border: `1px solid ${typeInfo.color}25` }}>
+            {typeInfo.icon} {typeInfo.label}
+          </span>
+        </div>
+      </div>
+
+      {/* Why connect — always visible */}
+      <div style={{ margin: "0 16px", padding: "10px 12px", borderRadius: "10px", fontSize: "12px", color: "#cbd5e1", lineHeight: "1.6", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", marginBottom: "12px" }}>
+        <span style={{ color: "#a78bfa", fontWeight: 600 }}>Why connect: </span>{conn.why}
+      </div>
+
+      {/* AI draft — expandable */}
+      <div style={{ margin: "0 16px 12px" }}>
+        <button onClick={() => setExpanded(!expanded)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "10px", cursor: "pointer", fontSize: "12px", color: "#a78bfa", fontWeight: 600 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <Sparkles style={{ width: "11px", height: "11px" }} />AI-Drafted Message
+          </span>
+          {expanded ? <ChevronUp style={{ width: "14px", height: "14px" }} /> : <ChevronDown style={{ width: "14px", height: "14px" }} />}
+        </button>
+        <AnimatePresence>
+          {expanded && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: "hidden" }}>
+              <div style={{ padding: "12px", background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.12)", borderTop: "none", borderRadius: "0 0 10px 10px" }}>
+                <p style={{ fontSize: "13px", color: "#cbd5e1", lineHeight: "1.65", marginBottom: "10px" }}>{conn.draft}</p>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: "10px", color: "#475569" }}>{conn.draft?.length || 0} / 280 chars</span>
+                  <button onClick={() => onCopy(conn.id, conn.draft)} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: 600, background: "none", border: "none", cursor: "pointer", color: copiedId === conn.id ? "#10b981" : "#a78bfa", padding: "4px 8px", borderRadius: "6px" }}>
+                    {copiedId === conn.id ? <><Check style={{ width: "12px", height: "12px" }} />Copied!</> : <><Copy style={{ width: "12px", height: "12px" }} />Copy</>}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Email */}
+      {conn.email_pattern && !conn.is_search_card && (
+        <div style={{ margin: "0 16px 12px", padding: "8px 12px", borderRadius: "8px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", fontSize: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
+          <span style={{ fontSize: "13px" }}>📧</span>
+          <span style={{ color: conn.email_verified ? "#10b981" : "#64748b" }}>{conn.email_verified ? "✓ Verified:" : "Likely:"}</span>
+          <span style={{ color: "#94a3b8", fontFamily: "monospace", fontSize: "11px" }}>{conn.email_pattern}</span>
+        </div>
+      )}
+
+      {/* CTA button */}
+      <div style={{ padding: "0 16px 16px" }}>
+        <button onClick={() => window.open(linkedinUrl, "_blank")} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "13px", padding: "12px", borderRadius: "12px", fontWeight: 700, color: "white", border: "none", cursor: "pointer", background: conn.is_real ? "linear-gradient(135deg,#0a66c2,#1a76c2)" : "linear-gradient(135deg,#374151,#4b5563)", boxShadow: conn.is_real ? "0 4px 16px rgba(10,102,194,0.3)" : "none" }}>
+          <LinkedInIcon style={{ width: "15px", height: "15px" }} />
+          {conn.is_real ? "View LinkedIn Profile →" : "Search on LinkedIn →"}
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function NetworkPage() {
-  const [company, setCompany] = useState("Google");
-  const [role, setRole] = useState("Senior Software Engineer");
-  const [connections, setConnections] = useState(MOCK_CONNECTIONS);
+  const [company, setCompany] = useState("");
+  const [role, setRole] = useState("");
+  const [location, setLocation] = useState("India");
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [insightData, setInsightData] = useState<{ hiring_status: string; culture: string } | null>(null);
 
   const findConnections = async () => {
+    if (!company.trim() || !role.trim()) return;
     setIsSearching(true);
+    setConnections([]);
+    setHasSearched(true);
+    setInsightData(null);
     try {
-      const { data } = await api.post("/network/find", { company, target_role: role, user_profile: {} });
+      const { data } = await api.post("/network/find", {
+        company: company.trim(),
+        target_role: role.trim(),
+        location: location.trim(),
+        user_profile: {},
+      });
       if (data.connections?.length) {
-        // Normalize field names
         const normalized = data.connections.map((c: Record<string, unknown>) => ({
           ...c,
           draft: (c.draft as string) || (c.message_draft as string) || "",
-          // Prefer direct LinkedIn profile URL over search URL
           linkedin_search: (c.linkedin_url as string) || (c.linkedin_search as string) || `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(((c.role as string) || "") + " " + ((c.company as string) || company))}`,
         }));
         setConnections(normalized);
       }
+      if (data.company_insights) setInsightData(data.company_insights);
     } catch {
-      /* keep mock */
+      setConnections(MOCK_CONNECTIONS);
     } finally {
       setIsSearching(false);
     }
@@ -129,180 +180,133 @@ export default function NetworkPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  return (
-    <div style={{ height: "100%", overflowY: "auto", background: "#0a0614" }}>
-      <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "24px", display: "flex", flexDirection: "column", gap: "24px" }}>
+  const S = {
+    page: { height: "100%", overflowY: "auto" as const, background: "#0a0614" },
+    inner: { maxWidth: "860px", margin: "0 auto", padding: "20px 16px", display: "flex", flexDirection: "column" as const, gap: "20px" },
+    card: { background: "rgba(18,10,36,0.9)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "16px", padding: "20px" },
+    inputBox: { display: "flex", alignItems: "center", gap: "8px", background: "rgba(15,8,30,0.8)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "12px", padding: "12px 14px" },
+    inputEl: { flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "14px", color: "#f1f5f9", fontFamily: "inherit" },
+  };
 
-        {/* Page header */}
-        <div className="nw-page-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+  return (
+    <div style={S.page}>
+      <div style={S.inner}>
+
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" as const }}>
           <div>
-            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#f1f5f9" }}>Network Intelligence</h2>
-            <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>Find the right people at target companies and get AI-drafted outreach</p>
+            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#f1f5f9", marginBottom: "4px" }}>Network Intelligence</h2>
+            <p style={{ fontSize: "13px", color: "#64748b" }}>Find the right people at target companies — real profiles, verified emails, AI outreach</p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", padding: "6px 14px", borderRadius: "20px", border: "1px solid rgba(236,72,153,0.3)", background: "rgba(236,72,153,0.08)", color: "#f472b6" }}>
-            <Users style={{ width: "13px", height: "13px" }} />Agent 5 — Network Intel
-          </div>
+          <span style={{ fontSize: "12px", padding: "6px 14px", borderRadius: "20px", border: "1px solid rgba(236,72,153,0.3)", background: "rgba(236,72,153,0.08)", color: "#f472b6", display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+            <Users style={{ width: "13px", height: "13px" }} />Agent 5
+          </span>
         </div>
 
-        {/* Search bar */}
-        <div style={card}>
+        {/* Search card */}
+        <div style={S.card}>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {/* Row 1: Company + Role */}
             <div className="nw-search-row" style={{ display: "flex", gap: "12px" }}>
-              <div style={inputBox}>
-                <Building2 style={{ width: "15px", height: "15px", color: "#475569", flexShrink: 0 }} />
-                <input
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && findConnections()}
-                  style={inputStyle}
-                  placeholder="Company name (e.g. Google, Flipkart)..."
-                />
+              <div style={S.inputBox}>
+                <Building2 style={{ width: "16px", height: "16px", color: "#475569", flexShrink: 0 }} />
+                <input value={company} onChange={(e) => setCompany(e.target.value)} onKeyDown={(e) => e.key === "Enter" && findConnections()} style={S.inputEl} placeholder="Company (e.g. Glanbia, Flipkart)..." />
               </div>
-              <div style={inputBox}>
-                <Search style={{ width: "15px", height: "15px", color: "#475569", flexShrink: 0 }} />
-                <input
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && findConnections()}
-                  style={inputStyle}
-                  placeholder="Target role (e.g. Senior SWE, PM)..."
-                />
+              <div style={S.inputBox}>
+                <Search style={{ width: "16px", height: "16px", color: "#475569", flexShrink: 0 }} />
+                <input value={role} onChange={(e) => setRole(e.target.value)} onKeyDown={(e) => e.key === "Enter" && findConnections()} style={S.inputEl} placeholder="Target role (e.g. HR Manager, Ecommerce Lead)..." />
               </div>
-              <button
-                onClick={findConnections}
-                disabled={isSearching}
-                style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 20px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", border: "none", borderRadius: "10px", color: "white", fontSize: "13px", fontWeight: 700, cursor: isSearching ? "not-allowed" : "pointer", flexShrink: 0, boxShadow: "0 4px 16px rgba(124,58,237,0.3)" }}
-              >
-                {isSearching ? (
-                  <motion.div style={{ width: "14px", height: "14px", borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />
-                ) : (
-                  <UserCheck style={{ width: "14px", height: "14px" }} />
-                )}
-                {isSearching ? "Finding..." : "Find Connections"}
+            </div>
+
+            {/* Row 2: Location + Button */}
+            <div style={{ display: "flex", gap: "12px", alignItems: "stretch" }}>
+              <div style={{ ...S.inputBox, flex: 1 }}>
+                <MapPin style={{ width: "16px", height: "16px", color: "#475569", flexShrink: 0 }} />
+                <input value={location} onChange={(e) => setLocation(e.target.value)} onKeyDown={(e) => e.key === "Enter" && findConnections()} style={S.inputEl} placeholder="Country / City (e.g. India, Bangalore)..." />
+              </div>
+              <button onClick={findConnections} disabled={isSearching || !company.trim() || !role.trim()} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "12px 24px", background: isSearching || !company.trim() || !role.trim() ? "rgba(124,58,237,0.4)" : "linear-gradient(135deg,#7c3aed,#6d28d9)", border: "none", borderRadius: "12px", color: "white", fontSize: "14px", fontWeight: 700, cursor: isSearching || !company.trim() || !role.trim() ? "not-allowed" : "pointer", flexShrink: 0, boxShadow: "0 4px 16px rgba(124,58,237,0.3)", minWidth: "140px" }}>
+                {isSearching ? <motion.div style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} /> : <UserCheck style={{ width: "16px", height: "16px" }} />}
+                {isSearching ? "Finding..." : "Find People"}
               </button>
             </div>
+
+            <p style={{ fontSize: "11px", color: "#475569" }}>
+              💡 Be specific — "HR Manager" finds recruiters, HRBPs, talent acquisition. "Ecommerce" finds category managers, buyers, digital leads.
+            </p>
           </div>
         </div>
 
-        {/* Company insight cards */}
-        <div className="nw-insights-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
-          {COMPANY_INSIGHTS.map((s, i) => {
-            const { Icon } = s;
-            return (
-              <motion.div
-                key={s.label}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.06 }}
-                style={{ ...card, padding: "16px", textAlign: "center" }}
-              >
-                <div style={{ width: "32px", height: "32px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px", background: `${s.color}15` }}>
-                  <Icon style={{ width: "16px", height: "16px", color: s.color }} />
+        {/* Insights row */}
+        {insightData && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "12px" }} className="nw-insights-grid">
+            {[
+              { label: "Hiring Status", value: insightData.hiring_status, color: "#10b981", Icon: TrendingUp },
+              { label: "Culture", value: insightData.culture?.slice(0, 40) + (insightData.culture?.length > 40 ? "…" : ""), color: "#f59e0b", Icon: Star },
+            ].map((s) => (
+              <div key={s.label} style={{ ...S.card, padding: "14px", display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ width: "36px", height: "36px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, background: `${s.color}15` }}>
+                  <s.Icon style={{ width: "18px", height: "18px", color: s.color }} />
                 </div>
-                <div style={{ fontSize: "14px", fontWeight: 900, marginBottom: "4px", color: s.color }}>{s.value}</div>
-                <div style={{ fontSize: "11px", color: "#94a3b8" }}>{s.label}</div>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Connections grid */}
-        <div>
-          <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#f1f5f9", marginBottom: "16px" }}>
-            {connections.length} Key Connections at{" "}
-            <span style={{ color: "#a78bfa" }}>{company}</span>
-            <span style={{ color: "#475569", fontWeight: 400 }}> for {role}</span>
-          </h3>
-
-          <div className="nw-connections-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
-            {connections.map((conn, i) => {
-              const typeInfo = TYPE_LABELS[conn.type] || { label: conn.type, color: "#94a3b8", icon: "👤" };
-              return (
-                <motion.div
-                  key={conn.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.08 }}
-                  style={{ ...card, display: "flex", flexDirection: "column", gap: "12px" }}
-                >
-                  {/* Person header */}
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-                    <div style={{ width: "48px", height: "48px", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "white", flexShrink: 0, background: `${conn.color}22`, border: `1px solid ${conn.color}40` }}>
-                      {conn.avatar}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" as const, marginBottom: "4px" }}>
-                        <h4 style={{ fontWeight: 700, color: "#f1f5f9", fontSize: "14px" }}>{conn.name}</h4>
-                        <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "10px", fontWeight: 600, background: `${typeInfo.color}15`, color: typeInfo.color, border: `1px solid ${typeInfo.color}25` }}>
-                          {typeInfo.icon} {typeInfo.label}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: "12px", color: "#94a3b8" }}>{conn.role}</div>
-                      <div style={{ fontSize: "11px", color: "#475569", marginTop: "3px", display: "flex", alignItems: "center", gap: "4px" }}>
-                        <Users style={{ width: "10px", height: "10px" }} />{conn.mutual} mutual connections
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
-                      {conn.is_real && <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "4px", background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)", fontWeight: 600 }}>✓ Real</span>}
-                      {conn.is_search_card && <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "4px", background: "rgba(100,116,139,0.15)", color: "#94a3b8", border: "1px solid rgba(100,116,139,0.3)", fontWeight: 600 }}>Search</span>}
-                      <a href={conn.linkedin_search || `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(conn.role + ' ' + conn.company)}`} target="_blank" rel="noopener noreferrer" style={{ color: "#60a5fa", textDecoration: "none" }} title={conn.is_real ? "View LinkedIn Profile" : "Search on LinkedIn"}>
-                        <ExternalLink style={{ width: "15px", height: "15px" }} />
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Why connect */}
-                  <div style={{ padding: "10px 12px", borderRadius: "10px", fontSize: "12px", color: "#cbd5e1", lineHeight: "1.6", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                    <span style={{ color: "#a78bfa", fontWeight: 600 }}>Why connect: </span>
-                    {conn.why}
-                  </div>
-
-                  {/* AI draft */}
-                  <div style={{ borderRadius: "10px", padding: "12px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.15)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "10px", color: "#a78bfa", marginBottom: "8px", fontWeight: 600 }}>
-                      <Sparkles style={{ width: "11px", height: "11px" }} />AI-Drafted Message
-                    </div>
-                    <p style={{ fontSize: "12px", color: "#cbd5e1", lineHeight: "1.6" }}>{conn.draft}</p>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "10px" }}>
-                      <span style={{ fontSize: "10px", color: "#475569" }}>{conn.draft.length} / 300 chars</span>
-                      <button
-                        onClick={() => copyDraft(conn.id, conn.draft)}
-                        style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: 600, background: "none", border: "none", cursor: "pointer", color: copiedId === conn.id ? "#10b981" : "#a78bfa" }}
-                      >
-                        {copiedId === conn.id ? (
-                          <><Check style={{ width: "12px", height: "12px" }} />Copied!</>
-                        ) : (
-                          <><Copy style={{ width: "12px", height: "12px" }} />Copy Message</>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* LinkedIn button */}
-                  {conn.email_pattern && (
-                    <div style={{ padding: "8px 10px", borderRadius: "8px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", fontSize: "11px", color: "#475569" }}>
-                      📧 <span style={{ color: "#64748b" }}>Likely email: </span>
-                      <span style={{ color: "#94a3b8", fontFamily: "monospace" }}>{conn.email_pattern}</span>
-                    </div>
-                  )}
-                  <button
-                    onClick={() => window.open(conn.linkedin_search || `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(conn.role + ' ' + conn.company)}`, "_blank")}
-                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", fontSize: "12px", padding: "10px", borderRadius: "10px", fontWeight: 600, color: "white", border: "none", cursor: "pointer", background: conn.is_real ? "linear-gradient(135deg,#0a66c2,#1a76c2)" : "linear-gradient(135deg,#374151,#4b5563)", boxShadow: conn.is_real ? "0 4px 12px rgba(10,102,194,0.3)" : "none" }}
-                  >
-                    <LinkedInIcon style={{ width: "14px", height: "14px" }} />
-                    {conn.is_real ? "View LinkedIn Profile →" : "Search on LinkedIn →"}
-                  </button>
-                  {conn.email_pattern && !conn.is_search_card && (
-                    <div style={{ fontSize: "11px", color: conn.email_verified ? "#10b981" : "#64748b", display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
-                      <span>{conn.email_verified ? "✓ Verified:" : "Likely:"}</span>
-                      <span style={{ fontFamily: "monospace" }}>{conn.email_pattern}</span>
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: s.color }}>{s.value}</div>
+                  <div style={{ fontSize: "11px", color: "#64748b" }}>{s.label}</div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
+
+        {/* Loading state */}
+        {isSearching && (
+          <div style={{ ...S.card, textAlign: "center", padding: "40px 20px" }}>
+            <motion.div style={{ width: "48px", height: "48px", borderRadius: "50%", border: "3px solid rgba(236,72,153,0.2)", borderTopColor: "#ec4899", margin: "0 auto 16px" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} />
+            <p style={{ fontSize: "14px", fontWeight: 600, color: "#f1f5f9", marginBottom: "6px" }}>Finding real people at {company}</p>
+            <p style={{ fontSize: "12px", color: "#475569" }}>Searching LinkedIn profiles, verifying emails, drafting outreach for {role}…</p>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!isSearching && !hasSearched && (
+          <div style={{ ...S.card, textAlign: "center", padding: "48px 20px" }}>
+            <div style={{ fontSize: "48px", marginBottom: "16px" }}>🤝</div>
+            <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#f1f5f9", marginBottom: "8px" }}>Your next colleague exists.</h3>
+            <p style={{ fontSize: "13px", color: "#64748b", maxWidth: "320px", margin: "0 auto", lineHeight: 1.6 }}>
+              Enter a company name, target role, and location above to find real people with verified LinkedIn profiles and email addresses.
+            </p>
+          </div>
+        )}
+
+        {/* Results */}
+        {!isSearching && connections.length > 0 && (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+              <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#f1f5f9" }}>
+                {connections.filter(c => !c.is_search_card).length} connections found at{" "}
+                <span style={{ color: "#a78bfa" }}>{company}</span>
+                <span style={{ color: "#64748b", fontWeight: 400 }}> · {role}</span>
+              </h3>
+              <button onClick={() => { setConnections([]); setHasSearched(false); }} style={{ fontSize: "12px", color: "#64748b", background: "none", border: "none", cursor: "pointer", padding: "4px 8px" }}>
+                Clear
+              </button>
+            </div>
+            <div className="nw-connections-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
+              {connections.map((conn, i) => (
+                <motion.div key={conn.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.06 }}>
+                  <ConnectionCard conn={conn} copiedId={copiedId} onCopy={copyDraft} />
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* No results */}
+        {!isSearching && hasSearched && connections.length === 0 && (
+          <div style={{ ...S.card, textAlign: "center", padding: "40px 20px" }}>
+            <div style={{ fontSize: "40px", marginBottom: "12px" }}>🔍</div>
+            <p style={{ fontSize: "14px", fontWeight: 600, color: "#f1f5f9", marginBottom: "6px" }}>No results found</p>
+            <p style={{ fontSize: "12px", color: "#64748b" }}>Try a different company name or role. Make sure the company name is exact.</p>
+          </div>
+        )}
       </div>
     </div>
   );

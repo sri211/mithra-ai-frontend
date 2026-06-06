@@ -194,8 +194,24 @@ export default function JobApplicationPage() {
     <div style={{ height: "100%", overflowY: "auto", background: "#0a0614" }}>
       <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "24px", display: "flex", flexDirection: "column", gap: "24px" }}>
 
+        {/* Beta banner */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 18px", borderRadius: "14px", background: "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(124,58,237,0.08))", border: "1px solid rgba(245,158,11,0.25)" }}>
+          <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(245,158,11,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <span style={{ fontSize: "18px" }}>⚗️</span>
+          </div>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "3px" }}>
+              <span style={{ fontSize: "14px", fontWeight: 800, color: "#f1f5f9" }}>Auto-Apply</span>
+              <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "20px", background: "rgba(245,158,11,0.2)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.35)", letterSpacing: "0.5px" }}>BETA</span>
+            </div>
+            <p style={{ fontSize: "12px", color: "#94a3b8" }}>
+              Auto-Apply is in active development. Available on all plans — results are simulated until browser automation is fully deployed.
+            </p>
+          </div>
+        </div>
+
         {/* Page header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" as const, gap: "10px" }}>
           <div>
             <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#f1f5f9" }}>Auto-Apply</h2>
             <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>AI opens, analyzes, fills and submits job applications on your behalf</p>
@@ -205,7 +221,7 @@ export default function JobApplicationPage() {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+        <div className="ja-content-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
 
           {/* ── LEFT: Apply form ── */}
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
