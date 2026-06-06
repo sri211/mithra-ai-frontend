@@ -3,8 +3,43 @@ import { useState, useRef, useEffect, useId } from "react";
 import { useResumeStore } from "@/lib/stores/resumeStore";
 import { useAgentStore } from "@/lib/stores/agentStore";
 import { FileUploadModal } from "@/components/ui/FileUploadModal";
+import ResumeViewerModal from "@/components/ui/ResumeViewerModal";
 import { api, streamSSE, API_BASE } from "@/lib/api/client";
 import { ResumeData } from "@/lib/types";
+
+// ── Format assistant messages with basic markdown ────────────────────────────
+function FormatMsg({ text }: { text: string }) {
+  if (!text) return <span>…</span>;
+  const lines = text.split("\n");
+  return (
+    <>
+      {lines.map((line, i) => {
+        if (line === "") return <div key={i} style={{ height: "5px" }} />;
+        // Bold: **text**
+        const boldParts = line.split(/(\*\*[^*]+\*\*)/g);
+        const rendered = boldParts.map((part, j) =>
+          part.startsWith("**") && part.endsWith("**")
+            ? <strong key={j} style={{ color: "#f1f5f9", fontWeight: 700 }}>{part.slice(2, -2)}</strong>
+            : <span key={j}>{part}</span>
+        );
+        // Bullet list
+        if (line.match(/^[-•*]\s/)) {
+          return (
+            <div key={i} style={{ display: "flex", gap: "6px", marginBottom: "2px", alignItems: "flex-start" }}>
+              <span style={{ color: "#7c3aed", flexShrink: 0, marginTop: "2px", fontSize: "11px" }}>▸</span>
+              <span>{boldParts.map((p, j) => p.startsWith("**") && p.endsWith("**") ? <strong key={j} style={{ color: "#f1f5f9" }}>{p.slice(2,-2)}</strong> : <span key={j}>{p}</span>)}</span>
+            </div>
+          );
+        }
+        // Numbered list
+        if (line.match(/^\d+\./)) {
+          return <div key={i} style={{ marginBottom: "3px" }}>{rendered}</div>;
+        }
+        return <div key={i} style={{ marginBottom: "2px" }}>{rendered}</div>;
+      })}
+    </>
+  );
+}
 
 // ─── Templates ──────────────────────────────────────────────────────────────
 const TEMPLATES = [
@@ -547,6 +582,7 @@ export default function ResumeBuilderPage() {
   const { resume, selectedTemplate, atsScore, setResume, setTemplate, updateSection, setAtsScore } = useResumeStore();
   const { pendingAction, clearAction } = useAgentStore();
   const [mode, setMode] = useState<BuildMode>("linkedin");
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([
     { role: "assistant", content: "Hi! I'm Mithra. Let's build your perfect resume.\n\nStart with: **What's your full name, current job title, and email?**" }
   ]);
@@ -837,19 +873,31 @@ export default function ResumeBuilderPage() {
       `}</style>
       <FileUploadModal isOpen={showUpload} onClose={() => setShowUpload(false)} onResumeParsed={(r) => { setResume(r); setAtsScore(70); setMode("editor"); }} />
 
+      {/* Full-screen resume viewer */}
+      <ResumeViewerModal isOpen={previewOpen} onClose={() => setPreviewOpen(false)} title={`Resume — ${selectedTemplate}`}>
+        <ResumePreview resume={resume} template={selectedTemplate} />
+      </ResumeViewerModal>
+
       <div className="rb-page-layout" style={{ height: "100%", display: "flex", overflow: "hidden", background: C.bg }}>
 
         {/* ── LEFT PANEL ── */}
         <div className="rb-left-panel" style={{ width: "420px", flexShrink: 0, display: "flex", flexDirection: "column", borderRight: `1px solid ${C.border}`, background: C.panel, overflow: "hidden" }}>
 
-          {/* Mode tabs */}
-          <div style={{ padding: "12px 14px", borderBottom: `1px solid ${C.border}` }}>
-            <div style={{ display: "flex", gap: "3px", background: "rgba(255,255,255,0.04)", borderRadius: "10px", padding: "4px" }}>
+          {/* Mode tabs + mobile preview trigger */}
+          <div style={{ padding: "10px 12px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: "8px" }}>
+            <div className="rb-mode-tabs" style={{ flex: 1, display: "flex", gap: "3px", background: "rgba(255,255,255,0.04)", borderRadius: "10px", padding: "4px" }}>
               <TabPill active={mode === "chat"} onClick={() => setMode("chat")}>💬 Chat</TabPill>
-              <TabPill active={mode === "linkedin"} onClick={() => setMode("linkedin")}>in LinkedIn</TabPill>
-              <TabPill active={mode === "form"} onClick={() => setMode("form")}>✏️ Form</TabPill>
-              <TabPill active={mode === "editor"} onClick={() => setMode("editor")}>🤖 AI Edit</TabPill>
+              <TabPill active={mode === "linkedin"} onClick={() => setMode("linkedin")}>in</TabPill>
+              <TabPill active={mode === "form"} onClick={() => setMode("form")}>✏️</TabPill>
+              <TabPill active={mode === "editor"} onClick={() => setMode("editor")}>🤖</TabPill>
             </div>
+            {/* Mobile-only: open full-screen resume viewer */}
+            <button
+              onClick={() => setPreviewOpen(true)}
+              className="md:hidden"
+              style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: "5px", padding: "7px 12px", borderRadius: "10px", background: "rgba(124,58,237,0.12)", border: `1px solid ${C.border}`, color: "#a78bfa", fontSize: "12px", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+              📄 Preview
+            </button>
           </div>
 
           {atsScore > 0 && (
@@ -862,24 +910,50 @@ export default function ResumeBuilderPage() {
 
             {/* ── CHAT MODE ── */}
             {mode === "chat" && (
-              <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-                <div style={{ flex: 1, padding: "16px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+                {/* Messages — WhatsApp-style scroll */}
+                <div style={{ flex: 1, padding: "12px 14px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px", WebkitOverflowScrolling: "touch" }}>
                   {chatMessages.map((msg, i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", gap: "8px" }}>
-                      {msg.role === "assistant" && <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "linear-gradient(135deg,#7c3aed,#f59e0b)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "12px" }}>✨</div>}
-                      <div style={{ maxWidth: "86%", padding: "10px 14px", fontSize: "13px", lineHeight: 1.6, background: msg.role === "user" ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "rgba(26,16,51,0.9)", color: msg.role === "user" ? "white" : C.secondary, borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px", border: msg.role === "assistant" ? `1px solid ${C.border}` : "none" }}>
-                        {msg.content || (isStreaming && i === chatMessages.length - 1 ? "..." : "")}
+                    <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", gap: "8px", alignItems: "flex-end" }}>
+                      {msg.role === "assistant" && (
+                        <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "linear-gradient(135deg,#7c3aed,#f59e0b)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "12px", marginBottom: "2px" }}>✨</div>
+                      )}
+                      <div style={{
+                        maxWidth: "82%", padding: "10px 14px",
+                        fontSize: "13px", lineHeight: 1.65,
+                        background: msg.role === "user" ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "rgba(22,13,44,0.95)",
+                        color: msg.role === "user" ? "white" : "#cbd5e1",
+                        borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                        border: msg.role === "assistant" ? `1px solid ${C.border}` : "none",
+                        wordBreak: "break-word",
+                      }}>
+                        {msg.role === "assistant"
+                          ? <FormatMsg text={msg.content || (isStreaming && i === chatMessages.length - 1 ? "…" : "")} />
+                          : msg.content
+                        }
                       </div>
                     </div>
                   ))}
                   <div ref={chatEndRef} />
                 </div>
-                <div style={{ padding: "12px 16px", borderTop: `1px solid ${C.border}`, display: "flex", flexDirection: "column", gap: "10px" }}>
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <input value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendChat()} style={{ ...inputStyle, flex: 1 }} placeholder="Answer Mithra's questions…" />
-                    <button onClick={sendChat} disabled={!chatInput.trim() || isStreaming} style={{ ...btnPrimary, width: "42px", flexShrink: 0, opacity: !chatInput.trim() || isStreaming ? 0.5 : 1 }}>→</button>
+
+                {/* Sticky input — WhatsApp bar */}
+                <div style={{ padding: "10px 12px", borderTop: `1px solid ${C.border}`, background: C.panel, flexShrink: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "flex-end" }}>
+                    <input
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendChat()}
+                      style={{ ...inputStyle, flex: 1, borderRadius: "20px", padding: "10px 16px", fontSize: "14px" }}
+                      placeholder="Type your answer…"
+                    />
+                    <button onClick={sendChat} disabled={!chatInput.trim() || isStreaming}
+                      style={{ width: "40px", height: "40px", borderRadius: "50%", background: chatInput.trim() ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "rgba(124,58,237,0.2)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: chatInput.trim() ? "pointer" : "not-allowed", flexShrink: 0, fontSize: "16px", color: "white" }}>
+                      {isStreaming ? "⏳" : "→"}
+                    </button>
                   </div>
-                  <button onClick={buildFromChat} disabled={isBuilding || chatMessages.length < 3} style={{ ...btnGold, opacity: chatMessages.length < 3 ? 0.5 : 1 }}>
+                  <button onClick={buildFromChat} disabled={isBuilding || chatMessages.length < 3}
+                    style={{ ...btnGold, opacity: chatMessages.length < 3 ? 0.4 : 1, borderRadius: "12px" }}>
                     {isBuilding ? <><Spinner /> Generating…</> : "✨ Generate Resume from Chat"}
                   </button>
                 </div>
@@ -1197,21 +1271,37 @@ The more text you paste, the more complete your resume will be.`}
         {/* ── RIGHT PANEL (Preview) ── */}
         <div className="rb-right-panel" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
-          {/* Toolbar */}
-          <div style={{ height: "52px", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", borderBottom: `1px solid ${C.border}`, background: "rgba(10,6,20,0.7)", flexShrink: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <button onClick={() => setShowTemplates(!showTemplates)} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 14px", borderRadius: "8px", border: `1px solid ${showTemplates ? "rgba(124,58,237,0.5)" : C.border}`, background: showTemplates ? "rgba(124,58,237,0.15)" : "rgba(255,255,255,0.04)", color: showTemplates ? "#a78bfa" : C.muted, fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
-                🎨 Templates
-              </button>
-              <span style={{ fontSize: "13px", color: C.muted }}>
-                Current: <span style={{ color: "#a78bfa", textTransform: "capitalize" }}>{selectedTemplate}</span>
-              </span>
+          {/* Toolbar — desktop full / mobile compact */}
+          <div style={{ borderBottom: `1px solid ${C.border}`, background: "rgba(10,6,20,0.7)", flexShrink: 0 }}>
+            {/* Desktop toolbar */}
+            <div className="rb-toolbar-full" style={{ height: "52px", alignItems: "center", justifyContent: "space-between", padding: "0 20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <button onClick={() => setShowTemplates(!showTemplates)} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 14px", borderRadius: "8px", border: `1px solid ${showTemplates ? "rgba(124,58,237,0.5)" : C.border}`, background: showTemplates ? "rgba(124,58,237,0.15)" : "rgba(255,255,255,0.04)", color: showTemplates ? "#a78bfa" : C.muted, fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
+                  🎨 Templates
+                </button>
+                <span style={{ fontSize: "13px", color: C.muted }}>
+                  Current: <span style={{ color: "#a78bfa", textTransform: "capitalize" }}>{selectedTemplate}</span>
+                </span>
+              </div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button onClick={resetResume} style={{ ...btnOutline, width: "auto", padding: "7px 12px", fontSize: "12px" }}>↺ Reset</button>
+                <button onClick={downloadTXT} style={{ ...btnOutline, width: "auto", padding: "7px 12px", fontSize: "12px", color: "#94a3b8" }}>⬇ TXT</button>
+                <button onClick={downloadPDF} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 16px", borderRadius: "8px", border: "none", fontSize: "13px", fontWeight: 700, background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white", cursor: "pointer", boxShadow: "0 4px 12px rgba(124,58,237,0.3)" }}>
+                  ⬇ Export PDF
+                </button>
+              </div>
             </div>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={resetResume} style={{ ...btnOutline, width: "auto", padding: "7px 12px", fontSize: "12px" }}>↺ Reset</button>
-              <button onClick={downloadTXT} style={{ ...btnOutline, width: "auto", padding: "7px 12px", fontSize: "12px", color: "#94a3b8" }}>⬇ TXT</button>
-              <button onClick={downloadPDF} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 16px", borderRadius: "8px", border: "none", fontSize: "13px", fontWeight: 700, background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white", cursor: "pointer", boxShadow: "0 4px 12px rgba(124,58,237,0.3)" }}>
-                ⬇ Export PDF
+
+            {/* Mobile compact toolbar — icon strip */}
+            <div className="rb-toolbar-compact" style={{ height: "44px", alignItems: "center", gap: "8px", padding: "0 12px", overflowX: "auto" }}>
+              <button onClick={() => setShowTemplates(!showTemplates)} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 10px", borderRadius: "8px", border: `1px solid ${showTemplates ? "rgba(124,58,237,0.5)" : C.border}`, background: showTemplates ? "rgba(124,58,237,0.15)" : "rgba(255,255,255,0.04)", color: showTemplates ? "#a78bfa" : C.muted, fontSize: "12px", fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>
+                🎨 <span style={{ color: "#a78bfa", textTransform: "capitalize", fontSize: "11px" }}>{selectedTemplate}</span>
+              </button>
+              <div style={{ width: "1px", height: "20px", background: "rgba(255,255,255,0.08)", flexShrink: 0 }} />
+              <button onClick={resetResume} title="Reset" style={{ width: "32px", height: "32px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`, cursor: "pointer", fontSize: "14px", flexShrink: 0 }}>↺</button>
+              <button onClick={downloadTXT} title="Export TXT" style={{ width: "32px", height: "32px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`, cursor: "pointer", fontSize: "14px", flexShrink: 0 }}>📄</button>
+              <button onClick={downloadPDF} title="Export PDF" style={{ display: "flex", alignItems: "center", gap: "4px", padding: "6px 12px", borderRadius: "8px", border: "none", fontSize: "12px", fontWeight: 700, background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white", cursor: "pointer", flexShrink: 0 }}>
+                ⬇ PDF
               </button>
             </div>
           </div>

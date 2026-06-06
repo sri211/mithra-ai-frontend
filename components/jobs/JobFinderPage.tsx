@@ -153,10 +153,16 @@ function JobCard({ job, isSelected, onClick, onSave, onApply }: {
                 <Bookmark style={{ width: "14px", height: "14px" }} />
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); onApply(); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const jobUrl = job.url || job.portal_url;
+                  const hasRealUrl = jobUrl && jobUrl !== "#" && !jobUrl.includes("linkedin.com/jobs");
+                  if (hasRealUrl) window.open(jobUrl as string, "_blank");
+                  else onApply();
+                }}
                 style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", padding: "6px 12px", borderRadius: "8px", fontWeight: 600, color: "white", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", border: "none", cursor: "pointer", boxShadow: "0 4px 12px rgba(124,58,237,0.3)" }}
               >
-                <Zap style={{ width: "12px", height: "12px" }} />Apply
+                <ExternalLink style={{ width: "12px", height: "12px" }} />Apply
               </button>
             </div>
           </div>
@@ -258,35 +264,30 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
 
       {/* Action buttons */}
       <div style={{ padding: "16px", borderTop: "1px solid rgba(124,58,237,0.1)", display: "flex", flexDirection: "column", gap: "10px", flexShrink: 0 }}>
-        <button
-          onClick={onAutoApply}
-          style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "12px", background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", borderRadius: "12px", color: "#0f0a1e", fontSize: "14px", fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(245,158,11,0.3)" }}
-        >
-          <Zap style={{ width: "16px", height: "16px" }} />Auto-Apply with AI
-        </button>
+        {/* Primary CTA: always open the real job URL */}
+        {(() => {
+          const jobUrl = job.url || job.portal_url;
+          const hasRealUrl = jobUrl && jobUrl !== "#" && !jobUrl.includes("linkedin.com/jobs");
+          const applyUrl = hasRealUrl
+            ? jobUrl
+            : `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(job.title + " " + job.company)}&location=${encodeURIComponent(job.location)}`;
+          return (
+            <button
+              onClick={() => window.open(applyUrl as string, "_blank")}
+              style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "13px", background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", borderRadius: "12px", color: "#0f0a1e", fontSize: "14px", fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 20px rgba(245,158,11,0.3)" }}
+            >
+              <ExternalLink style={{ width: "16px", height: "16px" }} />
+              {hasRealUrl ? `Apply on ${job.portal} →` : `Find on LinkedIn →`}
+            </button>
+          );
+        })()}
         <div style={{ display: "flex", gap: "10px" }}>
-          <button
-            onClick={onAdaptResume}
-            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "10px", background: "none", border: "1px solid rgba(124,58,237,0.4)", borderRadius: "10px", color: "#a78bfa", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}
-          >
+          <button onClick={onAdaptResume} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "10px", background: "none", border: "1px solid rgba(124,58,237,0.4)", borderRadius: "10px", color: "#a78bfa", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
             Adapt Resume
           </button>
-          <button
-            onClick={() => {
-              // Prefer job.url > portal_url, construct LinkedIn search if needed
-              const jobUrl = job.url || job.portal_url;
-              const finalUrl = (jobUrl && jobUrl !== "#" && jobUrl !== "https://linkedin.com/jobs")
-                ? jobUrl
-                : `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(job.title)}&location=${encodeURIComponent(job.location)}`;
-              window.open(finalUrl, "_blank");
-            }}
-            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "10px", background: "none", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "10px", color: "#94a3b8", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}
-          >
-            <ExternalLink style={{ width: "13px", height: "13px" }} />
-            {job.is_real_listing
-              ? `Apply on ${job.portal}`
-              : "Search on Google"
-            }
+          <button onClick={onAutoApply} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", padding: "10px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: "10px", color: "#f59e0b", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
+            <Zap style={{ width: "13px", height: "13px" }} />Auto-Apply
+            <span style={{ fontSize: "9px", padding: "1px 4px", borderRadius: "4px", background: "rgba(245,158,11,0.15)", marginLeft: "2px" }}>Beta</span>
           </button>
         </div>
       </div>

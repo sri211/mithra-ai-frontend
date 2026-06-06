@@ -277,11 +277,13 @@ body {
 
   /* ── Resume Builder ── */
   .rb-page-layout        { flex-direction: column !important; height: auto !important; min-height: 100% !important; overflow: visible !important; }
-  .rb-left-panel         { width: 100% !important; max-height: none !important; overflow: visible !important; border-right: none !important; border-bottom: 1px solid rgba(124,58,237,0.12) !important; }
-  .rb-right-panel        { width: 100% !important; flex: none !important; flex-shrink: 0 !important; min-height: 420px !important; max-height: 420px !important; }
+  .rb-left-panel         { width: 100% !important; height: 57vh !important; min-height: 57vh !important; max-height: 57vh !important; border-right: none !important; border-bottom: 1px solid rgba(124,58,237,0.12) !important; overflow: hidden !important; flex-shrink: 0 !important; }
+  .rb-right-panel        { width: 100% !important; flex: none !important; flex-shrink: 0 !important; height: 380px !important; min-height: 380px !important; max-height: 380px !important; }
   .rb-preview-scaler     { transform: scale(0.415) !important; transform-origin: top left !important; width: 241% !important; margin-bottom: 0 !important; }
-  .rb-preview-outer      { overflow: hidden !important; max-height: 360px !important; padding: 12px !important; align-items: flex-start !important; justify-content: flex-start !important; }
+  .rb-preview-outer      { overflow: hidden !important; height: 330px !important; padding: 10px 10px 0 !important; align-items: flex-start !important; justify-content: flex-start !important; flex: none !important; }
   .rb-mode-tabs          { overflow-x: auto !important; flex-wrap: nowrap !important; padding-bottom: 2px !important; }
+  .rb-toolbar-full       { display: none !important; }
+  .rb-toolbar-compact    { display: flex !important; }
 
   /* ── Resume Adaptor ── */
   .ra-page-layout        { flex-direction: column !important; height: auto !important; }
@@ -337,6 +339,10 @@ body {
   .mob-p-4               { padding: 16px !important; }
   .mob-gap-3             { gap: 12px !important; }
 }
+
+/* ── Resume builder toolbar ── */
+.rb-toolbar-compact { display: none; }
+.rb-toolbar-full    { display: flex; }
 
 /* ── Mobile nav hamburger ── */
 .lp-mob-menu-btn { display: none; }
