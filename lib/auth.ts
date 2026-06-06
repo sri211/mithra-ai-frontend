@@ -1,77 +1,41 @@
 "use client";
-import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
+// Custom auth helpers — uses authStore instead of NextAuth
+import { useAuthStore, getAuthHeaders as getHeaders } from "@/lib/stores/authStore";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { auth } from "@/auth";
-import { api } from "@/lib/api/client";
-
-// ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface MithraUser {
-  id: string;
-  name: string;
-  email: string;
-  plan: "free" | "pro" | "elite";
+  id: string; name: string; email: string; plan: "free" | "pro" | "elite";
 }
-
-export interface MithraSession {
-  user: MithraUser;
-  accessToken: string;
-  refreshToken: string;
-}
-
-// ── Client-side hook ──────────────────────────────────────────────────────────
 
 export function useUser() {
-  const { data: session, status } = useSession();
-
-  const user: MithraUser | null = session?.user
-    ? {
-        id: (session.user as Record<string, unknown>).id as string ?? "",
-        name: session.user.name ?? "",
-        email: session.user.email ?? "",
-        plan: ((session.user as Record<string, unknown>).plan as "free" | "pro" | "elite") ?? "free",
-      }
-    : null;
-
-  const accessToken: string = (session as Record<string, unknown> | null)?.accessToken as string ?? "";
-
+  const { user, accessToken } = useAuthStore();
   return {
-    user,
-    accessToken,
-    isLoading: status === "loading",
-    isAuthenticated: status === "authenticated",
+    user: user as MithraUser | null,
+    accessToken: accessToken ?? "",
+    isLoading: false,
+    isAuthenticated: !!user,
   };
 }
 
-// ── Require auth hook (client) ────────────────────────────────────────────────
-
 export function useRequireAuth() {
-  const { user, isLoading } = useUser();
+  const { user } = useAuthStore();
   const router = useRouter();
-
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/login");
-    }
-  }, [user, isLoading, router]);
-
-  return { user, isLoading };
+    if (!user) router.push("/login");
+  }, [user, router]);
+  return { user, isLoading: false };
 }
-
-// ── Logout ────────────────────────────────────────────────────────────────────
 
 export async function logout() {
-  await nextAuthSignOut({ callbackUrl: "/" });
+  useAuthStore.getState().logout();
+  document.cookie = "mithra-token=; path=/; max-age=0";
+  window.location.href = "/login";
 }
 
-// ── Auth header helper ────────────────────────────────────────────────────────
-
-export function getAuthHeaders(accessToken: string): Record<string, string> {
-  return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+export function getAuthHeaders(accessToken?: string): Record<string, string> {
+  if (accessToken) return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
+  return getHeaders();
 }
 
-// ── Server-side session helper ────────────────────────────────────────────────
-// Usage: const session = await getSession() inside server components / route handlers
-
-export { auth as getSession };
+export { useAuthStore };
