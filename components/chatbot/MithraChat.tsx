@@ -184,16 +184,26 @@ export default function MithraChat() {
 
   const panelW = expanded ? "560px" : "380px";
   const panelH = expanded ? "82vh" : "520px";
+  // On mobile, lift FAB + panel above the bottom nav bar (72px)
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const fabBottom = isMobile ? "80px" : "24px";
 
   return (
     <>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}`}</style>
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+        @media(max-width:767px){
+          .mithra-fab{bottom:80px!important}
+          .mithra-panel{bottom:80px!important;width:calc(100vw - 24px)!important;right:12px!important;left:12px!important;border-radius:20px!important}
+        }
+      `}</style>
 
       {/* ── FAB ── */}
       {!isOpen && (
-        <button onClick={() => setOpen(true)} style={{
+        <button className="mithra-fab" onClick={() => setOpen(true)} style={{
           position: "fixed", bottom: "24px", right: "24px", zIndex: 50,
-          width: "56px", height: "56px", borderRadius: "18px", border: "none",
+          width: "52px", height: "52px", borderRadius: "18px", border: "none",
           background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white",
           cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: "22px", boxShadow: "0 8px 32px rgba(124,58,237,0.55)",
@@ -212,7 +222,7 @@ export default function MithraChat() {
 
       {/* ── CHAT PANEL ── */}
       {isOpen && (
-        <div style={{
+        <div className="mithra-panel" style={{
           position: "fixed", bottom: "24px", right: "24px", zIndex: 50,
           width: panelW, height: panelH,
           display: "flex", flexDirection: "column", borderRadius: "20px", overflow: "hidden",
