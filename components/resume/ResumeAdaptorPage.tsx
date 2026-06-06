@@ -39,7 +39,7 @@ const SCORE_COLOR = (s: number) => s >= 80 ? "#10b981" : s >= 60 ? "#f59e0b" : "
 
 const S = {
   page: { height: "100%", display: "flex", overflow: "hidden" } as React.CSSProperties,
-  leftPanel: { width: "420px", flexShrink: 0, display: "flex", flexDirection: "column" as const, borderRight: "1px solid rgba(124,58,237,0.12)", overflow: "hidden" } as React.CSSProperties,
+  leftPanel: { width: "420px", flexShrink: 0, display: "flex", flexDirection: "column" as const, borderRight: "1px solid rgba(124,58,237,0.12)", overflow: "auto" } as React.CSSProperties,
   leftHeader: { padding: "20px 24px 16px", borderBottom: "1px solid rgba(124,58,237,0.1)", flexShrink: 0 } as React.CSSProperties,
   h3: { fontSize: "15px", fontWeight: 700, color: "#f1f5f9", marginBottom: "4px" } as React.CSSProperties,
   tabRow: { display: "flex", gap: "4px", padding: "4px", borderRadius: "12px", background: "rgba(255,255,255,0.04)", margin: "16px 16px 0", flexShrink: 0 } as React.CSSProperties,
@@ -423,9 +423,9 @@ export default function ResumeAdaptorPage() {
   ];
 
   return (
-    <div style={S.page}>
+    <div className="ra-page-layout" style={S.page}>
       {/* LEFT PANEL */}
-      <div style={S.leftPanel}>
+      <div className="ra-left-panel" style={S.leftPanel}>
         <div style={S.leftHeader}>
           <h3 style={S.h3}>Job Details</h3>
           <div style={{ width: "32px", height: "2px", background: "linear-gradient(90deg,#7c3aed,transparent)", borderRadius: "2px" }} />
@@ -534,7 +534,7 @@ export default function ResumeAdaptorPage() {
       </div>
 
       {/* RIGHT PANEL */}
-      <div style={S.rightPanel}>
+      <div className="ra-right-panel" style={S.rightPanel}>
         {/* Right panel tabs — only show when result exists */}
         {result && (
           <div style={{ display: "flex", gap: "0", borderBottom: "1px solid rgba(124,58,237,0.12)", flexShrink: 0 }}>

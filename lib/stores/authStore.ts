@@ -3,6 +3,42 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { API_BASE } from "@/lib/api/client";
 
+// Remove localStorage keys that were written while the user was a "guest"
+function clearGuestData() {
+  if (typeof window === "undefined") return;
+  ["mithra-resume-guest", "mithra-chat-guest", "mithra-selected-job-guest", "mithra-user-profile-guest"].forEach(
+    (k) => localStorage.removeItem(k)
+  );
+}
+
+// After a successful login/register, fetch and hydrate cloud data into the stores
+async function loadUserCloudData(token: string) {
+  try {
+    const headers = { Authorization: `Bearer ${token}` };
+    const base = process.env.NEXT_PUBLIC_API_URL ?? (process.env.NODE_ENV === "production" ? "https://api.mithraai.in/api" : "http://localhost:8000/api");
+
+    // Reset stores to clean state before loading this user's data
+    const [{ useResumeStore }, { useChatStore }] = await Promise.all([
+      import("@/lib/stores/resumeStore"),
+      import("@/lib/stores/chatStore"),
+    ]);
+    useResumeStore.getState().resetToDefault();
+    useChatStore.getState().clearMessages();
+
+    // Load most recent resume from cloud
+    const resRes = await fetch(`${base}/user/resumes`, { headers });
+    if (resRes.ok) {
+      const data = await resRes.json();
+      const resumes = Array.isArray(data) ? data : data?.resumes;
+      if (resumes?.length > 0) {
+        useResumeStore.getState().setResume(resumes[0].resume_json);
+      }
+    }
+  } catch {
+    // Non-critical — swallow silently
+  }
+}
+
 interface AuthUser {
   id: string;
   email: string;
@@ -44,7 +80,9 @@ export const useAuthStore = create<AuthStore>()(
             return false;
           }
           const data = await res.json();
+          clearGuestData();
           set({ user: data.user, accessToken: data.access_token, isLoading: false, error: null });
+          await loadUserCloudData(data.access_token);
           return true;
         } catch {
           set({ error: "Connection failed. Please try again.", isLoading: false });
@@ -65,7 +103,9 @@ export const useAuthStore = create<AuthStore>()(
             return false;
           }
           const data = await res.json();
+          clearGuestData();
           set({ user: data.user, accessToken: data.access_token, isLoading: false, error: null });
+          await loadUserCloudData(data.access_token);
           return true;
         } catch {
           set({ error: "Google sign-in failed", isLoading: false });
@@ -87,7 +127,9 @@ export const useAuthStore = create<AuthStore>()(
             return false;
           }
           const data = await res.json();
+          clearGuestData();
           set({ user: data.user, accessToken: data.access_token, isLoading: false, error: null });
+          await loadUserCloudData(data.access_token);
           return true;
         } catch {
           set({ error: "Registration failed. Please try again.", isLoading: false });
@@ -95,7 +137,15 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
 
-      logout: () => set({ user: null, accessToken: null, error: null }),
+      logout: () => {
+        set({ user: null, accessToken: null, error: null });
+        if (typeof document !== "undefined") {
+          document.cookie = "mithra-token=; path=/; max-age=0";
+        }
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
+      },
       clearError: () => set({ error: null }),
     }),
     {

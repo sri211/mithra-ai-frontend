@@ -301,6 +301,7 @@ export default function JobFinderPage() {
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
   const [remote, setRemote] = useState("");
+  const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
   const [salaryFilter, setSalaryFilter] = useState("");
   const [expFilter, setExpFilter] = useState("");
   const [jobs, setJobs] = useState<Job[]>(MOCK_JOBS);
@@ -357,7 +358,8 @@ export default function JobFinderPage() {
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       {/* Search bar card */}
       <div style={{ padding: "16px", borderBottom: "1px solid rgba(124,58,237,0.1)", flexShrink: 0 }}>
-        <div style={{ ...card, padding: "12px 16px", display: "flex", gap: "10px", alignItems: "center" }}>
+        <div style={{ ...card, padding: "12px 16px" }}>
+          <div className="jf-search-inner" style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "8px", background: "rgba(15,8,30,0.8)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "10px", padding: "8px 12px" }}>
             <Search style={{ width: "15px", height: "15px", color: "#475569", flexShrink: 0 }} />
             <input
@@ -368,7 +370,7 @@ export default function JobFinderPage() {
               placeholder="Job title, skills, or company..."
             />
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(15,8,30,0.8)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "10px", padding: "8px 12px", width: "160px", flexShrink: 0 }}>
+          <div className="jf-location-box" style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(15,8,30,0.8)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "10px", padding: "8px 12px", width: "160px", flexShrink: 0 }}>
             <MapPin style={{ width: "15px", height: "15px", color: "#475569", flexShrink: 0 }} />
             <input
               value={location}
@@ -390,10 +392,11 @@ export default function JobFinderPage() {
             )}
             {isSearching ? "Searching..." : "Search"}
           </button>
-        </div>
+          </div>{/* end jf-search-inner */}
+        </div>{/* end card */}
 
         {/* Filter row */}
-        <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "8px", marginTop: "12px", alignItems: "center" }}>
+        <div className="jf-filter-row" style={{ display: "flex", flexWrap: "wrap" as const, gap: "8px", marginTop: "12px", alignItems: "center" }}>
           <span style={{ fontSize: "12px", color: "#475569", marginRight: "4px" }}>Remote:</span>
           {["All", "Remote", "Hybrid", "On-site"].map((r) => (
             <button key={r} onClick={() => setRemote(remote === r ? "" : r)} style={chip(remote === r, "#7c3aed")}>{r}</button>
@@ -412,9 +415,9 @@ export default function JobFinderPage() {
       </div>
 
       {/* Results area */}
-      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+      <div className="jf-results-area" style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {/* Job list */}
-        <div style={{ width: selectedJob ? "50%" : "100%", overflowY: "auto", padding: "16px", transition: "width 0.3s ease" }}>
+        <div className="jf-list-panel" style={{ width: selectedJob ? "50%" : "100%", overflowY: "auto", padding: "16px", transition: "width 0.3s ease" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", fontSize: "12px", color: "#475569" }}>
             <span>{jobs.length} jobs found</span>
             <span>Sorted by: <span style={{ color: "#a78bfa" }}>AI Match Score</span></span>
@@ -424,36 +427,65 @@ export default function JobFinderPage() {
               key={job.id}
               job={job}
               isSelected={selectedJob?.id === job.id}
-              onClick={() => setSelectedJob(selectedJob?.id === job.id ? null : job)}
+              onClick={() => {
+                const next = selectedJob?.id === job.id ? null : job;
+                setSelectedJob(next);
+                if (next) setMobileDetailOpen(true);
+              }}
               onSave={() => toggleSave(job.id)}
               onApply={() => router.push("/job-application")}
             />
           ))}
         </div>
 
-        {/* Detail panel */}
+        {/* Detail panel — desktop side column */}
         <AnimatePresence>
           {selectedJob && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
+              className="jf-detail-desktop"
               style={{ flex: 1, borderLeft: "1px solid rgba(124,58,237,0.1)", overflow: "hidden" }}
             >
               <JobDetailPanel
                 job={selectedJob}
                 onClose={() => setSelectedJob(null)}
                 onAutoApply={() => router.push("/job-application")}
-                onAdaptResume={() => {
-                  // Store the full job details so ResumeAdaptorPage auto-populates
-                  storeSelectedJob(selectedJob);
-                  router.push("/resume-adaptor");
-                }}
+                onAdaptResume={() => { storeSelectedJob(selectedJob); router.push("/resume-adaptor"); }}
               />
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {/* Detail panel — mobile full-screen overlay */}
+      <AnimatePresence>
+        {selectedJob && mobileDetailOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="jf-detail-mobile-backdrop"
+              style={{ position: "fixed", inset: 0, zIndex: 55, background: "rgba(0,0,0,0.7)" }}
+              onClick={() => setMobileDetailOpen(false)} />
+            <motion.div
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className="jf-detail-mobile"
+              style={{
+                position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 56,
+                height: "88vh", borderRadius: "20px 20px 0 0", overflow: "hidden",
+                background: "rgba(10,6,20,0.99)", border: "1px solid rgba(124,58,237,0.2)", borderBottom: "none",
+              }}>
+              <JobDetailPanel
+                job={selectedJob}
+                onClose={() => { setMobileDetailOpen(false); setSelectedJob(null); }}
+                onAutoApply={() => { setMobileDetailOpen(false); router.push("/job-application"); }}
+                onAdaptResume={() => { storeSelectedJob(selectedJob); setMobileDetailOpen(false); router.push("/resume-adaptor"); }}
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

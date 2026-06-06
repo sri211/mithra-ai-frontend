@@ -1,8 +1,9 @@
 "use client";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { ChatMessage } from "@/lib/types";
 import { nanoid } from "../nanoid";
+import { userStorage } from "@/lib/stores/userStorage";
 
 const WELCOME_MESSAGE: ChatMessage = {
   id: "welcome",
@@ -20,6 +21,7 @@ interface ChatStore {
   setOpen: (open: boolean) => void;
   setLoading: (loading: boolean) => void;
   clear: () => void;
+  clearMessages: () => void;
 }
 
 export const useChatStore = create<ChatStore>()(
@@ -56,9 +58,21 @@ export const useChatStore = create<ChatStore>()(
             },
           ],
         }),
+      clearMessages: () =>
+        set({
+          messages: [
+            {
+              id: "welcome",
+              role: "assistant",
+              content: "Hi! I'm **Mithra**, your AI career companion. What story shall we tell today?",
+              timestamp: new Date(0),
+            },
+          ],
+        }),
     }),
     {
       name: "mithra-chat",
+      storage: createJSONStorage(() => userStorage),
       partialize: (state) => ({ messages: state.messages }),
       // Rehydrate timestamps as Date objects (JSON serializes them as strings)
       onRehydrateStorage: () => (state) => {

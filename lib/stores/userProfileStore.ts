@@ -1,6 +1,7 @@
 "use client";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { userStorage } from "@/lib/stores/userStorage";
 
 export interface UserProfile {
   name: string;
@@ -54,6 +55,7 @@ export const useUserProfileStore = create<UserProfileStore>()(
     }),
     {
       name: "mithra-user-profile",
+      storage: createJSONStorage(() => userStorage),
     }
   )
 );

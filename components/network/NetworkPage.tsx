@@ -134,7 +134,7 @@ export default function NetworkPage() {
       <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "24px", display: "flex", flexDirection: "column", gap: "24px" }}>
 
         {/* Page header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div className="nw-page-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#f1f5f9" }}>Network Intelligence</h2>
             <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>Find the right people at target companies and get AI-drafted outreach</p>
@@ -147,7 +147,7 @@ export default function NetworkPage() {
         {/* Search bar */}
         <div style={card}>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            <div style={{ display: "flex", gap: "12px" }}>
+            <div className="nw-search-row" style={{ display: "flex", gap: "12px" }}>
               <div style={inputBox}>
                 <Building2 style={{ width: "15px", height: "15px", color: "#475569", flexShrink: 0 }} />
                 <input
@@ -185,7 +185,7 @@ export default function NetworkPage() {
         </div>
 
         {/* Company insight cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
+        <div className="nw-insights-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
           {COMPANY_INSIGHTS.map((s, i) => {
             const { Icon } = s;
             return (
@@ -214,7 +214,7 @@ export default function NetworkPage() {
             <span style={{ color: "#475569", fontWeight: 400 }}> for {role}</span>
           </h3>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
+          <div className="nw-connections-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
             {connections.map((conn, i) => {
               const typeInfo = TYPE_LABELS[conn.type] || { label: conn.type, color: "#94a3b8", icon: "👤" };
               return (

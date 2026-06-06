@@ -1,6 +1,7 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
-import { FileText, Search, Zap, Users, Brain, BarChart3, Target, MessageSquare, ArrowRight, Star, Check, Sparkles } from "lucide-react";
+import { FileText, Search, Zap, Users, Brain, BarChart3, Target, MessageSquare, ArrowRight, Star, Check, Sparkles, Menu, X } from "lucide-react";
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -74,11 +75,13 @@ const HOW_IT_WORKS = [
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div style={{ background: "#0a0614", color: "#f8fafc", fontFamily: "Inter, system-ui, sans-serif", minHeight: "100vh" }}>
 
       {/* ── NAV ── */}
-      <nav style={{
+      <nav className="lp-nav" style={{
         position: "sticky", top: 0, zIndex: 50,
         background: "rgba(10,6,20,0.9)", backdropFilter: "blur(20px)",
         borderBottom: "1px solid rgba(124,58,237,0.12)",
@@ -99,7 +102,8 @@ export default function LandingPage() {
           </span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
+        {/* Desktop links */}
+        <div className="lp-nav-links" style={{ display: "flex", alignItems: "center", gap: "32px" }}>
           <div style={{ display: "flex", gap: "28px" }}>
             {["Features", "How it Works", "Pricing"].map((l) => (
               <a key={l} href={`#${l.toLowerCase().replace(/ /g, "-")}`}
@@ -121,10 +125,45 @@ export default function LandingPage() {
             Begin your story <ArrowRight style={{ width: "15px", height: "15px" }} />
           </Link>
         </div>
+
+        {/* Mobile right: CTA + hamburger */}
+        <div className="lp-mob-menu-btn" style={{ gap: "10px" }}>
+          <Link href="/register" style={{
+            background: "linear-gradient(135deg,#f59e0b,#d97706)",
+            color: "#0a0614", textDecoration: "none",
+            padding: "8px 16px", borderRadius: "10px",
+            fontSize: "13px", fontWeight: 700,
+          }}>
+            Start Free
+          </Link>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ background: "none", border: "none", cursor: "pointer", color: "#a78bfa", padding: "4px" }}>
+            {mobileMenuOpen ? <X style={{ width: "22px", height: "22px" }} /> : <Menu style={{ width: "22px", height: "22px" }} />}
+          </button>
+        </div>
       </nav>
 
+      {/* Mobile menu dropdown */}
+      {mobileMenuOpen && (
+        <div style={{ background: "rgba(10,6,20,0.98)", borderBottom: "1px solid rgba(124,58,237,0.15)", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "4px" }}>
+          {[
+            { label: "Features", href: "#features" },
+            { label: "How it Works", href: "#how-it-works" },
+            { label: "Pricing", href: "#pricing" },
+          ].map((l) => (
+            <a key={l.label} href={l.href} onClick={() => setMobileMenuOpen(false)}
+              style={{ fontSize: "16px", color: "#cbd5e1", textDecoration: "none", fontWeight: 500, padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "block" }}>
+              {l.label}
+            </a>
+          ))}
+          <Link href="/login" onClick={() => setMobileMenuOpen(false)}
+            style={{ fontSize: "16px", color: "#a78bfa", textDecoration: "none", fontWeight: 500, padding: "12px 0" }}>
+            Log in →
+          </Link>
+        </div>
+      )}
+
       {/* ── HERO ── */}
-      <section style={{ padding: "100px 24px 80px", textAlign: "center", maxWidth: "800px", margin: "0 auto" }}>
+      <section className="lp-hero" style={{ padding: "100px 24px 80px", textAlign: "center", maxWidth: "800px", margin: "0 auto" }}>
         <div style={{
           display: "inline-flex", alignItems: "center", gap: "8px",
           padding: "6px 16px", borderRadius: "100px", marginBottom: "32px",
@@ -174,7 +213,7 @@ export default function LandingPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display: "flex", justifyContent: "center", gap: "48px", marginTop: "64px", flexWrap: "wrap" }}>
+        <div className="lp-stats" style={{ display: "flex", justifyContent: "center", gap: "48px", marginTop: "64px", flexWrap: "wrap" }}>
           {STATS.map((s) => (
             <div key={s.label} style={{ textAlign: "center" }}>
               <div style={{ fontSize: "36px", fontWeight: 900, background: "linear-gradient(135deg,#a78bfa,#f59e0b)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
@@ -203,7 +242,7 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
+        <div className="lp-features-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
           {AGENTS.map((a) => (
             <Link key={a.num} href={a.href} style={{ textDecoration: "none" }}>
               <div style={{
@@ -290,7 +329,7 @@ export default function LandingPage() {
             </h2>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "32px" }}>
+          <div className="lp-how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "32px" }}>
             {HOW_IT_WORKS.map((s, i) => (
               <div key={s.step} style={{ textAlign: "center" }}>
                 <div style={{
@@ -318,7 +357,7 @@ export default function LandingPage() {
           </h2>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
+        <div className="lp-testimonials-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
           {TESTIMONIALS.map((t) => (
             <div key={t.name} style={{
               background: "rgba(20,13,40,0.8)", border: "1px solid rgba(124,58,237,0.12)",
@@ -349,20 +388,20 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA ── */}
-      <section style={{ padding: "0 24px 80px" }}>
-        <div style={{
+      <section style={{ padding: "0 16px 64px" }}>
+        <div className="lp-cta-box" style={{
           maxWidth: "640px", margin: "0 auto", textAlign: "center",
           background: "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(245,158,11,0.06) 100%)",
           border: "1px solid rgba(124,58,237,0.25)", borderRadius: "24px", padding: "56px 40px",
         }}>
           <div style={{ fontSize: "40px", marginBottom: "16px" }}>🚀</div>
-          <h2 style={{ fontSize: "clamp(24px,4vw,36px)", fontWeight: 900, color: "#f8fafc", marginBottom: "12px" }}>
+          <h2 style={{ fontSize: "clamp(22px,4vw,36px)", fontWeight: 900, color: "#f8fafc", marginBottom: "12px" }}>
             Every great career began with a single step forward.
           </h2>
           <p style={{ fontSize: "16px", color: "#64748b", marginBottom: "32px" }}>
             Join thousands of job seekers whose stories Mithra helped write.
           </p>
-          <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+          <div className="lp-cta-buttons" style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/register" style={{
               background: "linear-gradient(135deg,#f59e0b,#d97706)",
               color: "#0a0614", textDecoration: "none",
@@ -379,7 +418,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer style={{
+      <footer className="lp-footer" style={{
         borderTop: "1px solid rgba(124,58,237,0.08)",
         padding: "32px 24px",
         display: "flex", alignItems: "center", justifyContent: "space-between",

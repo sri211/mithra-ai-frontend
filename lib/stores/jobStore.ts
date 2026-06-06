@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { Job } from "@/lib/types";
 import { api } from "@/lib/api/client";
+import { userStorage } from "@/lib/stores/userStorage";
 
 interface SavedSearch {
   id: string;
@@ -66,7 +67,7 @@ export const useJobStore = create<JobStore>()(
     }),
     {
       name: "mithra-selected-job",
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => userStorage),
       partialize: (state) => ({
         selectedJob: state.selectedJob,
         recentSearches: state.recentSearches,

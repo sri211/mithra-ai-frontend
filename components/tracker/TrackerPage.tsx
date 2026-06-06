@@ -259,7 +259,7 @@ export default function TrackerPage() {
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#0a0614" }}>
       {/* Stats bar */}
-      <div style={{ padding: "16px 24px", borderBottom: "1px solid rgba(124,58,237,0.1)", flexShrink: 0, display: "flex", alignItems: "center", gap: "32px" }}>
+      <div className="tr-stats-bar" style={{ padding: "16px 24px", borderBottom: "1px solid rgba(124,58,237,0.1)", flexShrink: 0, display: "flex", alignItems: "center", gap: "32px" }}>
         {[
           { label: "Total Tracked",        value: stats.total,                    color: "#a78bfa" },
           { label: "Active Applications",  value: stats.applied,                  color: "#6366f1" },

@@ -837,10 +837,10 @@ export default function ResumeBuilderPage() {
       `}</style>
       <FileUploadModal isOpen={showUpload} onClose={() => setShowUpload(false)} onResumeParsed={(r) => { setResume(r); setAtsScore(70); setMode("editor"); }} />
 
-      <div style={{ height: "100%", display: "flex", overflow: "hidden", background: C.bg }}>
+      <div className="rb-page-layout" style={{ height: "100%", display: "flex", overflow: "hidden", background: C.bg }}>
 
         {/* ── LEFT PANEL ── */}
-        <div style={{ width: "420px", flexShrink: 0, display: "flex", flexDirection: "column", borderRight: `1px solid ${C.border}`, background: C.panel, overflow: "hidden" }}>
+        <div className="rb-left-panel" style={{ width: "420px", flexShrink: 0, display: "flex", flexDirection: "column", borderRight: `1px solid ${C.border}`, background: C.panel, overflow: "hidden" }}>
 
           {/* Mode tabs */}
           <div style={{ padding: "12px 14px", borderBottom: `1px solid ${C.border}` }}>
@@ -1195,7 +1195,7 @@ The more text you paste, the more complete your resume will be.`}
         </div>
 
         {/* ── RIGHT PANEL (Preview) ── */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div className="rb-right-panel" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
           {/* Toolbar */}
           <div style={{ height: "52px", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", borderBottom: `1px solid ${C.border}`, background: "rgba(10,6,20,0.7)", flexShrink: 0 }}>
@@ -1234,8 +1234,8 @@ The more text you paste, the more complete your resume will be.`}
           )}
 
           {/* Preview area */}
-          <div style={{ flex: 1, overflowY: "auto", display: "flex", justifyContent: "center", padding: "32px 24px", background: "rgba(8,4,18,0.6)" }}>
-            <div style={{ transformOrigin: "top center", transform: "scale(0.72)", marginBottom: "-28%" }}>
+          <div className="rb-preview-outer" style={{ flex: 1, overflowY: "auto", display: "flex", justifyContent: "center", padding: "32px 24px", background: "rgba(8,4,18,0.6)" }}>
+            <div className="rb-preview-scaler" style={{ transformOrigin: "top center", transform: "scale(0.72)", marginBottom: "-28%" }}>
               <ResumePreview resume={resume} template={selectedTemplate} />
             </div>
           </div>

@@ -28,9 +28,8 @@ export function useRequireAuth() {
 }
 
 export async function logout() {
+  // authStore.logout() handles cookie removal and redirect
   useAuthStore.getState().logout();
-  document.cookie = "mithra-token=; path=/; max-age=0";
-  window.location.href = "/login";
 }
 
 export function getAuthHeaders(accessToken?: string): Record<string, string> {

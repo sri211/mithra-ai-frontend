@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { ResumeData } from "@/lib/types";
 import { api } from "@/lib/api/client";
+import { userStorage } from "@/lib/stores/userStorage";
 
 const defaultResume: ResumeData = {
   personal: { name: "", email: "", phone: "", location: "", linkedin: "", github: "", website: "", title: "" },
@@ -28,6 +29,7 @@ interface ResumeStore {
   setBuilding: (b: boolean) => void;
   setAtsScore: (s: number) => void;
   reset: () => void;
+  resetToDefault: () => void;
   saveToCloud: (accessToken: string, name?: string) => Promise<string | null>;
   loadFromCloud: (accessToken: string) => Promise<void>;
   dismissSavedToast: () => void;
@@ -50,6 +52,7 @@ export const useResumeStore = create<ResumeStore>()(
       setBuilding: (isBuilding) => set({ isBuilding }),
       setAtsScore: (atsScore) => set({ atsScore }),
       reset: () => set({ resume: defaultResume, atsScore: 0 }),
+      resetToDefault: () => set({ resume: defaultResume, atsScore: 0, selectedTemplate: "modern" }),
       dismissSavedToast: () => set({ savedToastVisible: false }),
 
       saveToCloud: async (accessToken: string, name?: string) => {
@@ -100,7 +103,7 @@ export const useResumeStore = create<ResumeStore>()(
     }),
     {
       name: "mithra-resume",
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => userStorage),
       partialize: (state) => ({
         resume: state.resume,
         selectedTemplate: state.selectedTemplate,
