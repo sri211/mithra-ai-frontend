@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { useAuthStore } from "@/lib/stores/authStore";
 import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
@@ -13,33 +13,50 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState("");
+  const { login, loginWithGoogle } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-    try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-      if (result?.error) {
-        setError("Invalid email or password. Please try again.");
-      } else {
-        router.push("/resume-builder");
-      }
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setIsLoading(false);
+    const ok = await login(email, password);
+    if (ok) {
+      // Set cookie for middleware
+      document.cookie = `mithra-token=1; path=/; max-age=${7 * 86400}; SameSite=Lax`;
+      const params = new URLSearchParams(window.location.search);
+      router.push(params.get("callbackUrl") || "/resume-builder");
+    } else {
+      setError("Invalid email or password. Please try again.");
     }
+    setIsLoading(false);
   };
 
   const handleGoogle = async () => {
     setIsGoogleLoading(true);
+    // Load Google Identity Services and get id_token
     try {
-      await signIn("google", { callbackUrl: "/resume-builder" });
+      const google = (window as Window & { google?: { accounts?: { id?: { initialize: (c: object) => void; prompt: () => void } } } }).google;
+      if (!google?.accounts?.id) {
+        // Fallback: redirect to Google OAuth manually
+        const clientId = "958679936304-i304otpjmb8becedetj403u2m2kvbktf.apps.googleusercontent.com";
+        const redirectUri = encodeURIComponent(`${window.location.origin}/auth/google/callback`);
+        window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid+email+profile`;
+        return;
+      }
+      google.accounts.id.initialize({
+        client_id: "958679936304-i304otpjmb8becedetj403u2m2kvbktf.apps.googleusercontent.com",
+        callback: async (res: { credential: string }) => {
+          const ok = await loginWithGoogle(res.credential);
+          if (ok) {
+            document.cookie = `mithra-token=1; path=/; max-age=${7 * 86400}; SameSite=Lax`;
+            router.push("/resume-builder");
+          } else {
+            setError("Google sign-in failed.");
+          }
+          setIsGoogleLoading(false);
+        },
+      });
+      google.accounts.id.prompt();
     } catch {
       setError("Google sign-in failed. Please try again.");
       setIsGoogleLoading(false);

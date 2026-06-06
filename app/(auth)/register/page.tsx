@@ -2,9 +2,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { Eye, EyeOff, Mail, Lock, User, Loader2 } from "lucide-react";
-import { API_BASE } from "@/lib/api/client";
+import { useAuthStore } from "@/lib/stores/authStore";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -14,46 +13,22 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const { register } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
+    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
     setIsLoading(true);
-    try {
-      // Register via our API
-      const res = await fetch(`${API_BASE}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        setError(err.detail || "Registration failed. Please try again.");
-        return;
-      }
-
-      // Auto sign-in after registration
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        // Registration succeeded but sign-in failed — redirect to login
-        router.push("/login");
-      } else {
-        router.push("/resume-builder");
-      }
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setIsLoading(false);
+    const ok = await register(name, email, password);
+    if (ok) {
+      document.cookie = `mithra-token=1; path=/; max-age=${7 * 86400}; SameSite=Lax`;
+      router.push("/resume-builder");
+    } else {
+      const state = useAuthStore.getState();
+      setError(state.error || "Registration failed.");
     }
+    setIsLoading(false);
   };
 
   const input = {
