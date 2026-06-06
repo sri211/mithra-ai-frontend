@@ -11,6 +11,9 @@ import {
 import { cn } from "@/lib/cn";
 import MithraChat from "@/components/chatbot/MithraChat";
 import { useUser, logout } from "@/lib/auth";
+import { getLimits } from "@/lib/planLimits";
+import { useUsageTracker } from "@/lib/useUsageTracker";
+import { UsagePill } from "@/components/ui/UpgradeNudge";
 
 const NAV_ITEMS = [
   { href: "/resume-builder", icon: FileText, label: "Resume Builder", color: "#8b5cf6", description: "Every line you write is a promise to your future self." },
@@ -89,6 +92,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const isUpgradeActive = pathname?.startsWith("/pricing");
   const isMoreActive = MORE_ITEMS.some((i) => pathname?.startsWith(i.href));
+  const limits = getLimits(user?.plan ?? "free");
+  const usage = useUsageTracker(user?.id ?? "guest");
+  const showUsagePill = limits.resumeAdaptations !== -1 || limits.jobSearchesPerDay !== -1;
 
   // Close avatar dropdown on outside click
   useEffect(() => {
@@ -238,8 +244,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          {/* Right: Bell + Avatar (with dropdown) */}
+          {/* Right: usage pill + Bell + Avatar (with dropdown) */}
           <div className="flex items-center gap-1.5 shrink-0">
+            {/* Subtle usage indicator — only shows when ≥40% of free limit used */}
+            {showUsagePill && (
+              <UsagePill
+                adaptationsUsed={usage.adaptationsUsed}
+                searchesToday={usage.searchesToday}
+              />
+            )}
             <button className="relative w-9 h-9 rounded-xl flex items-center justify-center text-slate-400"
               style={{ background: "rgba(255,255,255,0.04)" }}>
               <Bell style={{ width: "16px", height: "16px" }} />

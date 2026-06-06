@@ -143,13 +143,38 @@ export default function TrackerPage() {
 
   if (!limits.trackerAccess) {
     return (
-      <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 20px", background: "#0a0614" }}>
-        <div style={{ width: "100%", maxWidth: "420px" }}>
+      <div style={{ height: "100%", overflowY: "auto", background: "#0a0614", padding: "24px 16px" }}>
+        <div style={{ maxWidth: "480px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "16px" }}>
           <UpgradeGate
             requiredPlan="pro"
             featureName="Application Tracker"
-            description="Track every application from bookmark to offer letter. Visualise your progress with a full Kanban board — available on Pro plan."
+            description="Kanban board to track every job application from bookmark to offer letter."
           />
+          {/* Blurred Kanban preview */}
+          <div style={{ borderRadius: "16px", padding: "20px", background: "rgba(99,102,241,0.05)", border: "1px solid rgba(99,102,241,0.15)" }}>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#818cf8", marginBottom: "12px" }}>What Pro unlocks:</div>
+            <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px" }}>
+              {[
+                { label: "Saved", color: "#64748b", emoji: "🔖", n: 4 },
+                { label: "Applied", color: "#6366f1", emoji: "📤", n: 3 },
+                { label: "Interview", color: "#8b5cf6", emoji: "💼", n: 1 },
+                { label: "Offer", color: "#10b981", emoji: "🎉", n: 0 },
+              ].map((s) => (
+                <div key={s.label} style={{ flexShrink: 0, width: "100px", borderRadius: "12px", padding: "10px 8px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: s.color, marginBottom: "6px", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <span>{s.emoji}</span>{s.label} <span style={{ opacity: 0.7 }}>({s.n})</span>
+                  </div>
+                  {[...Array(s.n)].map((_, i) => (
+                    <div key={i} style={{ height: "28px", borderRadius: "6px", background: "rgba(255,255,255,0.06)", marginBottom: "4px" }} />
+                  ))}
+                  {s.n === 0 && <div style={{ height: "28px", borderRadius: "6px", border: "1px dashed rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", color: "#334155" }}>empty</div>}
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: "10px", fontSize: "12px", color: "#64748b" }}>
+              + Response rate tracking · Salary comparison · Next steps for each application
+            </div>
+          </div>
         </div>
       </div>
     );

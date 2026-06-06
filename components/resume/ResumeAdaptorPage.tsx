@@ -15,6 +15,9 @@ import { useJobStore } from "@/lib/stores/jobStore";
 import { FileUploadModal } from "@/components/ui/FileUploadModal";
 import { ResumeData } from "@/lib/types";
 import { useUser } from "@/lib/auth";
+import { getLimits } from "@/lib/planLimits";
+import { useUsageTracker } from "@/lib/useUsageTracker";
+import { UsageProgressNudge, CelebrationNudge, TeaserNudge } from "@/components/ui/UpgradeNudge";
 
 type InputMode = "paste" | "url" | "company";
 type RightTab = "results" | "changes" | "preview";
@@ -192,6 +195,10 @@ export default function ResumeAdaptorPage() {
   const { pendingAction, clearAction } = useAgentStore();
   const { selectedJob, clearSelectedJob } = useJobStore();
   const { user, accessToken } = useUser();
+  const limits = getLimits(user?.plan ?? "free");
+  const usage = useUsageTracker(user?.id ?? "guest");
+  const [showAdaptNudge, setShowAdaptNudge] = useState(false);
+  const [showSuccessNudge, setShowSuccessNudge] = useState(false);
   const [inputMode, setInputMode] = useState<InputMode>("paste");
   const [jdText, setJdText] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -296,15 +303,25 @@ export default function ResumeAdaptorPage() {
     try {
       const { data } = await api.post("/resume/adapt", requestBody);
       setResult(data);
+      // Track usage and show nudge for free users
+      if (limits.resumeAdaptations !== -1) {
+        const newCount = usage.incrementAdaptations();
+        if (newCount >= 2) setShowAdaptNudge(true);   // show from 2nd use onward
+        if (newCount >= limits.resumeAdaptations) setShowSuccessNudge(false); // switch to hard gate
+      }
       if (data.suggested_changes && Array.isArray(data.suggested_changes)) {
         const changes = data.suggested_changes as SuggestedChange[];
         setSuggestedChanges(changes);
-        // Select all changes by default
         setSelectedChangeIdxs(new Set(changes.map((_: SuggestedChange, i: number) => i)));
         setRightTab("changes");
       } else if (data.adapted_resume) {
         setAdaptedResume(data.adapted_resume as ResumeData);
         setRightTab("results");
+      }
+      // Celebrate on Pro-worthy result
+      if (limits.resumeAdaptations !== -1 && (data.ats_score_after ?? 0) >= 70) {
+        setShowSuccessNudge(true);
+        setTimeout(() => setShowSuccessNudge(false), 8000);
       }
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
@@ -535,6 +552,18 @@ export default function ResumeAdaptorPage() {
 
       {/* RIGHT PANEL */}
       <div className="ra-right-panel" style={S.rightPanel}>
+        {/* Upgrade nudges */}
+        {limits.resumeAdaptations !== -1 && showAdaptNudge && (
+          <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(124,58,237,0.08)" }}>
+            <UsageProgressNudge
+              used={usage.adaptationsUsed}
+              total={limits.resumeAdaptations}
+              noun="adaptations"
+              period="this month"
+              onDismiss={() => setShowAdaptNudge(false)}
+            />
+          </div>
+        )}
         {/* Right panel tabs — only show when result exists */}
         {result && (
           <div style={{ display: "flex", gap: "0", borderBottom: "1px solid rgba(124,58,237,0.12)", flexShrink: 0 }}>
@@ -732,6 +761,33 @@ export default function ResumeAdaptorPage() {
                   </h3>
                   <p style={{ fontSize: "13px", color: "#cbd5e1", lineHeight: "1.6" }}>{result.interview_prep_tip}</p>
                 </div>
+
+                {/* Upgrade nudge — free users only, after seeing their result */}
+                {limits.resumeAdaptations !== -1 && result.ats_score_after > 0 && (
+                  <div>
+                    {usage.adaptationsUsed >= limits.resumeAdaptations ? (
+                      <UsageProgressNudge
+                        used={usage.adaptationsUsed}
+                        total={limits.resumeAdaptations}
+                        noun="adaptations"
+                        period="this month"
+                      />
+                    ) : result.ats_score_after >= 70 ? (
+                      <CelebrationNudge
+                        emoji="🎯"
+                        headline={`ATS score ${result.ats_score_after} — great result!`}
+                        subtext="Get unlimited adaptations + all 6 templates + Interview Prep with Pro plan."
+                        ctaLabel="Upgrade to Pro"
+                        accentColor="#7c3aed"
+                        onDismiss={() => setShowSuccessNudge(false)}
+                      />
+                    ) : (
+                      <TeaserNudge plan="pro" compact features={[
+                        "Unlimited adaptations", "All templates", "Interview Prep"
+                      ]} />
+                    )}
+                  </div>
+                )}
 
                 {/* Action buttons */}
                 <div style={{ display: "flex", gap: "10px", paddingBottom: "8px", flexWrap: "wrap" as const }}>

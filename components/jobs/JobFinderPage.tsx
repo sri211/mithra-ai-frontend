@@ -10,6 +10,10 @@ import { api } from "@/lib/api/client";
 import { Job } from "@/lib/types";
 import { useAgentStore } from "@/lib/stores/agentStore";
 import { useJobStore } from "@/lib/stores/jobStore";
+import { useUser } from "@/lib/auth";
+import { getLimits } from "@/lib/planLimits";
+import { useUsageTracker } from "@/lib/useUsageTracker";
+import { UsageProgressNudge, TeaserNudge } from "@/components/ui/UpgradeNudge";
 
 const PORTAL_COLORS: Record<string, string> = {
   LinkedIn: "#0a66c2", Indeed: "#2164f3", Glassdoor: "#0caa41",
@@ -297,6 +301,10 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
 
 export default function JobFinderPage() {
   const router = useRouter();
+  const { user } = useUser();
+  const limits = getLimits(user?.plan ?? "free");
+  const usage = useUsageTracker(user?.id ?? "guest");
+  const [showSearchNudge, setShowSearchNudge] = useState(false);
   const { pendingAction, clearAction } = useAgentStore();
   const { setSelectedJob: storeSelectedJob } = useJobStore();
   const [query, setQuery] = useState("");
@@ -327,6 +335,17 @@ export default function JobFinderPage() {
   }, [pendingAction]);
 
   const search = async () => {
+    // Track and gate searches for free users
+    if (limits.jobSearchesPerDay !== -1) {
+      const newCount = usage.incrementSearches();
+      if (newCount > limits.jobSearchesPerDay) {
+        setShowSearchNudge(true);
+        return; // soft block
+      }
+      if (newCount >= Math.ceil(limits.jobSearchesPerDay * 0.7)) {
+        setShowSearchNudge(true); // nudge at 70% usage
+      }
+    }
     setIsSearching(true);
     setSelectedJob(null);
     try {
@@ -419,6 +438,20 @@ export default function JobFinderPage() {
       <div className="jf-results-area" style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {/* Job list */}
         <div className="jf-list-panel" style={{ width: selectedJob ? "50%" : "100%", overflowY: "auto", padding: "16px", transition: "width 0.3s ease" }}>
+          {/* Search usage nudge */}
+          {showSearchNudge && limits.jobSearchesPerDay !== -1 && (
+            <div style={{ marginBottom: "12px" }}>
+              <UsageProgressNudge
+                used={Math.min(usage.searchesToday, limits.jobSearchesPerDay)}
+                total={limits.jobSearchesPerDay}
+                noun="searches"
+                period="today"
+                upgradeLabel="Unlimited searches"
+                accentColor="#10b981"
+                onDismiss={() => setShowSearchNudge(false)}
+              />
+            </div>
+          )}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", fontSize: "12px", color: "#475569" }}>
             <span>{jobs.length} jobs found</span>
             <span>Sorted by: <span style={{ color: "#a78bfa" }}>AI Match Score</span></span>

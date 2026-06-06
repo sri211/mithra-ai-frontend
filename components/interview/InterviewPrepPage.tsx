@@ -9,6 +9,7 @@ import { api, streamSSE } from "@/lib/api/client";
 import { useUser } from "@/lib/auth";
 import { getLimits } from "@/lib/planLimits";
 import UpgradeGate from "@/components/ui/UpgradeGate";
+import { TeaserNudge } from "@/components/ui/UpgradeNudge";
 
 type Phase = "setup" | "loading" | "practice" | "feedback";
 
@@ -118,13 +119,29 @@ export default function InterviewPrepPage() {
 
   if (!limits.interviewPrepAccess) {
     return (
-      <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 20px", background: "#0a0614" }}>
-        <div style={{ width: "100%", maxWidth: "420px" }}>
+      <div style={{ height: "100%", overflowY: "auto", background: "#0a0614", padding: "24px 16px" }}>
+        <div style={{ maxWidth: "480px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "16px" }}>
           <UpgradeGate
             requiredPlan="pro"
             featureName="Interview Prep"
-            description="AI mock interviews with STAR evaluation, live coaching, and company-specific question banks — unlock with Pro plan."
+            description="AI mock interviews with STAR evaluation, live coaching, and company-specific question banks."
           />
+          {/* Preview of what's inside */}
+          <div style={{ borderRadius: "16px", padding: "20px", background: "rgba(249,115,22,0.05)", border: "1px solid rgba(249,115,22,0.15)" }}>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#fb923c", marginBottom: "12px" }}>What Pro unlocks:</div>
+            {[
+              { emoji: "🎯", text: "Role-specific questions for your exact company" },
+              { emoji: "📋", text: "STAR method scoring with breakdown per component" },
+              { emoji: "🤖", text: "Live AI coaching during your session" },
+              { emoji: "📊", text: "Detailed feedback + ideal answer examples" },
+              { emoji: "🔄", text: "Unlimited sessions — practice till you're confident" },
+            ].map((f) => (
+              <div key={f.emoji} style={{ display: "flex", gap: "10px", marginBottom: "8px", alignItems: "flex-start" }}>
+                <span style={{ fontSize: "16px", flexShrink: 0 }}>{f.emoji}</span>
+                <span style={{ fontSize: "13px", color: "#94a3b8", lineHeight: 1.5 }}>{f.text}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
