@@ -1,9 +1,25 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react";
+
+const GOOGLE_CLIENT_ID = "958679936304-i304otpjmb8becedetj403u2m2kvbktf.apps.googleusercontent.com";
+
+// Load Google Identity Services script once
+function loadGIS(): Promise<void> {
+  return new Promise((resolve) => {
+    if (document.getElementById("gis-script")) { resolve(); return; }
+    const s = document.createElement("script");
+    s.id = "gis-script";
+    s.src = "https://accounts.google.com/gsi/client";
+    s.async = true;
+    s.defer = true;
+    s.onload = () => resolve();
+    document.head.appendChild(s);
+  });
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +30,9 @@ export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const { login, loginWithGoogle } = useAuthStore();
+
+  // Pre-load GIS on mount
+  useEffect(() => { loadGIS(); }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,28 +52,32 @@ export default function LoginPage() {
 
   const handleGoogle = async () => {
     setIsGoogleLoading(true);
-    // Load Google Identity Services and get id_token
+    setError("");
     try {
-      const google = (window as Window & { google?: { accounts?: { id?: { initialize: (c: object) => void; prompt: () => void } } } }).google;
+      // Ensure GIS is loaded
+      await loadGIS();
+      type GIS = { accounts: { id: { initialize: (c: object) => void; prompt: () => void } } };
+      const google = (window as Window & { google?: GIS }).google;
       if (!google?.accounts?.id) {
-        // Fallback: redirect to Google OAuth manually
-        const clientId = "958679936304-i304otpjmb8becedetj403u2m2kvbktf.apps.googleusercontent.com";
-        const redirectUri = encodeURIComponent(`${window.location.origin}/auth/google/callback`);
-        window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid+email+profile`;
+        setError("Google sign-in unavailable. Please use email login.");
+        setIsGoogleLoading(false);
         return;
       }
+      // Use popup/One Tap — no redirect URI needed, only JS origins
       google.accounts.id.initialize({
-        client_id: "958679936304-i304otpjmb8becedetj403u2m2kvbktf.apps.googleusercontent.com",
+        client_id: GOOGLE_CLIENT_ID,
         callback: async (res: { credential: string }) => {
           const ok = await loginWithGoogle(res.credential);
           if (ok) {
             document.cookie = `mithra-token=1; path=/; max-age=${7 * 86400}; SameSite=Lax`;
-            router.push("/resume-builder");
+            const params = new URLSearchParams(window.location.search);
+            router.push(params.get("callbackUrl") || "/resume-builder");
           } else {
-            setError("Google sign-in failed.");
+            setError("Google sign-in failed. Please try again.");
           }
           setIsGoogleLoading(false);
         },
+        ux_mode: "popup",
       });
       google.accounts.id.prompt();
     } catch {
