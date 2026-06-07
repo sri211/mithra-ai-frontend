@@ -436,7 +436,7 @@ export default function LandingPage() {
             Mithra AI
           </span>
         </div>
-        <p style={{ fontSize: "13px", color: "#334155" }}>© 2024 Mithra AI. Built for job seekers everywhere.</p>
+        <p style={{ fontSize: "13px", color: "#334155" }}>© 2026 Mithra AI. Built for job seekers everywhere.</p>
         <div style={{ display: "flex", gap: "24px" }}>
           {["Privacy", "Terms", "Contact"].map((l) => (
             <a key={l} href="#" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}

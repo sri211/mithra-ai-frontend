@@ -7,6 +7,7 @@ import {
   FileText, Target, Search, Zap, Users, Brain, BarChart3,
   Sparkles, ChevronLeft, ChevronRight, LogOut, Crown,
   Home, MoreHorizontal, X, Bell, Settings, User, ChevronDown,
+  Award, Gift, BarChart2,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import MithraChat from "@/components/chatbot/MithraChat";
@@ -17,6 +18,7 @@ import { UsagePill } from "@/components/ui/UpgradeNudge";
 
 const NAV_ITEMS = [
   { href: "/resume-builder", icon: FileText, label: "Resume Builder", color: "#8b5cf6", description: "Every line you write is a promise to your future self." },
+  { href: "/resume-score",   icon: Award,    label: "Resume Score",   color: "#10b981", description: "See exactly where your resume wins and where it loses.", badge: "Free" },
   { href: "/resume-adaptor", icon: Target, label: "Resume Adaptor", color: "#06b6d4", description: "A single role, seen through a thousand lenses." },
   { href: "/job-finder", icon: Search, label: "Job Finder", color: "#10b981", description: "Somewhere in the noise, one job was written for you." },
   { href: "/job-application", icon: Zap, label: "Auto Apply", color: "#f59e0b", description: "While you sleep, Mithra knocks on doors." },
@@ -33,11 +35,13 @@ const BOTTOM_PRIMARY = [
   { href: "/interview-prep", icon: Brain, label: "Interview", color: "#f97316" },
 ];
 
-// "More" sheet — only overflow agent pages (no Home/Logout — those are in avatar dropdown)
+// "More" sheet — overflow agent pages + key utilities
 const MORE_ITEMS = [
-  { href: "/network", icon: Users, label: "Network", color: "#ec4899", emoji: "🤝" },
-  { href: "/tracker", icon: BarChart3, label: "Tracker", color: "#6366f1", emoji: "📊" },
-  { href: "/job-application", icon: Zap, label: "Auto Apply", color: "#f59e0b", emoji: "⚡", beta: true },
+  { href: "/resume-score",    icon: Award,    label: "Resume Score",  color: "#10b981", emoji: "🏆", badge: "Free" },
+  { href: "/network",         icon: Users,    label: "Network",       color: "#ec4899", emoji: "🤝" },
+  { href: "/tracker",         icon: BarChart3,label: "Tracker",       color: "#6366f1", emoji: "📊" },
+  { href: "/referral",        icon: Gift,     label: "Refer & Earn",  color: "#10b981", emoji: "🎁" },
+  { href: "/job-application", icon: Zap,      label: "Auto Apply",    color: "#f59e0b", emoji: "⚡", beta: true },
 ];
 
 const PLAN_COLORS: Record<string, { bg: string; color: string; label: string }> = {
@@ -146,7 +150,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <AnimatePresence>
                   {!collapsed && (
                     <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} className="min-w-0">
-                      <div className={cn("text-sm font-semibold truncate", active ? "text-white" : "text-slate-300")} style={active ? { color: item.color } : {}}>{item.label}</div>
+                      <div className={cn("text-sm font-semibold truncate flex items-center gap-2", active ? "text-white" : "text-slate-300")} style={active ? { color: item.color } : {}}>
+                        {item.label}
+                        {(item as { badge?: string }).badge && (
+                          <span style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "4px", background: "rgba(16,185,129,0.2)", color: "#10b981", fontWeight: 700, letterSpacing: "0.3px" }}>
+                            {(item as { badge?: string }).badge}
+                          </span>
+                        )}
+                      </div>
                       <div className="text-[11px] text-slate-500 truncate">{item.description}</div>
                     </motion.div>
                   )}
@@ -173,9 +184,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="p-2 border-t space-y-1" style={{ borderColor: "rgba(124,58,237,0.1)" }}>
+          <Link href="/referral" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-slate-400 hover:text-green-400 hover:bg-white/5 transition-all">
+            <Gift className="w-4 h-4 shrink-0 text-green-400" />
+            {!collapsed && <span className="text-sm">Refer & Earn</span>}
+          </Link>
           <Link href="/" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 transition-all">
             <Home className="w-4 h-4 shrink-0" />
-            {!collapsed && <span className="text-sm">Back to Home</span>}
+            {!collapsed && <span className="text-sm">Home</span>}
           </Link>
           {user && (
             <button onClick={() => logout()} className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-slate-500 hover:text-red-400 hover:bg-white/5 transition-all">
@@ -202,27 +217,95 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <p className="text-xs text-slate-500">{currentPage?.description}</p>
           </div>
           <div className="flex items-center gap-3">
-            <button className="relative w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-all">
+            {/* Notifications — link to referral/updates */}
+            <Link href="/referral" title="Referrals & Rewards"
+              className="relative w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-amber-400 hover:bg-white/5 transition-all">
               <Bell className="w-4 h-4" />
               <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-400" />
-            </button>
-            <button className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-all">
+            </Link>
+
+            {/* Settings — link to referral page for now (add /settings when built) */}
+            <Link href="/referral" title="Settings"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-all">
               <Settings className="w-4 h-4" />
-            </button>
-            {user ? (
-              <div className="flex items-center gap-2">
-                <span style={{ fontSize: "11px", padding: "3px 10px", borderRadius: "20px", fontWeight: 700, background: planStyle.bg, color: planStyle.color, border: `1px solid ${planStyle.color}30`, textTransform: "uppercase" as const, letterSpacing: "0.5px" }}>
-                  {planStyle.label}
-                </span>
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }} title={user.name}>
+            </Link>
+
+            {/* Desktop Avatar dropdown — same as mobile */}
+            <div ref={avatarRef} style={{ position: "relative" }}>
+              <motion.button
+                whileTap={{ scale: 0.92 }}
+                onClick={() => setAvatarOpen(!avatarOpen)}
+                style={{
+                  display: "flex", alignItems: "center", gap: "8px",
+                  padding: "4px 10px 4px 4px",
+                  background: avatarOpen ? "rgba(124,58,237,0.15)" : "rgba(255,255,255,0.05)",
+                  border: `1px solid ${avatarOpen ? "rgba(124,58,237,0.4)" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: "24px", cursor: "pointer",
+                }}>
+                <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 800, color: "white" }}>
                   {userInitials}
                 </div>
-              </div>
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-600 to-violet-800 flex items-center justify-center">
-                <User className="w-4 h-4 text-white" />
-              </div>
-            )}
+                {user && (
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: planStyle.color }}>
+                    {planStyle.label}
+                  </span>
+                )}
+                <motion.div animate={{ rotate: avatarOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                  <ChevronDown style={{ width: "13px", height: "13px", color: "#64748b" }} />
+                </motion.div>
+              </motion.button>
+
+              <AnimatePresence>
+                {avatarOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: -8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: -8 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                    style={{
+                      position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 100,
+                      background: "rgba(14,8,30,0.98)", border: "1px solid rgba(124,58,237,0.2)",
+                      borderRadius: "16px", padding: "8px", minWidth: "220px",
+                      boxShadow: "0 16px 40px rgba(0,0,0,0.6)",
+                    }}>
+                    {user && (
+                      <div style={{ padding: "10px 12px 12px" }}>
+                        <div style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", marginBottom: "2px" }}>{user.name}</div>
+                        <div style={{ fontSize: "11px", color: "#475569" }}>{user.email}</div>
+                        <span style={{ display: "inline-block", marginTop: "6px", fontSize: "10px", padding: "2px 8px", borderRadius: "20px", fontWeight: 700, background: planStyle.bg, color: planStyle.color, textTransform: "uppercase" as const }}>
+                          {planStyle.label}
+                        </span>
+                      </div>
+                    )}
+                    <div style={{ height: "1px", background: "rgba(124,58,237,0.12)", margin: "4px 0" }} />
+                    {[
+                      { icon: Crown,    label: "Upgrade Plan",    href: "/pricing",  color: "#f59e0b" },
+                      { icon: Gift,     label: "Refer & Earn",    href: "/referral", color: "#10b981" },
+                      { icon: Award,    label: "Resume Score",    href: "/resume-score", color: "#8b5cf6" },
+                      { icon: Home,     label: "Back to Home",    href: "/",         color: "#94a3b8" },
+                    ].map(({ icon: Icon, label, href, color }) => (
+                      <Link key={label} href={href} onClick={() => setAvatarOpen(false)}
+                        style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "10px", textDecoration: "none", color: "#cbd5e1", fontSize: "13px", fontWeight: 500 }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+                        <Icon style={{ width: "15px", height: "15px", color, flexShrink: 0 }} />{label}
+                      </Link>
+                    ))}
+                    {user && (
+                      <>
+                        <div style={{ height: "1px", background: "rgba(255,255,255,0.05)", margin: "4px 0" }} />
+                        <button onClick={() => { logout(); setAvatarOpen(false); }}
+                          style={{ width: "100%", display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "10px", background: "none", border: "none", cursor: "pointer", color: "#f87171", fontSize: "13px", fontWeight: 500, textAlign: "left" as const }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239,68,68,0.08)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+                          <LogOut style={{ width: "15px", height: "15px", flexShrink: 0 }} />Logout
+                        </button>
+                      </>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </header>
 
@@ -442,27 +525,30 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </div>
 
               {/* Agent items — large touch-friendly grid */}
-              <div style={{ padding: "0 16px 24px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
+              <div style={{ padding: "0 16px 24px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
                 {MORE_ITEMS.map((item) => {
                   const active = pathname?.startsWith(item.href);
+                  const typedItem = item as typeof item & { badge?: string };
                   return (
                     <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)} style={{ textDecoration: "none" }}>
                       <motion.div whileTap={{ scale: 0.93 }}
                         style={{
-                          display: "flex", flexDirection: "column", alignItems: "center", gap: "10px",
-                          padding: "20px 8px 16px",
-                          borderRadius: "20px",
+                          display: "flex", flexDirection: "column", alignItems: "center", gap: "8px",
+                          padding: "16px 6px 14px",
+                          borderRadius: "18px",
                           background: active ? `${item.color}15` : "rgba(255,255,255,0.04)",
                           border: `1px solid ${active ? item.color + "35" : "rgba(255,255,255,0.07)"}`,
                           position: "relative",
                         }}>
-                        {item.beta && (
-                          <span style={{ position: "absolute", top: "8px", right: "8px", fontSize: "8px", fontWeight: 700, padding: "1px 5px", borderRadius: "4px", background: "rgba(245,158,11,0.2)", color: "#f59e0b", letterSpacing: "0.3px" }}>BETA</span>
+                        {(item.beta || typedItem.badge) && (
+                          <span style={{ position: "absolute", top: "7px", right: "7px", fontSize: "8px", fontWeight: 700, padding: "1px 4px", borderRadius: "4px", background: item.beta ? "rgba(245,158,11,0.2)" : "rgba(16,185,129,0.2)", color: item.beta ? "#f59e0b" : "#10b981", letterSpacing: "0.3px" }}>
+                            {item.beta ? "BETA" : typedItem.badge}
+                          </span>
                         )}
-                        <div style={{ width: "48px", height: "48px", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", background: active ? `${item.color}20` : "rgba(255,255,255,0.07)", border: `1px solid ${active ? item.color + "30" : "rgba(255,255,255,0.08)"}` }}>
-                          <item.icon style={{ width: "22px", height: "22px", color: active ? item.color : "#64748b" }} />
+                        <div style={{ width: "44px", height: "44px", borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center", background: active ? `${item.color}20` : "rgba(255,255,255,0.07)", border: `1px solid ${active ? item.color + "30" : "rgba(255,255,255,0.08)"}` }}>
+                          <item.icon style={{ width: "20px", height: "20px", color: active ? item.color : "#64748b" }} />
                         </div>
-                        <span style={{ fontSize: "12px", fontWeight: 600, color: active ? item.color : "#94a3b8", textAlign: "center", lineHeight: 1.2 }}>
+                        <span style={{ fontSize: "11px", fontWeight: 600, color: active ? item.color : "#94a3b8", textAlign: "center", lineHeight: 1.2 }}>
                           {item.label}
                         </span>
                       </motion.div>
