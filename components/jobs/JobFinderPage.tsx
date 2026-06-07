@@ -452,24 +452,76 @@ export default function JobFinderPage() {
               />
             </div>
           )}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", fontSize: "12px", color: "#475569" }}>
-            <span>{jobs.length} jobs found</span>
-            <span>Sorted by: <span style={{ color: "#a78bfa" }}>AI Match Score</span></span>
-          </div>
-          {jobs.map((job) => (
-            <JobCard
-              key={job.id}
-              job={job}
-              isSelected={selectedJob?.id === job.id}
-              onClick={() => {
-                const next = selectedJob?.id === job.id ? null : job;
-                setSelectedJob(next);
-                if (next) setMobileDetailOpen(true);
-              }}
-              onSave={() => toggleSave(job.id)}
-              onApply={() => router.push("/job-application")}
-            />
-          ))}
+          {/* Result count + gating split */}
+          {(() => {
+            const cap = limits.jobResultsVisible; // -1 = unlimited
+            const visibleJobs = cap === -1 ? jobs : jobs.slice(0, cap);
+            const lockedJobs  = cap === -1 ? [] : jobs.slice(cap);
+            const totalShown  = cap === -1 ? jobs.length : Math.min(jobs.length, cap);
+
+            return (
+              <>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", fontSize: "12px", color: "#475569" }}>
+                  <span>
+                    {totalShown} of {jobs.length} jobs shown
+                    {lockedJobs.length > 0 && <span style={{ color: "#f59e0b", marginLeft: "6px" }}>· {lockedJobs.length} locked</span>}
+                  </span>
+                  <span>Sorted by: <span style={{ color: "#a78bfa" }}>AI Match Score</span></span>
+                </div>
+
+                {/* Visible results */}
+                {visibleJobs.map((job) => (
+                  <JobCard
+                    key={job.id}
+                    job={job}
+                    isSelected={selectedJob?.id === job.id}
+                    onClick={() => {
+                      const next = selectedJob?.id === job.id ? null : job;
+                      setSelectedJob(next);
+                      if (next) setMobileDetailOpen(true);
+                    }}
+                    onSave={() => toggleSave(job.id)}
+                    onApply={() => router.push("/job-application")}
+                  />
+                ))}
+
+                {/* Locked results wall */}
+                {lockedJobs.length > 0 && (
+                  <div style={{ position: "relative", marginTop: "8px" }}>
+                    {/* Blurred preview of locked cards */}
+                    <div style={{ filter: "blur(4px)", pointerEvents: "none", userSelect: "none", opacity: 0.45 }}>
+                      {lockedJobs.slice(0, 3).map((job) => (
+                        <JobCard key={job.id} job={job} isSelected={false} onClick={() => {}} onSave={() => {}} onApply={() => {}} />
+                      ))}
+                    </div>
+                    {/* Upgrade overlay */}
+                    <div style={{
+                      position: "absolute", inset: 0, display: "flex", flexDirection: "column",
+                      alignItems: "center", justifyContent: "center", gap: "12px",
+                      background: "linear-gradient(to bottom, transparent 0%, rgba(10,6,22,0.92) 35%, rgba(10,6,22,0.98) 100%)",
+                      borderRadius: "16px",
+                    }}>
+                      <div style={{ textAlign: "center", padding: "0 24px" }}>
+                        <div style={{ fontSize: "22px", marginBottom: "8px" }}>🔒</div>
+                        <div style={{ fontSize: "15px", fontWeight: 700, color: "#f1f5f9", marginBottom: "6px" }}>
+                          {lockedJobs.length} more matches hidden
+                        </div>
+                        <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "16px" }}>
+                          Free plan shows top 8 results. Upgrade to Pro to see all {jobs.length} matches.
+                        </div>
+                        <button
+                          onClick={() => router.push("/pricing")}
+                          style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "11px 28px", background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", borderRadius: "10px", color: "#0a0614", fontSize: "14px", fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(245,158,11,0.4)" }}
+                        >
+                          Upgrade to Pro — See All Matches →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
 
         {/* Detail panel — desktop side column */}

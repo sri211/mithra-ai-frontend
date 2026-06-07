@@ -8,6 +8,7 @@ import { api, streamSSE, API_BASE } from "@/lib/api/client";
 import { ResumeData } from "@/lib/types";
 import { useUser } from "@/lib/auth";
 import { getLimits } from "@/lib/planLimits";
+import { useUsageTracker } from "@/lib/useUsageTracker";
 
 // ── Format assistant messages with basic markdown ────────────────────────────
 function FormatMsg({ text }: { text: string }) {
@@ -585,6 +586,7 @@ export default function ResumeBuilderPage() {
   const { pendingAction, clearAction } = useAgentStore();
   const { user } = useUser();
   const limits = getLimits(user?.plan ?? "free");
+  const usage = useUsageTracker(user?.id ?? "guest");
   const [mode, setMode] = useState<BuildMode>("linkedin");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([
@@ -685,6 +687,13 @@ export default function ResumeBuilderPage() {
 
   const buildFromLinkedIn = async () => {
     if (!linkedinInput.trim()) return;
+    if (limits.resumeRegenerationsPerMonth !== -1) {
+      const used = usage.incrementRegenerations();
+      if (used > limits.resumeRegenerationsPerMonth) {
+        setBuildError(`Free plan: ${limits.resumeRegenerationsPerMonth} AI builds/month used. Upgrade to Pro for unlimited rebuilds.`);
+        return;
+      }
+    }
     setIsBuilding(true); setBuildError("");
     try {
       const { data } = await api.post("/resume/build/linkedin", { linkedin_text: linkedinInput });
@@ -747,6 +756,13 @@ export default function ResumeBuilderPage() {
 
   const buildFromChat = async () => {
     if (chatMessages.length < 3) return;
+    if (limits.resumeRegenerationsPerMonth !== -1) {
+      const used = usage.incrementRegenerations();
+      if (used > limits.resumeRegenerationsPerMonth) {
+        setBuildError(`Free plan: ${limits.resumeRegenerationsPerMonth} AI builds/month used. Upgrade to Pro for unlimited rebuilds.`);
+        return;
+      }
+    }
     setIsBuilding(true); setBuildError("");
     try {
       const { data } = await api.post("/resume/build/qa", { conversation: chatMessages });
@@ -805,6 +821,14 @@ export default function ResumeBuilderPage() {
   };
 
   const downloadPDF = () => {
+    // Gate PDF downloads for free users
+    if (limits.pdfDownloadsPerMonth !== -1) {
+      const newCount = usage.incrementPdfDownloads();
+      if (newCount > limits.pdfDownloadsPerMonth) {
+        // Already over limit — don't download
+        return;
+      }
+    }
     const content = document.getElementById("resume-preview-content");
     if (!content) { alert("Build a resume first, then export."); return; }
     const name = resume.personal.name || "resume";
@@ -1290,9 +1314,22 @@ The more text you paste, the more complete your resume will be.`}
               <div style={{ display: "flex", gap: "8px" }}>
                 <button onClick={resetResume} style={{ ...btnOutline, width: "auto", padding: "7px 12px", fontSize: "12px" }}>↺ Reset</button>
                 <button onClick={downloadTXT} style={{ ...btnOutline, width: "auto", padding: "7px 12px", fontSize: "12px", color: "#94a3b8" }}>⬇ TXT</button>
-                <button onClick={downloadPDF} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 16px", borderRadius: "8px", border: "none", fontSize: "13px", fontWeight: 700, background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white", cursor: "pointer", boxShadow: "0 4px 12px rgba(124,58,237,0.3)" }}>
-                  ⬇ Export PDF
-                </button>
+                {(() => {
+                  const pdfCap = limits.pdfDownloadsPerMonth;
+                  const pdfUsed = usage.pdfDownloadsUsed;
+                  const locked = pdfCap !== -1 && pdfUsed >= pdfCap;
+                  return locked ? (
+                    <button
+                      onClick={() => window.location.href = "/pricing"}
+                      style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 16px", borderRadius: "8px", border: "1px solid rgba(245,158,11,0.4)", fontSize: "13px", fontWeight: 700, background: "rgba(245,158,11,0.1)", color: "#f59e0b", cursor: "pointer", position: "relative" }}>
+                      🔒 Export PDF — Upgrade to Pro
+                    </button>
+                  ) : (
+                    <button onClick={downloadPDF} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 16px", borderRadius: "8px", border: "none", fontSize: "13px", fontWeight: 700, background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white", cursor: "pointer", boxShadow: "0 4px 12px rgba(124,58,237,0.3)" }}>
+                      ⬇ Export PDF {pdfCap !== -1 && <span style={{ fontSize: "10px", opacity: 0.7 }}>({pdfCap - pdfUsed} left)</span>}
+                    </button>
+                  );
+                })()}
               </div>
             </div>
 
@@ -1304,9 +1341,19 @@ The more text you paste, the more complete your resume will be.`}
               <div style={{ width: "1px", height: "20px", background: "rgba(255,255,255,0.08)", flexShrink: 0 }} />
               <button onClick={resetResume} title="Reset" style={{ width: "32px", height: "32px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`, cursor: "pointer", fontSize: "14px", flexShrink: 0 }}>↺</button>
               <button onClick={downloadTXT} title="Export TXT" style={{ width: "32px", height: "32px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`, cursor: "pointer", fontSize: "14px", flexShrink: 0 }}>📄</button>
-              <button onClick={downloadPDF} title="Export PDF" style={{ display: "flex", alignItems: "center", gap: "4px", padding: "6px 12px", borderRadius: "8px", border: "none", fontSize: "12px", fontWeight: 700, background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white", cursor: "pointer", flexShrink: 0 }}>
-                ⬇ PDF
-              </button>
+              {(() => {
+                const pdfCap = limits.pdfDownloadsPerMonth;
+                const locked = pdfCap !== -1 && usage.pdfDownloadsUsed >= pdfCap;
+                return locked ? (
+                  <button onClick={() => window.location.href = "/pricing"} title="Upgrade to export PDF" style={{ display: "flex", alignItems: "center", gap: "4px", padding: "6px 12px", borderRadius: "8px", border: "1px solid rgba(245,158,11,0.4)", fontSize: "12px", fontWeight: 700, background: "rgba(245,158,11,0.1)", color: "#f59e0b", cursor: "pointer", flexShrink: 0 }}>
+                    🔒 PDF
+                  </button>
+                ) : (
+                  <button onClick={downloadPDF} title="Export PDF" style={{ display: "flex", alignItems: "center", gap: "4px", padding: "6px 12px", borderRadius: "8px", border: "none", fontSize: "12px", fontWeight: 700, background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white", cursor: "pointer", flexShrink: 0 }}>
+                    ⬇ PDF
+                  </button>
+                );
+              })()}
             </div>
           </div>
 

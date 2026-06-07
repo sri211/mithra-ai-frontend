@@ -6,6 +6,9 @@ import { useAgentStore } from "@/lib/stores/agentStore";
 import { useUserProfileStore } from "@/lib/stores/userProfileStore";
 import { useResumeStore } from "@/lib/stores/resumeStore";
 import { streamSSE } from "@/lib/api/client";
+import { useUser } from "@/lib/auth";
+import { getLimits } from "@/lib/planLimits";
+import { useUsageTracker } from "@/lib/useUsageTracker";
 
 // ─── Parse action markers from Claude response ───────────────────────────────
 function parseActions(text: string) {
@@ -43,6 +46,9 @@ export default function MithraChat() {
   const { dispatchAction } = useAgentStore();
   const { profile, setProfile, markSetupDone } = useUserProfileStore();
   const { resume } = useResumeStore();
+  const { user } = useUser();
+  const limits = getLimits(user?.plan ?? "free");
+  const usage  = useUsageTracker(user?.id ?? "guest");
   const pathname = usePathname();
   const router = useRouter();
   const [input, setInput] = useState("");
@@ -139,6 +145,20 @@ export default function MithraChat() {
   const send = useCallback(async (text?: string) => {
     const msg = (text ?? input).trim();
     if (!msg || isLoading) return;
+
+    // ── Daily message cap for free users ─────────────────────────────────────
+    if (limits.chatMessagesPerDay !== -1) {
+      const newCount = usage.incrementChatMessages();
+      if (newCount > limits.chatMessagesPerDay) {
+        addMessage({ role: "user", content: msg });
+        addMessage({
+          role: "assistant",
+          content: `You've reached your **${limits.chatMessagesPerDay} free messages** for today. Upgrade to Pro for unlimited Mithra conversations — no daily cap, ever.\n\n[Upgrade to Pro →](/pricing)`,
+        });
+        return;
+      }
+    }
+
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "20px";
     addMessage({ role: "user", content: msg });

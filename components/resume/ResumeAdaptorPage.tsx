@@ -284,13 +284,63 @@ export default function ResumeAdaptorPage() {
     } finally { setIsFetching(false); }
   };
 
-  const analyze = async () => {
-    const jd = inputMode === "paste" ? jdText
-      : inputMode === "url" ? `Job URL: ${jobUrl}`
-      : `Company: ${companyName}, Role: ${roleName}${additionalContext ? `, Context: ${additionalContext}` : ""}`;
-    if (!jd.trim()) return;
-    setIsAnalyzing(true); setResult(null); setAdaptedResume(null); setSuggestedChanges([]); setSelectedChangeIdxs(new Set());
+  const jdForRequest = () =>
+    inputMode === "paste" ? jdText
+    : inputMode === "url" ? `Job URL: ${jobUrl}`
+    : `Company: ${companyName}, Role: ${roleName}${additionalContext ? `, Context: ${additionalContext}` : ""}`;
 
+  // ATS Score check — always free/unlimited, uses the cheap scoring endpoint
+  const checkScore = async () => {
+    const jd = jdForRequest();
+    if (!jd.trim()) return;
+    setIsAnalyzing(true); setResult(null); setLoadingStep("Scoring your resume...");
+    try {
+      const { data } = await api.post("/resume/score", { resume });
+      // Show score-only result (no adapted resume, no rewrite)
+      setResult({
+        ats_score_before: data.overall_score ?? 0,
+        ats_score_after: data.overall_score ?? 0,
+        missing_keywords: data.missing_keywords ?? [],
+        matched_keywords: data.matched_keywords ?? [],
+        suggested_changes: [],
+        changes_made: [],
+        cover_letter_hook: "",
+        interview_prep_tip: data.improvement_tips?.join(" ") ?? "",
+        adapted_resume: undefined,
+        style_preserved: true,
+      });
+      setRightTab("results");
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Score check failed.";
+      setLoadingStep(msg);
+    } finally { setIsAnalyzing(false); setLoadingStep(""); }
+  };
+
+  // Full adaptation — gated at 3/month for free users
+  const analyze = async () => {
+    const jd = jdForRequest();
+    if (!jd.trim()) return;
+
+    // Gate: free users capped at 3 adaptations/month
+    if (limits.resumeAdaptations !== -1) {
+      const newCount = usage.incrementAdaptations();
+      if (newCount > limits.resumeAdaptations) {
+        // Show hard upgrade wall
+        setResult({
+          ats_score_before: 0, ats_score_after: 0,
+          missing_keywords: [], matched_keywords: [],
+          suggested_changes: [], changes_made: [],
+          cover_letter_hook: "",
+          interview_prep_tip: `__UPGRADE_WALL__You've used all ${limits.resumeAdaptations} free adaptations this month. Upgrade to Pro for unlimited rewrites. Your ATS Score check above is still free and unlimited.`,
+          adapted_resume: undefined, style_preserved: true,
+        });
+        setRightTab("results");
+        return;
+      }
+      if (newCount >= 2) setShowAdaptNudge(true);
+    }
+
+    setIsAnalyzing(true); setResult(null); setAdaptedResume(null); setSuggestedChanges([]); setSelectedChangeIdxs(new Set());
     const requestBody: Record<string, unknown> = { resume, jd_text: jd };
     if (inputMode === "company" && companyName.trim()) {
       requestBody.company_name = companyName.trim();
@@ -298,17 +348,11 @@ export default function ResumeAdaptorPage() {
       setLoadingStep(`Researching ${companyName.trim()} hiring patterns...`);
       await new Promise((r) => setTimeout(r, 800));
     }
-    setLoadingStep("Analyzing your resume...");
+    setLoadingStep("Adapting your resume...");
 
     try {
       const { data } = await api.post("/resume/adapt", requestBody);
       setResult(data);
-      // Track usage and show nudge for free users
-      if (limits.resumeAdaptations !== -1) {
-        const newCount = usage.incrementAdaptations();
-        if (newCount >= 2) setShowAdaptNudge(true);   // show from 2nd use onward
-        if (newCount >= limits.resumeAdaptations) setShowSuccessNudge(false); // switch to hard gate
-      }
       if (data.suggested_changes && Array.isArray(data.suggested_changes)) {
         const changes = data.suggested_changes as SuggestedChange[];
         setSuggestedChanges(changes);
@@ -318,24 +362,20 @@ export default function ResumeAdaptorPage() {
         setAdaptedResume(data.adapted_resume as ResumeData);
         setRightTab("results");
       }
-      // Celebrate on Pro-worthy result
-      if (limits.resumeAdaptations !== -1 && (data.ats_score_after ?? 0) >= 70) {
+      if ((data.ats_score_after ?? 0) >= 70) {
         setShowSuccessNudge(true);
         setTimeout(() => setShowSuccessNudge(false), 8000);
       }
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-        || (err as Error)?.message
-        || "Failed to adapt resume. Please try again.";
+        || (err as Error)?.message || "Failed to adapt resume. Please try again.";
       setResult({
         ats_score_before: 0, ats_score_after: 0,
         missing_keywords: [], matched_keywords: [],
-        suggested_changes: [],
-        changes_made: [],
+        suggested_changes: [], changes_made: [],
         cover_letter_hook: "",
         interview_prep_tip: msg,
-        adapted_resume: resume,
-        style_preserved: true,
+        adapted_resume: resume, style_preserved: true,
       });
       setRightTab("results");
     } finally { setIsAnalyzing(false); setLoadingStep(""); }
@@ -540,13 +580,46 @@ export default function ResumeAdaptorPage() {
             )}
           </div>
 
-          <button onClick={analyze} disabled={isAnalyzing} style={isAnalyzing ? S.btnPrimaryDisabled : S.btnPrimary}>
-            {isAnalyzing ? (
-              <><motion.div style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />{loadingStep || "Analyzing with AI..."}</>
-            ) : (
-              <><Wand2 style={{ width: "16px", height: "16px" }} />Adapt My Resume</>
-            )}
-          </button>
+          {/* Two-button layout: ATS Score (always free) + Adapt (gated) */}
+          <div style={{ display: "flex", gap: "10px" }}>
+            {/* ATS Score — always free, unlimited */}
+            <button
+              onClick={checkScore}
+              disabled={isAnalyzing}
+              style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px 16px", background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.4)", borderRadius: "10px", color: "#10b981", fontSize: "13px", fontWeight: 700, cursor: isAnalyzing ? "not-allowed" : "pointer", opacity: isAnalyzing ? 0.6 : 1 }}>
+              <TrendingUp style={{ width: "15px", height: "15px" }} />
+              Check ATS Score
+              <span style={{ fontSize: "10px", padding: "1px 6px", borderRadius: "10px", background: "rgba(16,185,129,0.2)", fontWeight: 800 }}>FREE</span>
+            </button>
+
+            {/* Adapt — gated at 3/month for free */}
+            {(() => {
+              const adaptCap = limits.resumeAdaptations;
+              const adaptUsed = usage.adaptationsUsed;
+              const adaptLocked = adaptCap !== -1 && adaptUsed >= adaptCap;
+              return adaptLocked ? (
+                <button
+                  onClick={() => window.location.href = "/pricing"}
+                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px 16px", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.4)", borderRadius: "10px", color: "#f59e0b", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}>
+                  🔒 Adapt Resume — Upgrade to Pro
+                </button>
+              ) : (
+                <button
+                  onClick={analyze}
+                  disabled={isAnalyzing}
+                  style={isAnalyzing ? { ...S.btnPrimaryDisabled, flex: 1 } : { ...S.btnPrimary, flex: 1 }}>
+                  {isAnalyzing ? (
+                    <><motion.div style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />{loadingStep || "Adapting..."}</>
+                  ) : (
+                    <><Wand2 style={{ width: "16px", height: "16px" }} />
+                      Adapt My Resume
+                      {adaptCap !== -1 && <span style={{ fontSize: "10px", opacity: 0.7, marginLeft: "4px" }}>({adaptCap - adaptUsed} left)</span>}
+                    </>
+                  )}
+                </button>
+              );
+            })()}
+          </div>
         </div>
       </div>
 
@@ -754,13 +827,27 @@ export default function ResumeAdaptorPage() {
                   </button>
                 </div>
 
-                {/* Interview tip */}
-                <div style={{ ...S.card, background: "rgba(124,58,237,0.05)", borderColor: "rgba(124,58,237,0.2)", borderLeft: "3px solid #7c3aed" }}>
-                  <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#a78bfa", marginBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
-                    <Target style={{ width: "16px", height: "16px" }} />Interview Prep Tip
-                  </h3>
-                  <p style={{ fontSize: "13px", color: "#cbd5e1", lineHeight: "1.6" }}>{result.interview_prep_tip}</p>
-                </div>
+                {/* Interview tip / upgrade wall */}
+                {result.interview_prep_tip.startsWith("__UPGRADE_WALL__") ? (
+                  <div style={{ textAlign: "center", padding: "24px 16px", background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: "16px" }}>
+                    <div style={{ fontSize: "28px", marginBottom: "10px" }}>🔒</div>
+                    <div style={{ fontSize: "15px", fontWeight: 700, color: "#f1f5f9", marginBottom: "8px" }}>Monthly adaptation limit reached</div>
+                    <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "16px", lineHeight: 1.6 }}>
+                      {result.interview_prep_tip.replace("__UPGRADE_WALL__", "")}
+                    </div>
+                    <button onClick={() => window.location.href = "/pricing"}
+                      style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "11px 28px", background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", borderRadius: "10px", color: "#0a0614", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
+                      Upgrade to Pro — Unlimited Adaptations →
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ ...S.card, background: "rgba(124,58,237,0.05)", borderColor: "rgba(124,58,237,0.2)", borderLeft: "3px solid #7c3aed" }}>
+                    <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#a78bfa", marginBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <Target style={{ width: "16px", height: "16px" }} />Interview Prep Tip
+                    </h3>
+                    <p style={{ fontSize: "13px", color: "#cbd5e1", lineHeight: "1.6" }}>{result.interview_prep_tip}</p>
+                  </div>
+                )}
 
                 {/* Upgrade nudge — free users only, after seeing their result */}
                 {limits.resumeAdaptations !== -1 && result.ats_score_after > 0 && (
