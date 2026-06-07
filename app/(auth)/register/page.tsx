@@ -1,19 +1,28 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Mail, Lock, User, Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, EyeOff, Mail, Lock, User, Loader2, Gift } from "lucide-react";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { API_BASE } from "@/lib/api/client";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const { register } = useAuthStore();
+
+  // Pre-fill referral code from URL ?ref=CODE
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) setReferralCode(ref.toUpperCase());
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,6 +32,21 @@ export default function RegisterPage() {
     const ok = await register(name, email, password);
     if (ok) {
       document.cookie = `mithra-token=1; path=/; max-age=${7 * 86400}; SameSite=Lax`;
+
+      // Auto-apply referral code if provided
+      if (referralCode.trim()) {
+        try {
+          const token = useAuthStore.getState().accessToken;
+          await fetch(`${API_BASE}/referral/apply`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ referral_code: referralCode.trim().toUpperCase() }),
+          });
+        } catch {
+          // Non-critical — swallow silently
+        }
+      }
+
       router.push("/resume-builder");
     } else {
       const state = useAuthStore.getState();
@@ -31,7 +55,7 @@ export default function RegisterPage() {
     setIsLoading(false);
   };
 
-  const input = {
+  const input: React.CSSProperties = {
     width: "100%",
     background: "rgba(15,8,30,0.8)",
     border: "1px solid rgba(124,58,237,0.25)",
@@ -41,7 +65,7 @@ export default function RegisterPage() {
     fontSize: "14px",
     outline: "none",
     fontFamily: "inherit",
-    boxSizing: "border-box" as const,
+    boxSizing: "border-box",
     transition: "border-color 0.2s",
   };
 
@@ -57,87 +81,57 @@ export default function RegisterPage() {
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+        {/* Name */}
         <div style={{ position: "relative" }}>
-          <User
-            style={{
-              position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)",
-              width: "16px", height: "16px", color: "#64748b",
-            }}
-          />
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Your full name"
-            required
-            style={input}
+          <User style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", width: "16px", height: "16px", color: "#64748b" }} />
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" required style={input}
             onFocus={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.5)")}
-            onBlur={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.25)")}
-          />
+            onBlur={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.25)")} />
         </div>
 
+        {/* Email */}
         <div style={{ position: "relative" }}>
-          <Mail
-            style={{
-              position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)",
-              width: "16px", height: "16px", color: "#64748b",
-            }}
-          />
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            required
-            style={input}
+          <Mail style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", width: "16px", height: "16px", color: "#64748b" }} />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required style={input}
             onFocus={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.5)")}
-            onBlur={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.25)")}
-          />
+            onBlur={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.25)")} />
         </div>
 
+        {/* Password */}
         <div style={{ position: "relative" }}>
-          <Lock
-            style={{
-              position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)",
-              width: "16px", height: "16px", color: "#64748b",
-            }}
-          />
-          <input
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Choose a password (8+ chars)"
-            required
-            style={{ ...input, paddingRight: "44px" }}
+          <Lock style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", width: "16px", height: "16px", color: "#64748b" }} />
+          <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)}
+            placeholder="Choose a password (8+ chars)" required style={{ ...input, paddingRight: "44px" }}
             onFocus={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.5)")}
-            onBlur={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.25)")}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            style={{
-              position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)",
-              background: "none", border: "none", cursor: "pointer", color: "#64748b",
-              padding: "2px", display: "flex",
-            }}
-          >
+            onBlur={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.25)")} />
+          <button type="button" onClick={() => setShowPassword(!showPassword)}
+            style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#64748b", padding: "2px", display: "flex" }}>
             {showPassword ? <EyeOff style={{ width: "15px", height: "15px" }} /> : <Eye style={{ width: "15px", height: "15px" }} />}
           </button>
         </div>
 
+        {/* Referral code — optional */}
+        <div style={{ position: "relative" }}>
+          <Gift style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", width: "16px", height: "16px", color: "#10b981" }} />
+          <input type="text" value={referralCode} onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+            placeholder="Referral code (optional)"
+            style={{ ...input, borderColor: referralCode ? "rgba(16,185,129,0.4)" : "rgba(124,58,237,0.25)", letterSpacing: referralCode ? "1px" : "normal" }}
+            onFocus={(e) => (e.target.style.borderColor = "rgba(16,185,129,0.5)")}
+            onBlur={(e) => (e.target.style.borderColor = referralCode ? "rgba(16,185,129,0.4)" : "rgba(124,58,237,0.25)")} />
+          {referralCode && (
+            <span style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", fontWeight: 700, color: "#10b981" }}>
+              ✓ Applied
+            </span>
+          )}
+        </div>
+
         {error && (
-          <div style={{
-            padding: "10px 12px", borderRadius: "8px",
-            background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
-            fontSize: "13px", color: "#f87171",
-          }}>
+          <div style={{ padding: "10px 12px", borderRadius: "8px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", fontSize: "13px", color: "#f87171" }}>
             {error}
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={isLoading}
+        <button type="submit" disabled={isLoading}
           style={{
             width: "100%", padding: "12px",
             background: isLoading ? "rgba(124,58,237,0.4)" : "linear-gradient(135deg,#7c3aed,#6d28d9)",
@@ -147,8 +141,7 @@ export default function RegisterPage() {
             fontFamily: "inherit",
             display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
             boxShadow: isLoading ? "none" : "0 4px 16px rgba(124,58,237,0.3)",
-          }}
-        >
+          }}>
           {isLoading && <Loader2 style={{ width: "15px", height: "15px", animation: "spin 1s linear infinite" }} />}
           {isLoading ? "Creating account..." : "Create free account"}
         </button>
@@ -156,17 +149,22 @@ export default function RegisterPage() {
 
       <p style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", color: "#475569" }}>
         Already have an account?{" "}
-        <Link
-          href="/login"
-          style={{ color: "#a78bfa", textDecoration: "none", fontWeight: 600 }}
+        <Link href="/login" style={{ color: "#a78bfa", textDecoration: "none", fontWeight: 600 }}
           onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
-          onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
-        >
+          onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>
           Sign in
         </Link>
       </p>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
   );
 }
