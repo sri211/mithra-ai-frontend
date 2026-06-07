@@ -6,12 +6,15 @@ import LandingPage from "@/components/landing/LandingPage";
 
 export default function RootPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const hasHydrated = useAuthStore((s) => s._hasHydrated);
 
   useEffect(() => {
-    if (user) router.replace("/resume-builder");
-  }, [user, router]);
+    if (hasHydrated && user) router.replace("/resume-builder");
+  }, [hasHydrated, user, router]);
 
+  // Wait for hydration — avoid flash of landing page for logged-in users
+  if (!hasHydrated) return null;
   if (user) return null;
   return <LandingPage />;
 }

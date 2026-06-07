@@ -51,6 +51,8 @@ interface AuthStore {
   accessToken: string | null;
   isLoading: boolean;
   error: string | null;
+  _hasHydrated: boolean;
+  setHasHydrated: (v: boolean) => void;
   login: (email: string, password: string) => Promise<boolean>;
   loginWithGoogle: (idToken: string) => Promise<boolean>;
   register: (name: string, email: string, password: string) => Promise<boolean>;
@@ -65,6 +67,8 @@ export const useAuthStore = create<AuthStore>()(
       accessToken: null,
       isLoading: false,
       error: null,
+      _hasHydrated: false,
+      setHasHydrated: (v) => set({ _hasHydrated: v }),
 
       login: async (email, password) => {
         set({ isLoading: true, error: null });
@@ -152,6 +156,9 @@ export const useAuthStore = create<AuthStore>()(
       name: "mithra-auth",
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({ user: s.user, accessToken: s.accessToken }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );

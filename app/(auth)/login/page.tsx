@@ -45,7 +45,8 @@ export default function LoginPage() {
       const params = new URLSearchParams(window.location.search);
       router.push(params.get("callbackUrl") || "/resume-builder");
     } else {
-      setError("Invalid email or password. Please try again.");
+      const storeError = useAuthStore.getState().error;
+      setError(storeError || "Invalid email or password. Please try again.");
     }
     setIsLoading(false);
   };
