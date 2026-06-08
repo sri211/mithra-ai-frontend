@@ -15,7 +15,7 @@ function clearGuestData() {
 async function loadUserCloudData(token: string) {
   try {
     const headers = { Authorization: `Bearer ${token}` };
-    const base = process.env.NEXT_PUBLIC_API_URL ?? (process.env.NODE_ENV === "production" ? "https://api.mithraai.in/api" : "http://localhost:8000/api");
+    const base = API_BASE;
 
     // Reset stores to clean state before loading this user's data
     const [{ useResumeStore }, { useChatStore }] = await Promise.all([

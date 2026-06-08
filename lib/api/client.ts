@@ -2,7 +2,7 @@ import axios from "axios";
 
 export const API_BASE =
   process.env.NODE_ENV === "production"
-    ? "https://api.mithraai.in/api"
+    ? "/api/backend"
     : "http://localhost:8000/api";
 
 export const api = axios.create({

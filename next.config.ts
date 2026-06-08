@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async rewrites() {
+    return [
+      {
+        source: "/api/backend/:path*",
+        destination: "https://api.mithraai.in/api/:path*",
+      },
+    ];
+  },
   async headers() {
     return [
       {
