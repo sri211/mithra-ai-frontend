@@ -22,7 +22,7 @@ function FormatMsg({ text }: { text: string }) {
         const boldParts = line.split(/(\*\*[^*]+\*\*)/g);
         const rendered = boldParts.map((part, j) =>
           part.startsWith("**") && part.endsWith("**")
-            ? <strong key={j} style={{ color: "#f1f5f9", fontWeight: 700 }}>{part.slice(2, -2)}</strong>
+            ? <strong key={j} style={{ color: "#111111", fontWeight: 700 }}>{part.slice(2, -2)}</strong>
             : <span key={j}>{part}</span>
         );
         // Bullet list
@@ -56,42 +56,42 @@ const TEMPLATES = [
 
 // ─── Design tokens ──────────────────────────────────────────────────────────
 const C = {
-  bg: "#0a0614",
-  panel: "rgba(16,10,32,0.95)",
-  card: "rgba(22,14,44,0.9)",
-  border: "rgba(124,58,237,0.18)",
-  inputBg: "rgba(12,6,26,0.8)",
+  bg: "#F7F7F5",
+  panel: "#FFFFFF",
+  card: "#FFFFFF",
+  border: "rgba(0,0,0,0.09)",
+  inputBg: "#FFFFFF",
   violet: "#7c3aed",
   gold: "#f59e0b",
-  text: "#f1f5f9",
-  muted: "#64748b",
-  secondary: "#94a3b8",
+  text: "#111111",
+  muted: "#888888",
+  secondary: "#555555",
 };
 
 const inputStyle: React.CSSProperties = {
-  width: "100%", background: C.inputBg, border: `1px solid ${C.border}`,
+  width: "100%", background: C.inputBg, border: `1px solid rgba(0,0,0,0.12)`,
   borderRadius: "10px", color: C.text, padding: "10px 14px",
   fontSize: "13px", outline: "none", fontFamily: "inherit", boxSizing: "border-box",
 };
 
 const btnPrimary: React.CSSProperties = {
   display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-  background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white",
+  background: "#7c3aed", color: "white",
   border: "none", borderRadius: "10px", padding: "11px 20px",
   fontSize: "13px", fontWeight: 700, cursor: "pointer",
-  boxShadow: "0 4px 16px rgba(124,58,237,0.3)", width: "100%",
+  boxShadow: "0 2px 8px rgba(124,58,237,0.25)", width: "100%",
 };
 
 const btnGold: React.CSSProperties = {
   ...btnPrimary,
-  background: "linear-gradient(135deg,#f59e0b,#d97706)",
-  color: "#0a0614", boxShadow: "0 4px 16px rgba(245,158,11,0.3)",
+  background: "#f59e0b",
+  color: "#111111", boxShadow: "0 2px 8px rgba(245,158,11,0.25)",
 };
 
 const btnOutline: React.CSSProperties = {
   ...btnPrimary,
-  background: "transparent", border: `1px solid ${C.border}`,
-  color: C.secondary, boxShadow: "none",
+  background: "transparent", border: `1px solid rgba(0,0,0,0.12)`,
+  color: "#555555", boxShadow: "none",
 };
 
 type BuildMode = "chat" | "linkedin" | "form" | "editor";
@@ -913,7 +913,7 @@ export default function ResumeBuilderPage() {
 
           {/* Mode tabs + mobile preview trigger */}
           <div style={{ padding: "10px 12px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: "8px" }}>
-            <div className="rb-mode-tabs" style={{ flex: 1, display: "flex", gap: "3px", background: "rgba(255,255,255,0.04)", borderRadius: "10px", padding: "4px" }}>
+            <div className="rb-mode-tabs" style={{ flex: 1, display: "flex", gap: "3px", background: "rgba(0,0,0,0.04)", borderRadius: "10px", padding: "4px" }}>
               <TabPill active={mode === "chat"} onClick={() => setMode("chat")}>💬 Chat</TabPill>
               <TabPill active={mode === "linkedin"} onClick={() => setMode("linkedin")}>in</TabPill>
               <TabPill active={mode === "form"} onClick={() => setMode("form")}>✏️</TabPill>
@@ -923,7 +923,7 @@ export default function ResumeBuilderPage() {
             <button
               onClick={() => setPreviewOpen(true)}
               className="md:hidden"
-              style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: "5px", padding: "7px 12px", borderRadius: "10px", background: "rgba(124,58,237,0.12)", border: `1px solid ${C.border}`, color: "#a78bfa", fontSize: "12px", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+              style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: "5px", padding: "7px 12px", borderRadius: "10px", background: "rgba(124,58,237,0.07)", border: `1px solid rgba(124,58,237,0.2)`, color: "#7c3aed", fontSize: "12px", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
               📄 Preview
             </button>
           </div>
@@ -949,8 +949,8 @@ export default function ResumeBuilderPage() {
                       <div style={{
                         maxWidth: "82%", padding: "10px 14px",
                         fontSize: "13px", lineHeight: 1.65,
-                        background: msg.role === "user" ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "rgba(22,13,44,0.95)",
-                        color: msg.role === "user" ? "white" : "#cbd5e1",
+                        background: msg.role === "user" ? "#7c3aed" : "#F0F0EC",
+                        color: msg.role === "user" ? "white" : "#333333",
                         borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
                         border: msg.role === "assistant" ? `1px solid ${C.border}` : "none",
                         wordBreak: "break-word",
@@ -1009,7 +1009,7 @@ export default function ResumeBuilderPage() {
                     { id: "url" as const, label: "🔗 URL" },
                   ]).map((opt) => (
                     <button key={opt.id} onClick={() => setLinkedInImportMode(opt.id)}
-                      style={{ flex: 1, padding: "6px 4px", borderRadius: "6px", border: "none", fontSize: "11px", fontWeight: 600, cursor: "pointer", position: "relative", background: linkedInImportMode === opt.id ? "rgba(10,102,194,0.3)" : "transparent", color: linkedInImportMode === opt.id ? "#60a5fa" : C.muted }}>
+                      style={{ flex: 1, padding: "6px 4px", borderRadius: "6px", border: "none", fontSize: "11px", fontWeight: 600, cursor: "pointer", position: "relative", background: linkedInImportMode === opt.id ? "rgba(10,102,194,0.1)" : "transparent", color: linkedInImportMode === opt.id ? "#0a66c2" : C.muted }}>
                       {opt.label}
                       {opt.badge && linkedInImportMode === opt.id && (
                         <span style={{ marginLeft: "4px", fontSize: "9px", padding: "1px 5px", borderRadius: "8px", background: "#10b981", color: "white", fontWeight: 700 }}>{opt.badge}</span>

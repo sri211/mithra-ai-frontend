@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -33,7 +33,7 @@ interface SuggestedChange {
 const LENS_COLORS: Record<string, { bg: string; color: string; border: string }> = {
   "ATS":            { bg: "rgba(59,130,246,0.15)",  color: "#60a5fa", border: "rgba(59,130,246,0.4)" },
   "HR Screener":    { bg: "rgba(16,185,129,0.15)",  color: "#34d399", border: "rgba(16,185,129,0.4)" },
-  "Hiring Manager": { bg: "rgba(124,58,237,0.15)",  color: "#a78bfa", border: "rgba(124,58,237,0.4)" },
+  "Hiring Manager": { bg: "rgba(124,58,237,0.15)",  color: "#7c3aed", border: "rgba(124,58,237,0.4)" },
   "Domain Expert":  { bg: "rgba(245,158,11,0.15)",  color: "#fbbf24", border: "rgba(245,158,11,0.4)" },
   "Cultural Fit":   { bg: "rgba(236,72,153,0.15)",  color: "#f472b6", border: "rgba(236,72,153,0.4)" },
 };
@@ -42,23 +42,23 @@ const SCORE_COLOR = (s: number) => s >= 80 ? "#10b981" : s >= 60 ? "#f59e0b" : "
 
 const S = {
   page: { height: "100%", display: "flex", overflow: "hidden" } as React.CSSProperties,
-  leftPanel: { width: "420px", flexShrink: 0, display: "flex", flexDirection: "column" as const, borderRight: "1px solid rgba(124,58,237,0.12)", overflow: "auto" } as React.CSSProperties,
-  leftHeader: { padding: "20px 24px 16px", borderBottom: "1px solid rgba(124,58,237,0.1)", flexShrink: 0 } as React.CSSProperties,
-  h3: { fontSize: "15px", fontWeight: 700, color: "#f1f5f9", marginBottom: "4px" } as React.CSSProperties,
-  tabRow: { display: "flex", gap: "4px", padding: "4px", borderRadius: "12px", background: "rgba(255,255,255,0.04)", margin: "16px 16px 0", flexShrink: 0 } as React.CSSProperties,
-  tabActive: { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "8px 4px", fontSize: "12px", fontWeight: 600, borderRadius: "8px", border: "none", cursor: "pointer", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white", boxShadow: "0 2px 12px rgba(124,58,237,0.4)" } as React.CSSProperties,
-  tabInactive: { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "8px 4px", fontSize: "12px", fontWeight: 600, borderRadius: "8px", border: "none", cursor: "pointer", background: "transparent", color: "#94a3b8" } as React.CSSProperties,
+  leftPanel: { width: "420px", flexShrink: 0, display: "flex", flexDirection: "column" as const, borderRight: "1px solid rgba(0,0,0,0.08)", overflow: "auto" } as React.CSSProperties,
+  leftHeader: { padding: "20px 24px 16px", borderBottom: "1px solid rgba(0,0,0,0.08)", flexShrink: 0 } as React.CSSProperties,
+  h3: { fontSize: "15px", fontWeight: 700, color: "#111111", marginBottom: "4px" } as React.CSSProperties,
+  tabRow: { display: "flex", gap: "4px", padding: "4px", borderRadius: "12px", background: "rgba(0,0,0,0.04)", margin: "16px 16px 0", flexShrink: 0 } as React.CSSProperties,
+  tabActive: { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "8px 4px", fontSize: "12px", fontWeight: 600, borderRadius: "8px", border: "none", cursor: "pointer", background: "#7c3aed", color: "white", boxShadow: "0 2px 8px rgba(124,58,237,0.25)" } as React.CSSProperties,
+  tabInactive: { flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", padding: "8px 4px", fontSize: "12px", fontWeight: 600, borderRadius: "8px", border: "none", cursor: "pointer", background: "transparent", color: "#888888" } as React.CSSProperties,
   inputArea: { flex: 1, overflowY: "auto" as const, padding: "12px 16px" } as React.CSSProperties,
-  textarea: { width: "100%", background: "rgba(15,8,30,0.8)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "10px", padding: "12px", color: "#f1f5f9", fontSize: "13px", lineHeight: "1.6", resize: "none" as const, outline: "none", fontFamily: "inherit" } as React.CSSProperties,
-  input: { width: "100%", background: "rgba(15,8,30,0.8)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "10px", padding: "10px 12px", color: "#f1f5f9", fontSize: "13px", outline: "none", fontFamily: "inherit" } as React.CSSProperties,
-  label: { fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "6px" } as React.CSSProperties,
-  bottomSection: { padding: "16px", borderTop: "1px solid rgba(124,58,237,0.1)", flexShrink: 0, display: "flex", flexDirection: "column" as const, gap: "12px" } as React.CSSProperties,
-  resumeCard: { display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderRadius: "12px", border: "1px solid rgba(124,58,237,0.15)", background: "rgba(26,16,51,0.6)" } as React.CSSProperties,
-  btnPrimary: { width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "12px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", border: "none", borderRadius: "12px", color: "white", fontSize: "14px", fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,58,237,0.3)" } as React.CSSProperties,
-  btnPrimaryDisabled: { width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "12px", background: "rgba(124,58,237,0.3)", border: "none", borderRadius: "12px", color: "rgba(255,255,255,0.5)", fontSize: "14px", fontWeight: 700, cursor: "not-allowed" } as React.CSSProperties,
+  textarea: { width: "100%", background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "12px", color: "#111111", fontSize: "13px", lineHeight: "1.6", resize: "none" as const, outline: "none", fontFamily: "inherit" } as React.CSSProperties,
+  input: { width: "100%", background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "10px 12px", color: "#111111", fontSize: "13px", outline: "none", fontFamily: "inherit" } as React.CSSProperties,
+  label: { fontSize: "11px", color: "#888888", display: "block", marginBottom: "6px" } as React.CSSProperties,
+  bottomSection: { padding: "16px", borderTop: "1px solid rgba(0,0,0,0.08)", flexShrink: 0, display: "flex", flexDirection: "column" as const, gap: "12px" } as React.CSSProperties,
+  resumeCard: { display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderRadius: "12px", border: "1px solid rgba(0,0,0,0.09)", background: "#F7F7F5" } as React.CSSProperties,
+  btnPrimary: { width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "12px", background: "#7c3aed", border: "none", borderRadius: "12px", color: "white", fontSize: "14px", fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(124,58,237,0.25)" } as React.CSSProperties,
+  btnPrimaryDisabled: { width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "12px", background: "rgba(124,58,237,0.15)", border: "none", borderRadius: "12px", color: "rgba(0,0,0,0.3)", fontSize: "14px", fontWeight: 700, cursor: "not-allowed" } as React.CSSProperties,
   rightPanel: { flex: 1, display: "flex", flexDirection: "column" as const, overflow: "hidden" } as React.CSSProperties,
-  card: { borderRadius: "16px", padding: "20px", border: "1px solid rgba(124,58,237,0.2)", background: "rgba(18,10,36,0.9)" } as React.CSSProperties,
-  chip: (color: string) => ({ fontSize: "12px", padding: "4px 10px", borderRadius: "20px", fontWeight: 500, background: `${color}1a`, color, border: `1px solid ${color}30` }) as React.CSSProperties,
+  card: { borderRadius: "16px", padding: "20px", border: "1px solid rgba(0,0,0,0.09)", background: "#FFFFFF" } as React.CSSProperties,
+  chip: (color: string) => ({ fontSize: "12px", padding: "4px 10px", borderRadius: "20px", fontWeight: 500, background: `${color}15`, color, border: `1px solid ${color}30` }) as React.CSSProperties,
 };
 
 function ScoreRing({ score, label }: { score: number; label: string }) {
@@ -68,15 +68,15 @@ function ScoreRing({ score, label }: { score: number; label: string }) {
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
       <div style={{ position: "relative", width: "96px", height: "96px" }}>
         <svg style={{ width: "100%", height: "100%", transform: "rotate(-90deg)" }} viewBox="0 0 92 92">
-          <circle cx="46" cy="46" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+          <circle cx="46" cy="46" r={r} fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="8" />
           <motion.circle cx="46" cy="46" r={r} fill="none" stroke={color} strokeWidth="8" strokeLinecap="round" strokeDasharray={circ} initial={{ strokeDashoffset: circ }} animate={{ strokeDashoffset: circ - dash }} transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }} />
         </svg>
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
           <span style={{ fontSize: "20px", fontWeight: 900, color }}>{score}</span>
-          <span style={{ fontSize: "10px", color: "#475569" }}>/ 100</span>
+          <span style={{ fontSize: "10px", color: "#888888" }}>/ 100</span>
         </div>
       </div>
-      <span style={{ fontSize: "12px", fontWeight: 600, color: "#94a3b8" }}>{label}</span>
+      <span style={{ fontSize: "12px", fontWeight: 600, color: "#888888" }}>{label}</span>
     </div>
   );
 }
@@ -518,7 +518,7 @@ export default function ResumeAdaptorPage() {
               <div style={{ display: "flex", gap: "8px" }}>
                 <input value={jobUrl} onChange={(e) => setJobUrl(e.target.value)} onKeyDown={(e) => e.key === "Enter" && fetchJD()}
                   style={{ ...S.input, flex: 1 }} placeholder="https://linkedin.com/jobs/view/..." />
-                <button onClick={fetchJD} disabled={isFetching || !jobUrl.trim()} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 16px", borderRadius: "10px", fontSize: "13px", fontWeight: 600, border: "1px solid rgba(124,58,237,0.4)", background: isFetching ? "rgba(124,58,237,0.15)" : "rgba(124,58,237,0.25)", color: isFetching ? "rgba(255,255,255,0.5)" : "white", cursor: isFetching || !jobUrl.trim() ? "not-allowed" : "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
+                <button onClick={fetchJD} disabled={isFetching || !jobUrl.trim()} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 16px", borderRadius: "10px", fontSize: "13px", fontWeight: 600, border: "1px solid rgba(124,58,237,0.4)", background: isFetching ? "rgba(124,58,237,0.1)" : "#7c3aed", color: isFetching ? "rgba(124,58,237,0.5)" : "white", cursor: isFetching || !jobUrl.trim() ? "not-allowed" : "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
                   {isFetching ? <motion.div style={{ width: "14px", height: "14px", borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} /> : <Link2 style={{ width: "14px", height: "14px" }} />}
                   {isFetching ? "Fetching..." : "Fetch"}
                 </button>
@@ -539,16 +539,16 @@ export default function ResumeAdaptorPage() {
         <div style={{ height: "1px", background: "rgba(124,58,237,0.1)", margin: "0 16px" }} />
         <div style={S.bottomSection}>
           <div>
-            <p style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "8px", fontWeight: 600 }}>YOUR RESUME</p>
+            <p style={{ fontSize: "11px", color: "#888888", marginBottom: "8px", fontWeight: 600 }}>YOUR RESUME</p>
             <div style={S.resumeCard}>
               <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(124,58,237,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <FileText style={{ width: "16px", height: "16px", color: "#a78bfa" }} />
+                <FileText style={{ width: "16px", height: "16px", color: "#7c3aed" }} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "13px", fontWeight: 600, color: "#f1f5f9", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{resume.personal.name || "No resume loaded"}</div>
-                <div style={{ fontSize: "12px", color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{resume.personal.title || "Build or upload a resume first"}</div>
+                <div style={{ fontSize: "13px", fontWeight: 600, color: "#111111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{resume.personal.name || "No resume loaded"}</div>
+                <div style={{ fontSize: "12px", color: "#888888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{resume.personal.title || "Build or upload a resume first"}</div>
               </div>
-              <button onClick={() => setUploadOpen(true)} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", color: "#a78bfa", background: "none", border: "none", cursor: "pointer", padding: "4px 8px", borderRadius: "6px", flexShrink: 0 }}>
+              <button onClick={() => setUploadOpen(true)} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", color: "#7c3aed", background: "none", border: "none", cursor: "pointer", padding: "4px 8px", borderRadius: "6px", flexShrink: 0 }}>
                 <Upload style={{ width: "12px", height: "12px" }} />Change
               </button>
             </div>
@@ -556,10 +556,10 @@ export default function ResumeAdaptorPage() {
           {/* Template chip — always uses source template */}
           <div style={{ position: "relative" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "11px", color: "#64748b" }}>Template</span>
+              <span style={{ fontSize: "11px", color: "#888888" }}>Template</span>
               <button
                 onClick={() => setShowTemplateDropdown(!showTemplateDropdown)}
-                style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: 600, padding: "4px 10px", borderRadius: "20px", border: "1px solid rgba(124,58,237,0.3)", background: "rgba(124,58,237,0.1)", color: "#a78bfa", cursor: "pointer" }}
+                style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: 600, padding: "4px 10px", borderRadius: "20px", border: "1px solid rgba(124,58,237,0.3)", background: "rgba(124,58,237,0.1)", color: "#7c3aed", cursor: "pointer" }}
               >
                 {(previewTemplate.charAt(0).toUpperCase() + previewTemplate.slice(1))}
                 <ChevronDown style={{ width: "12px", height: "12px" }} />
@@ -639,7 +639,7 @@ export default function ResumeAdaptorPage() {
         )}
         {/* Right panel tabs — only show when result exists */}
         {result && (
-          <div style={{ display: "flex", gap: "0", borderBottom: "1px solid rgba(124,58,237,0.12)", flexShrink: 0 }}>
+          <div style={{ display: "flex", gap: "0", borderBottom: "1px solid rgba(0,0,0,0.08)", flexShrink: 0 }}>
             {[
               { id: "changes" as RightTab, icon: <Sparkles style={{ width: "13px", height: "13px" }} />, label: `Proposed Changes${suggestedChanges.length ? ` (${suggestedChanges.length})` : ""}` },
               { id: "results" as RightTab, icon: <TrendingUp style={{ width: "13px", height: "13px" }} />, label: "Results & Score" },
@@ -659,31 +659,31 @@ export default function ResumeAdaptorPage() {
                 style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: "32px" }}>
                 <div style={{ textAlign: "center", maxWidth: "280px" }}>
                   <div style={{ width: "80px", height: "80px", borderRadius: "24px", background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-                    <Target style={{ width: "40px", height: "40px", color: "#a78bfa" }} />
+                    <Target style={{ width: "40px", height: "40px", color: "#7c3aed" }} />
                   </div>
-                  <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#f1f5f9", marginBottom: "8px" }}>Speak their language</h3>
-                  <p style={{ fontSize: "13px", color: "#94a3b8", lineHeight: "1.6" }}>A single role, seen through a thousand lenses — yours, theirs, and the one that matters most. Add a job description to begin.</p>
+                  <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#111111", marginBottom: "8px" }}>Speak their language</h3>
+                  <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.6" }}>A single role, seen through a thousand lenses — yours, theirs, and the one that matters most. Add a job description to begin.</p>
                 </div>
               </motion.div>
             ) : rightTab === "changes" ? (
               <motion.div key="changes" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
                 <div style={{ ...S.card }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-                    <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", display: "flex", alignItems: "center", gap: "8px" }}>
-                      <Sparkles style={{ width: "16px", height: "16px", color: "#a78bfa" }} />
+                    <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#111111", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <Sparkles style={{ width: "16px", height: "16px", color: "#7c3aed" }} />
                       Proposed Changes
                     </h3>
                     <div style={{ display: "flex", gap: "8px" }}>
-                      <button onClick={() => setSelectedChangeIdxs(new Set(suggestedChanges.map((_, i) => i)))} style={{ fontSize: "11px", color: "#a78bfa", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>Select all</button>
-                      <button onClick={() => setSelectedChangeIdxs(new Set())} style={{ fontSize: "11px", color: "#64748b", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>Deselect all</button>
+                      <button onClick={() => setSelectedChangeIdxs(new Set(suggestedChanges.map((_, i) => i)))} style={{ fontSize: "11px", color: "#7c3aed", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>Select all</button>
+                      <button onClick={() => setSelectedChangeIdxs(new Set())} style={{ fontSize: "11px", color: "#888888", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>Deselect all</button>
                     </div>
                   </div>
-                  <p style={{ fontSize: "12px", color: "#64748b", marginBottom: "16px" }}>
+                  <p style={{ fontSize: "12px", color: "#888888", marginBottom: "16px" }}>
                     Review and select which changes to apply. Uncheck any you want to keep as-is.
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                     {suggestedChanges.map((c, i) => (
-                      <div key={i} style={{ borderRadius: "10px", padding: "12px", background: selectedChangeIdxs.has(i) ? "rgba(124,58,237,0.06)" : "rgba(255,255,255,0.02)", border: `1px solid ${selectedChangeIdxs.has(i) ? "rgba(124,58,237,0.3)" : "rgba(255,255,255,0.06)"}`, transition: "all 0.15s" }}>
+                      <div key={i} style={{ borderRadius: "10px", padding: "12px", background: selectedChangeIdxs.has(i) ? "rgba(124,58,237,0.06)" : "rgba(0,0,0,0.02)", border: `1px solid ${selectedChangeIdxs.has(i) ? "rgba(124,58,237,0.25)" : "rgba(0,0,0,0.07)"}`, transition: "all 0.15s" }}>
                         <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
                           <input
                             type="checkbox"
@@ -695,11 +695,11 @@ export default function ResumeAdaptorPage() {
                             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px", flexWrap: "wrap" as const }}>
                               <span style={{ fontSize: "11px", fontWeight: 600, color: "#7c3aed", textTransform: "uppercase" as const, letterSpacing: "0.5px" }}>{c.section}</span>
                               {c.lens && (() => {
-                                const lc = LENS_COLORS[c.lens] || { bg: "rgba(100,116,139,0.15)", color: "#94a3b8", border: "rgba(100,116,139,0.3)" };
+                                const lc = LENS_COLORS[c.lens] || { bg: "rgba(100,116,139,0.15)", color: "#888888", border: "rgba(100,116,139,0.3)" };
                                 return <span style={{ fontSize: "10px", fontWeight: 600, padding: "2px 7px", borderRadius: "20px", background: lc.bg, color: lc.color, border: `1px solid ${lc.border}` }}>{c.lens}</span>;
                               })()}
                             </div>
-                            <div style={{ display: "flex", gap: "6px", fontSize: "12px", color: "#64748b", marginBottom: "4px" }}>
+                            <div style={{ display: "flex", gap: "6px", fontSize: "12px", color: "#888888", marginBottom: "4px" }}>
                               <span style={{ flexShrink: 0, color: "rgba(239,68,68,0.8)", fontWeight: 600 }}>Before:</span>
                               <span style={{ wordBreak: "break-word" }}>{c.original && c.original.length > 120 ? c.original.slice(0, 120) + "..." : c.original}</span>
                             </div>
@@ -707,7 +707,7 @@ export default function ResumeAdaptorPage() {
                               <span style={{ flexShrink: 0, color: "#34d399", fontWeight: 600 }}>After:</span>
                               <span style={{ wordBreak: "break-word" }}>{c.suggested}</span>
                             </div>
-                            <div style={{ fontSize: "11px", color: "#475569", fontStyle: "italic" }}>{c.reason}</div>
+                            <div style={{ fontSize: "11px", color: "#888888", fontStyle: "italic" }}>{c.reason}</div>
                           </div>
                         </div>
                       </div>
@@ -727,8 +727,8 @@ export default function ResumeAdaptorPage() {
                 {/* Score rings */}
                 <div style={S.card}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
-                    <TrendingUp style={{ width: "16px", height: "16px", color: "#a78bfa" }} />
-                    <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9" }}>ATS Score Improvement</h3>
+                    <TrendingUp style={{ width: "16px", height: "16px", color: "#7c3aed" }} />
+                    <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#111111" }}>ATS Score Improvement</h3>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-around" }}>
                     <ScoreRing score={result.ats_score_before} label="Before" />
@@ -737,7 +737,7 @@ export default function ResumeAdaptorPage() {
                         style={{ fontSize: "32px", fontWeight: 900, background: "linear-gradient(135deg,#a78bfa,#f59e0b)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                         +{result.ats_score_after - result.ats_score_before}
                       </motion.div>
-                      <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>points</div>
+                      <div style={{ fontSize: "12px", color: "#888888", marginTop: "4px" }}>points</div>
                     </div>
                     <ScoreRing score={result.ats_score_after} label="After" />
                   </div>
@@ -746,7 +746,7 @@ export default function ResumeAdaptorPage() {
                 {/* Perspective scores */}
                 {result.perspective_scores && (
                   <div style={S.card}>
-                    <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", marginBottom: "14px" }}>5-Perspective Analysis</h3>
+                    <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#111111", marginBottom: "14px" }}>5-Perspective Analysis</h3>
                     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                       {(
                         [
@@ -761,10 +761,10 @@ export default function ResumeAdaptorPage() {
                         return (
                           <div key={key}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                              <span style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8" }}>{label}</span>
+                              <span style={{ fontSize: "11px", fontWeight: 600, color: "#888888" }}>{label}</span>
                               <span style={{ fontSize: "11px", fontWeight: 700, color }}>{score}</span>
                             </div>
-                            <div style={{ height: "6px", borderRadius: "4px", background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                            <div style={{ height: "6px", borderRadius: "4px", background: "rgba(0,0,0,0.08)", overflow: "hidden" }}>
                               <motion.div initial={{ width: 0 }} animate={{ width: `${score}%` }} transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
                                 style={{ height: "100%", borderRadius: "4px", background: color }} />
                             </div>
@@ -777,7 +777,7 @@ export default function ResumeAdaptorPage() {
 
                 {/* Keywords */}
                 <div style={S.card}>
-                  <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", marginBottom: "16px" }}>Keyword Analysis</h3>
+                  <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#111111", marginBottom: "16px" }}>Keyword Analysis</h3>
                   <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#34d399", marginBottom: "8px", fontWeight: 600 }}>
@@ -796,17 +796,17 @@ export default function ResumeAdaptorPage() {
 
                 {/* Changes */}
                 <div style={S.card}>
-                  <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-                    <Sparkles style={{ width: "16px", height: "16px", color: "#a78bfa" }} />Changes Made
+                  <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#111111", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <Sparkles style={{ width: "16px", height: "16px", color: "#7c3aed" }} />Changes Made
                   </h3>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {result.changes_made.map((c, i) => {
                       const change = typeof c === "string" ? { before: null, after: c } : c;
                       return (
-                        <div key={i} style={{ borderRadius: "10px", padding: "12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", flexDirection: "column", gap: "6px" }}>
-                          {change.before && <div style={{ display: "flex", gap: "8px", fontSize: "12px", color: "#64748b" }}><span style={{ flexShrink: 0, color: "rgba(239,68,68,0.7)", fontWeight: 600 }}>Before:</span><span>{change.before}</span></div>}
+                        <div key={i} style={{ borderRadius: "10px", padding: "12px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", gap: "6px" }}>
+                          {change.before && <div style={{ display: "flex", gap: "8px", fontSize: "12px", color: "#888888" }}><span style={{ flexShrink: 0, color: "rgba(239,68,68,0.7)", fontWeight: 600 }}>Before:</span><span>{change.before}</span></div>}
                           <div style={{ display: "flex", gap: "8px", fontSize: "12px", color: "#cbd5e1" }}>
-                            {change.before ? <span style={{ flexShrink: 0, color: "#34d399", fontWeight: 600 }}>After:</span> : <ChevronRight style={{ width: "14px", height: "14px", color: "#a78bfa", flexShrink: 0, marginTop: "1px" }} />}
+                            {change.before ? <span style={{ flexShrink: 0, color: "#34d399", fontWeight: 600 }}>After:</span> : <ChevronRight style={{ width: "14px", height: "14px", color: "#7c3aed", flexShrink: 0, marginTop: "1px" }} />}
                             <span>{change.after}</span>
                           </div>
                         </div>
@@ -831,8 +831,8 @@ export default function ResumeAdaptorPage() {
                 {result.interview_prep_tip.startsWith("__UPGRADE_WALL__") ? (
                   <div style={{ textAlign: "center", padding: "24px 16px", background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: "16px" }}>
                     <div style={{ fontSize: "28px", marginBottom: "10px" }}>🔒</div>
-                    <div style={{ fontSize: "15px", fontWeight: 700, color: "#f1f5f9", marginBottom: "8px" }}>Monthly adaptation limit reached</div>
-                    <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "16px", lineHeight: 1.6 }}>
+                    <div style={{ fontSize: "15px", fontWeight: 700, color: "#111111", marginBottom: "8px" }}>Monthly adaptation limit reached</div>
+                    <div style={{ fontSize: "13px", color: "#888888", marginBottom: "16px", lineHeight: 1.6 }}>
                       {result.interview_prep_tip.replace("__UPGRADE_WALL__", "")}
                     </div>
                     <button onClick={() => window.location.href = "/pricing"}
@@ -842,7 +842,7 @@ export default function ResumeAdaptorPage() {
                   </div>
                 ) : (
                   <div style={{ ...S.card, background: "rgba(124,58,237,0.05)", borderColor: "rgba(124,58,237,0.2)", borderLeft: "3px solid #7c3aed" }}>
-                    <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#a78bfa", marginBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#7c3aed", marginBottom: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
                       <Target style={{ width: "16px", height: "16px" }} />Interview Prep Tip
                     </h3>
                     <p style={{ fontSize: "13px", color: "#cbd5e1", lineHeight: "1.6" }}>{result.interview_prep_tip}</p>
@@ -879,7 +879,7 @@ export default function ResumeAdaptorPage() {
                 {/* Action buttons */}
                 <div style={{ display: "flex", gap: "10px", paddingBottom: "8px", flexWrap: "wrap" as const }}>
                   <button onClick={() => setRightTab("preview")}
-                    style={{ flex: 1, minWidth: "140px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px", background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.4)", borderRadius: "12px", color: "#a78bfa", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}>
+                    style={{ flex: 1, minWidth: "140px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px", background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.25)", borderRadius: "12px", color: "#7c3aed", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}>
                     <Eye style={{ width: "15px", height: "15px" }} />View Resume
                   </button>
                   <button onClick={loadInBuilder}
@@ -891,7 +891,7 @@ export default function ResumeAdaptorPage() {
                     <Download style={{ width: "15px", height: "15px" }} />Export PDF
                   </button>
                   <button onClick={downloadTXT}
-                    style={{ flex: 1, minWidth: "140px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#94a3b8", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
+                    style={{ flex: 1, minWidth: "140px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px", background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.1)", borderRadius: "12px", color: "#555555", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
                     <Download style={{ width: "15px", height: "15px" }} />TXT
                   </button>
                   {user && adaptedResume && (
@@ -907,23 +907,23 @@ export default function ResumeAdaptorPage() {
                   <div style={{ ...S.card }}>
                     <button onClick={loadMyAdaptedResumes}
                       style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: showMyAdapted ? "12px" : 0 }}>
-                      <Cloud style={{ width: "14px", height: "14px", color: "#a78bfa" }} />
-                      <span style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", flex: 1, textAlign: "left" }}>My Adapted Resumes</span>
-                      <ChevronDown style={{ width: "14px", height: "14px", color: "#64748b", transform: showMyAdapted ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+                      <Cloud style={{ width: "14px", height: "14px", color: "#7c3aed" }} />
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: "#111111", flex: 1, textAlign: "left" }}>My Adapted Resumes</span>
+                      <ChevronDown style={{ width: "14px", height: "14px", color: "#888888", transform: showMyAdapted ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
                     </button>
                     {showMyAdapted && (
                       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                         {myAdaptedResumes.length === 0 ? (
-                          <p style={{ fontSize: "12px", color: "#475569" }}>No saved adaptations yet.</p>
+                          <p style={{ fontSize: "12px", color: "#888888" }}>No saved adaptations yet.</p>
                         ) : myAdaptedResumes.map((ar) => (
                           <div key={ar.id}
                             onClick={() => { setAdaptedResume(ar.adapted_json); setRightTab("preview"); }}
                             style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "10px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.15)", cursor: "pointer" }}>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: "13px", fontWeight: 600, color: "#f1f5f9", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              <div style={{ fontSize: "13px", fontWeight: 600, color: "#111111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 {ar.role || "Resume"}{ar.company ? ` @ ${ar.company}` : ""}
                               </div>
-                              <div style={{ fontSize: "11px", color: "#64748b" }}>
+                              <div style={{ fontSize: "11px", color: "#888888" }}>
                                 ATS {ar.ats_before}% → {ar.ats_after}% · {new Date(ar.created_at).toLocaleDateString()}
                               </div>
                             </div>
@@ -941,11 +941,11 @@ export default function ResumeAdaptorPage() {
               /* PREVIEW TAB — adapted resume rendered live */
               <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
                 <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                  <div style={{ fontSize: "13px", color: "#94a3b8", flex: 1 }}>ATS-adapted resume — ready to download or edit</div>
+                  <div style={{ fontSize: "13px", color: "#888888", flex: 1 }}>ATS-adapted resume — ready to download or edit</div>
                   <button onClick={downloadPDF} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", borderRadius: "8px", color: "#0f0a1e", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}>
                     <Download style={{ width: "13px", height: "13px" }} />Export PDF
                   </button>
-                  <button onClick={loadInBuilder} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 14px", background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)", borderRadius: "8px", color: "#a78bfa", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
+                  <button onClick={loadInBuilder} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 14px", background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)", borderRadius: "8px", color: "#7c3aed", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
                     <Edit3 style={{ width: "13px", height: "13px" }} />Edit in Builder
                   </button>
                 </div>

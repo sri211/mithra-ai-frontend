@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -65,17 +65,31 @@
 }
 
 :root {
-  --bg-base: #080810;
-  --bg-surface: #0f0f1a;
-  --bg-raised: #131320;
+  /* App shell — light cream theme */
+  --bg-base: #F7F7F5;
+  --bg-surface: #FFFFFF;
+  --bg-raised: #F0F0EC;
   --violet: #7c3aed;
-  --violet-dim: rgba(124,58,237,0.08);
+  --violet-dim: rgba(124,58,237,0.07);
   --gold: #f59e0b;
-  --text-primary: #f4f4f5;
-  --text-secondary: #a1a1aa;
-  --text-muted: #52525b;
-  --border: rgba(255,255,255,0.06);
-  --border-active: rgba(124,58,237,0.4);
+  --text-primary: #111111;
+  --text-secondary: #444444;
+  --text-muted: #888888;
+  --border: rgba(0,0,0,0.07);
+  --border-active: rgba(124,58,237,0.3);
+
+  /* App page design tokens — used by agent pages */
+  --ap-bg: #F7F7F5;
+  --ap-surface: #FFFFFF;
+  --ap-surface2: #F0F0EC;
+  --ap-dark: #111111;
+  --ap-body: #444444;
+  --ap-muted: #888888;
+  --ap-border: rgba(0,0,0,0.07);
+  --ap-border-med: rgba(0,0,0,0.12);
+  --ap-violet: #7c3aed;
+  --ap-violet-bg: rgba(124,58,237,0.06);
+  --ap-violet-border: rgba(124,58,237,0.18);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -92,8 +106,8 @@ body {
 /* Scrollbar — neutral, not violet */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
 
 @layer utilities {
   /* Landing page marquee */

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,17 +50,17 @@ const MOCK_JOBS: Job[] = [
 
 // ─── Styles ────────────────────────────────────────────────────────────────────
 const card: React.CSSProperties = {
-  background: "rgba(18,10,36,0.9)",
-  border: "1px solid rgba(124,58,237,0.15)",
+  background: "#FFFFFF",
+  border: "1px solid rgba(0,0,0,0.09)",
   borderRadius: "16px",
   padding: "16px",
 };
 const inputBase: React.CSSProperties = {
-  background: "rgba(15,8,30,0.8)",
-  border: "1px solid rgba(124,58,237,0.2)",
+  background: "#FFFFFF",
+  border: "1px solid rgba(0,0,0,0.12)",
   borderRadius: "10px",
   padding: "10px 14px",
-  color: "#f1f5f9",
+  color: "#111111",
   fontSize: "13px",
   outline: "none",
   fontFamily: "inherit",
@@ -70,9 +70,9 @@ const chip = (active: boolean, activeColor?: string): React.CSSProperties => ({
   padding: "6px 14px",
   borderRadius: "20px",
   fontWeight: 500,
-  border: `1px solid ${active ? (activeColor || "rgba(124,58,237,0.5)") : "rgba(255,255,255,0.08)"}`,
-  background: active ? (activeColor ? `${activeColor}22` : "rgba(124,58,237,0.2)") : "rgba(255,255,255,0.04)",
-  color: active ? (activeColor || "white") : "#94a3b8",
+  border: `1px solid ${active ? (activeColor || "rgba(124,58,237,0.4)") : "rgba(0,0,0,0.1)"}`,
+  background: active ? (activeColor ? `${activeColor}15` : "rgba(124,58,237,0.08)") : "rgba(0,0,0,0.03)",
+  color: active ? (activeColor || "#7c3aed") : "#888888",
   cursor: "pointer",
 });
 
@@ -94,7 +94,7 @@ function JobCard({ job, isSelected, onClick, onSave, onApply }: {
         borderRadius: "16px",
         padding: "16px",
         border: `1px solid ${isSelected ? "rgba(124,58,237,0.5)" : "rgba(124,58,237,0.15)"}`,
-        background: isSelected ? "rgba(124,58,237,0.1)" : "rgba(18,10,36,0.9)",
+        background: isSelected ? "rgba(124,58,237,0.07)" : "#FFFFFF",
         boxShadow: isSelected ? "0 0 0 1px rgba(124,58,237,0.3), 0 8px 30px rgba(124,58,237,0.15)" : undefined,
         marginBottom: "12px",
       }}
@@ -113,7 +113,7 @@ function JobCard({ job, isSelected, onClick, onSave, onApply }: {
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px", marginBottom: "2px" }}>
-            <h3 style={{ fontWeight: 700, color: "#f1f5f9", fontSize: "14px", lineHeight: "1.3" }}>{job.title}</h3>
+            <h3 style={{ fontWeight: 700, color: "#111111", fontSize: "14px", lineHeight: "1.3" }}>{job.title}</h3>
             {job.match_score && (
               <span style={{
                 flexShrink: 0, fontSize: "12px", fontWeight: 700, padding: "2px 8px", borderRadius: "12px",
@@ -126,7 +126,7 @@ function JobCard({ job, isSelected, onClick, onSave, onApply }: {
 
           <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "8px", color: portalColor }}>{job.company}</div>
 
-          <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "8px", fontSize: "12px", color: "#94a3b8", marginBottom: "10px" }}>
+          <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "8px", fontSize: "12px", color: "#888888", marginBottom: "10px" }}>
             <span style={{ display: "flex", alignItems: "center", gap: "4px" }}><MapPin style={{ width: "11px", height: "11px" }} />{job.location}</span>
             <span style={{ display: "flex", alignItems: "center", gap: "4px" }}><DollarSign style={{ width: "11px", height: "11px" }} />{salary}</span>
             <span style={{ display: "flex", alignItems: "center", gap: "4px" }}><Globe style={{ width: "11px", height: "11px" }} />{job.remote}</span>
@@ -135,7 +135,7 @@ function JobCard({ job, isSelected, onClick, onSave, onApply }: {
 
           <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "4px", marginBottom: "10px" }}>
             {job.skills.slice(0, 4).map((s) => (
-              <span key={s} style={{ fontSize: "11px", padding: "3px 8px", borderRadius: "6px", background: "rgba(124,58,237,0.12)", color: "#a78bfa", border: "1px solid rgba(124,58,237,0.2)" }}>{s}</span>
+              <span key={s} style={{ fontSize: "11px", padding: "3px 8px", borderRadius: "6px", background: "rgba(124,58,237,0.12)", color: "#7c3aed", border: "1px solid rgba(0,0,0,0.12)" }}>{s}</span>
             ))}
             {job.skills.length > 4 && <span style={{ fontSize: "11px", padding: "3px 8px", color: "#475569" }}>+{job.skills.length - 4}</span>}
           </div>
@@ -145,14 +145,14 @@ function JobCard({ job, isSelected, onClick, onSave, onApply }: {
               <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "12px", background: `${portalColor}20`, color: portalColor }}>{job.portal}</span>
               {job.is_real_listing
                 ? <span style={{ fontSize: "10px", padding: "2px 7px", borderRadius: "12px", background: "rgba(16,185,129,0.12)", color: "#10b981", border: "1px solid rgba(16,185,129,0.25)" }}>Real listing</span>
-                : <span style={{ fontSize: "10px", padding: "2px 7px", borderRadius: "12px", background: "rgba(148,163,184,0.1)", color: "#64748b", border: "1px solid rgba(148,163,184,0.2)" }}>Search result</span>
+                : <span style={{ fontSize: "10px", padding: "2px 7px", borderRadius: "12px", background: "rgba(148,163,184,0.1)", color: "#888888", border: "1px solid rgba(148,163,184,0.2)" }}>Search result</span>
               }
               {job.posted_date && <span style={{ fontSize: "10px", color: "#475569" }}>{formatPostedDate(job.posted_date)}</span>}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <button
                 onClick={(e) => { e.stopPropagation(); onSave(); }}
-                style={{ width: "28px", height: "28px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: "#64748b" }}
+                style={{ width: "28px", height: "28px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: "none", cursor: "pointer", color: "#888888" }}
               >
                 <Bookmark style={{ width: "14px", height: "14px" }} />
               </button>
@@ -202,10 +202,10 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
     >
       {/* Header */}
       <div style={{ height: "56px", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", borderBottom: "1px solid rgba(124,58,237,0.1)", flexShrink: 0 }}>
-        <span style={{ fontWeight: 700, color: "#f1f5f9", fontSize: "14px" }}>Job Details</span>
+        <span style={{ fontWeight: 700, color: "#111111", fontSize: "14px" }}>Job Details</span>
         <button
           onClick={onClose}
-          style={{ width: "32px", height: "32px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: "#94a3b8" }}
+          style={{ width: "32px", height: "32px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: "none", cursor: "pointer", color: "#888888" }}
         >
           <X style={{ width: "16px", height: "16px" }} />
         </button>
@@ -219,7 +219,7 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
             {job.company[0]}
           </div>
           <div>
-            <h2 style={{ fontSize: "17px", fontWeight: 900, color: "#f1f5f9", lineHeight: "1.2" }}>{job.title}</h2>
+            <h2 style={{ fontSize: "17px", fontWeight: 900, color: "#111111", lineHeight: "1.2" }}>{job.title}</h2>
             <div style={{ fontWeight: 600, marginTop: "4px", color: portalColor }}>{job.company}</div>
           </div>
         </div>
@@ -227,11 +227,11 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
         {/* Info grid */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
           {infoGrid.map(({ Icon, label, value }) => (
-            <div key={label} style={{ borderRadius: "10px", padding: "12px", background: "rgba(255,255,255,0.04)" }}>
+            <div key={label} style={{ borderRadius: "10px", padding: "12px", background: "rgba(0,0,0,0.03)" }}>
               <div style={{ fontSize: "11px", color: "#475569", marginBottom: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
                 <Icon style={{ width: "11px", height: "11px" }} />{label}
               </div>
-              <div style={{ fontSize: "13px", fontWeight: 600, color: "#f1f5f9" }}>{value}</div>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: "#111111" }}>{value}</div>
             </div>
           ))}
         </div>
@@ -243,7 +243,7 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
               <span style={{ fontSize: "13px", fontWeight: 700, color: matchColor }}>AI Match Score</span>
               <span style={{ fontSize: "24px", fontWeight: 900, color: matchColor }}>{job.match_score}%</span>
             </div>
-            <div style={{ height: "6px", borderRadius: "3px", overflow: "hidden", background: "rgba(255,255,255,0.08)" }}>
+            <div style={{ height: "6px", borderRadius: "3px", overflow: "hidden", background: "rgba(0,0,0,0.08)" }}>
               <motion.div style={{ height: "100%", borderRadius: "3px", background: matchColor }} initial={{ width: 0 }} animate={{ width: `${job.match_score}%` }} transition={{ duration: 1 }} />
             </div>
           </div>
@@ -251,18 +251,18 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
 
         {/* Skills */}
         <div>
-          <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", marginBottom: "8px" }}>Required Skills</h4>
+          <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#111111", marginBottom: "8px" }}>Required Skills</h4>
           <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "6px" }}>
             {job.skills.map((s) => (
-              <span key={s} style={{ fontSize: "12px", padding: "4px 10px", borderRadius: "8px", fontWeight: 500, background: "rgba(124,58,237,0.15)", color: "#a78bfa", border: "1px solid rgba(124,58,237,0.25)" }}>{s}</span>
+              <span key={s} style={{ fontSize: "12px", padding: "4px 10px", borderRadius: "8px", fontWeight: 500, background: "rgba(124,58,237,0.15)", color: "#7c3aed", border: "1px solid rgba(124,58,237,0.25)" }}>{s}</span>
             ))}
           </div>
         </div>
 
         {/* Description */}
         <div>
-          <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", marginBottom: "8px" }}>About the Role</h4>
-          <p style={{ fontSize: "13px", color: "#94a3b8", lineHeight: "1.6" }}>{job.description}</p>
+          <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#111111", marginBottom: "8px" }}>About the Role</h4>
+          <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.6" }}>{job.description}</p>
         </div>
       </div>
 
@@ -286,7 +286,7 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
           );
         })()}
         <div style={{ display: "flex", gap: "10px" }}>
-          <button onClick={onAdaptResume} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "10px", background: "none", border: "1px solid rgba(124,58,237,0.4)", borderRadius: "10px", color: "#a78bfa", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
+          <button onClick={onAdaptResume} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "10px", background: "none", border: "1px solid rgba(124,58,237,0.4)", borderRadius: "10px", color: "#7c3aed", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
             Adapt Resume
           </button>
           <button onClick={onAutoApply} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", padding: "10px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: "10px", color: "#f59e0b", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
@@ -380,23 +380,23 @@ export default function JobFinderPage() {
       <div style={{ padding: "16px", borderBottom: "1px solid rgba(124,58,237,0.1)", flexShrink: 0 }}>
         <div style={{ ...card, padding: "12px 16px" }}>
           <div className="jf-search-inner" style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "8px", background: "rgba(15,8,30,0.8)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "10px", padding: "8px 12px" }}>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "8px", background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "8px 12px" }}>
             <Search style={{ width: "15px", height: "15px", color: "#475569", flexShrink: 0 }} />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && search()}
-              style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "13px", color: "#f1f5f9", fontFamily: "inherit" }}
+              style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "13px", color: "#111111", fontFamily: "inherit" }}
               placeholder="Job title, skills, or company..."
             />
           </div>
-          <div className="jf-location-box" style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(15,8,30,0.8)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "10px", padding: "8px 12px", width: "160px", flexShrink: 0 }}>
+          <div className="jf-location-box" style={{ display: "flex", alignItems: "center", gap: "8px", background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "8px 12px", width: "160px", flexShrink: 0 }}>
             <MapPin style={{ width: "15px", height: "15px", color: "#475569", flexShrink: 0 }} />
             <input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && search()}
-              style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "13px", color: "#f1f5f9", fontFamily: "inherit" }}
+              style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "13px", color: "#111111", fontFamily: "inherit" }}
               placeholder="Location..."
             />
           </div>
@@ -421,12 +421,12 @@ export default function JobFinderPage() {
           {["All", "Remote", "Hybrid", "On-site"].map((r) => (
             <button key={r} onClick={() => setRemote(remote === r ? "" : r)} style={chip(remote === r, "#7c3aed")}>{r}</button>
           ))}
-          <div style={{ width: "1px", height: "20px", background: "rgba(255,255,255,0.1)", margin: "0 4px" }} />
+          <div style={{ width: "1px", height: "20px", background: "rgba(0,0,0,0.08)", margin: "0 4px" }} />
           <span style={{ fontSize: "12px", color: "#475569", marginRight: "4px" }}>Salary:</span>
           {["₹10-20L", "₹20-35L", "₹35L+"].map((s) => (
             <button key={s} onClick={() => setSalaryFilter(salaryFilter === s ? "" : s)} style={chip(salaryFilter === s, "#f59e0b")}>{s}</button>
           ))}
-          <div style={{ width: "1px", height: "20px", background: "rgba(255,255,255,0.1)", margin: "0 4px" }} />
+          <div style={{ width: "1px", height: "20px", background: "rgba(0,0,0,0.08)", margin: "0 4px" }} />
           <span style={{ fontSize: "12px", color: "#475569", marginRight: "4px" }}>Experience:</span>
           {["0-2yr", "2-5yr", "5yr+"].map((e) => (
             <button key={e} onClick={() => setExpFilter(expFilter === e ? "" : e)} style={chip(expFilter === e, "#06b6d4")}>{e}</button>
@@ -466,7 +466,7 @@ export default function JobFinderPage() {
                     {totalShown} of {jobs.length} jobs shown
                     {lockedJobs.length > 0 && <span style={{ color: "#f59e0b", marginLeft: "6px" }}>· {lockedJobs.length} locked</span>}
                   </span>
-                  <span>Sorted by: <span style={{ color: "#a78bfa" }}>AI Match Score</span></span>
+                  <span>Sorted by: <span style={{ color: "#7c3aed" }}>AI Match Score</span></span>
                 </div>
 
                 {/* Visible results */}
@@ -503,10 +503,10 @@ export default function JobFinderPage() {
                     }}>
                       <div style={{ textAlign: "center", padding: "0 24px" }}>
                         <div style={{ fontSize: "22px", marginBottom: "8px" }}>🔒</div>
-                        <div style={{ fontSize: "15px", fontWeight: 700, color: "#f1f5f9", marginBottom: "6px" }}>
+                        <div style={{ fontSize: "15px", fontWeight: 700, color: "#111111", marginBottom: "6px" }}>
                           {lockedJobs.length} more matches hidden
                         </div>
-                        <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "16px" }}>
+                        <div style={{ fontSize: "13px", color: "#888888", marginBottom: "16px" }}>
                           Free plan shows top 8 results. Upgrade to Pro to see all {jobs.length} matches.
                         </div>
                         <button
@@ -560,7 +560,7 @@ export default function JobFinderPage() {
               style={{
                 position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 56,
                 height: "88vh", borderRadius: "20px 20px 0 0", overflow: "hidden",
-                background: "rgba(10,6,20,0.99)", border: "1px solid rgba(124,58,237,0.2)", borderBottom: "none",
+                background: "rgba(10,6,20,0.99)", border: "1px solid rgba(0,0,0,0.12)", borderBottom: "none",
               }}>
               <JobDetailPanel
                 job={selectedJob}

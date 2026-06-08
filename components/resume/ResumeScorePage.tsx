@@ -37,8 +37,8 @@ function CategoryCard({ cat, index }: { cat: ScoreCategory; index: number }) {
       transition={{ delay: index * 0.06 }}
       style={{
         borderRadius: "16px", overflow: "hidden",
-        border: `1px solid ${color}25`,
-        background: "rgba(18,10,36,0.9)",
+        border: `1px solid ${color}30`,
+        background: "#FFFFFF",
       }}>
 
       {/* Header */}
@@ -53,7 +53,7 @@ function CategoryCard({ cat, index }: { cat: ScoreCategory; index: number }) {
         {/* Score ring */}
         <div style={{ position: "relative", width: "44px", height: "44px", flexShrink: 0 }}>
           <svg style={{ width: "100%", height: "100%", transform: "rotate(-90deg)" }} viewBox="0 0 44 44">
-            <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
+            <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="4" />
             <motion.circle cx="22" cy="22" r="18" fill="none" stroke={color} strokeWidth="4"
               strokeLinecap="round"
               strokeDasharray={113}
@@ -66,12 +66,12 @@ function CategoryCard({ cat, index }: { cat: ScoreCategory; index: number }) {
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: "14px", fontWeight: 700, color: "#f1f5f9", marginBottom: "2px" }}>{cat.name}</div>
-          <div style={{ fontSize: "12px", color: "#64748b" }}>{score} / {max} points</div>
+          <div style={{ fontSize: "14px", fontWeight: 700, color: "#111111", marginBottom: "2px" }}>{cat.name}</div>
+          <div style={{ fontSize: "12px", color: "#888888" }}>{score} / {max} points</div>
         </div>
 
         {/* Bar */}
-        <div style={{ width: "80px", height: "6px", borderRadius: "3px", background: "rgba(255,255,255,0.06)", overflow: "hidden", flexShrink: 0 }}>
+        <div style={{ width: "80px", height: "6px", borderRadius: "3px", background: "rgba(0,0,0,0.08)", overflow: "hidden", flexShrink: 0 }}>
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
@@ -80,7 +80,7 @@ function CategoryCard({ cat, index }: { cat: ScoreCategory; index: number }) {
           />
         </div>
 
-        <div style={{ flexShrink: 0, color: "#64748b" }}>
+        <div style={{ flexShrink: 0, color: "#888888" }}>
           {open ? <ChevronUp style={{ width: "16px", height: "16px" }} /> : <ChevronDown style={{ width: "16px", height: "16px" }} />}
         </div>
       </button>
@@ -93,14 +93,14 @@ function CategoryCard({ cat, index }: { cat: ScoreCategory; index: number }) {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             style={{ overflow: "hidden" }}>
-            <div style={{ padding: "0 16px 16px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+            <div style={{ padding: "0 16px 16px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
 
               {/* Strengths */}
               {cat.strengths.length > 0 && (
                 <div style={{ marginTop: "12px" }}>
                   <div style={{ fontSize: "11px", fontWeight: 700, color: "#10b981", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>✓ Strengths</div>
                   {cat.strengths.map((s, i) => (
-                    <div key={i} style={{ display: "flex", gap: "8px", fontSize: "13px", color: "#cbd5e1", marginBottom: "4px", alignItems: "flex-start" }}>
+                    <div key={i} style={{ display: "flex", gap: "8px", fontSize: "13px", color: "#333333", marginBottom: "4px", alignItems: "flex-start" }}>
                       <CheckCircle2 style={{ width: "14px", height: "14px", color: "#10b981", flexShrink: 0, marginTop: "2px" }} />{s}
                     </div>
                   ))}
@@ -112,7 +112,7 @@ function CategoryCard({ cat, index }: { cat: ScoreCategory; index: number }) {
                 <div style={{ marginTop: "10px" }}>
                   <div style={{ fontSize: "11px", fontWeight: 700, color: "#ef4444", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>✗ Gaps</div>
                   {cat.gaps.map((g, i) => (
-                    <div key={i} style={{ display: "flex", gap: "8px", fontSize: "13px", color: "#cbd5e1", marginBottom: "4px", alignItems: "flex-start" }}>
+                    <div key={i} style={{ display: "flex", gap: "8px", fontSize: "13px", color: "#333333", marginBottom: "4px", alignItems: "flex-start" }}>
                       <XCircle style={{ width: "14px", height: "14px", color: "#ef4444", flexShrink: 0, marginTop: "2px" }} />{g}
                     </div>
                   ))}
@@ -121,9 +121,9 @@ function CategoryCard({ cat, index }: { cat: ScoreCategory; index: number }) {
 
               {/* Tip */}
               {cat.tip && (
-                <div style={{ marginTop: "10px", padding: "10px 12px", borderRadius: "10px", background: `${color}0d`, border: `1px solid ${color}25`, fontSize: "12px", color: "#94a3b8", display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                <div style={{ marginTop: "10px", padding: "10px 12px", borderRadius: "10px", background: `${color}0d`, border: `1px solid ${color}25`, fontSize: "12px", color: "#888888", display: "flex", gap: "8px", alignItems: "flex-start" }}>
                   <AlertCircle style={{ width: "14px", height: "14px", color, flexShrink: 0, marginTop: "1px" }} />
-                  <span><strong style={{ color }}>Tip: </strong>{String(cat.tip)}</span>
+                  <span><strong style={{ color }}>Tip: </strong><span style={{ color: "#555555" }}>{String(cat.tip)}</span></span>
                 </div>
               )}
             </div>
@@ -165,7 +165,7 @@ export default function ResumeScorePage() {
   const gc      = gradeColor(grade);
 
   return (
-    <div style={{ height: "100%", overflowY: "auto", background: "#0a0614" }}>
+    <div style={{ height: "100%", overflowY: "auto", background: "#F7F7F5" }}>
       <FileUploadModal
         isOpen={showUpload}
         onClose={() => setShowUpload(false)}
@@ -182,8 +182,8 @@ export default function ResumeScorePage() {
                 <Award style={{ width: "22px", height: "22px", color: "white" }} />
               </div>
               <div>
-                <h1 style={{ fontSize: "22px", fontWeight: 900, color: "#f1f5f9", marginBottom: "2px" }}>Resume Score Checker</h1>
-                <p style={{ fontSize: "13px", color: "#64748b" }}>7-dimension analysis · 100-point scale · Free for all users</p>
+                <h1 style={{ fontSize: "22px", fontWeight: 900, color: "#111111", marginBottom: "2px" }}>Resume Score Checker</h1>
+                <p style={{ fontSize: "13px", color: "#888888" }}>7-dimension analysis · 100-point scale · Free for all users</p>
               </div>
             </div>
             <span style={{ fontSize: "11px", padding: "4px 12px", borderRadius: "20px", background: "rgba(16,185,129,0.12)", color: "#10b981", border: "1px solid rgba(16,185,129,0.25)", fontWeight: 700 }}>
@@ -193,28 +193,28 @@ export default function ResumeScorePage() {
         </div>
 
         {/* Input card */}
-        <div style={{ background: "rgba(18,10,36,0.9)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "20px", padding: "20px", marginBottom: "20px" }}>
+        <div style={{ background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.09)", borderRadius: "20px", padding: "20px", marginBottom: "20px" }}>
           {/* Resume status */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px", padding: "12px 16px", borderRadius: "12px", background: hasResume ? "rgba(16,185,129,0.08)" : "rgba(245,158,11,0.06)", border: `1px solid ${hasResume ? "rgba(16,185,129,0.25)" : "rgba(245,158,11,0.2)"}` }}>
             {hasResume ? <CheckCircle2 style={{ width: "18px", height: "18px", color: "#10b981", flexShrink: 0 }} /> : <AlertCircle style={{ width: "18px", height: "18px", color: "#f59e0b", flexShrink: 0 }} />}
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "13px", fontWeight: 600, color: "#f1f5f9" }}>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: "#111111" }}>
                 {hasResume ? `Resume loaded: ${resume?.personal?.name || "Unnamed"}` : "No resume loaded"}
               </div>
-              <div style={{ fontSize: "11px", color: "#64748b" }}>
+              <div style={{ fontSize: "11px", color: "#888888" }}>
                 {hasResume ? `${resume?.experience?.length || 0} experience entries · ${resume?.skills?.technical?.length || 0} skills` : "Import or build a resume in Resume Builder first"}
               </div>
             </div>
             <button
               onClick={() => setShowUpload(true)}
-              style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#a78bfa", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}>
+              style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.2)", color: "#7c3aed", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}>
               <Upload style={{ width: "13px", height: "13px" }} />{hasResume ? "Change" : "Import"}
             </button>
           </div>
 
           {/* Target role (optional) */}
           <div style={{ marginBottom: "16px" }}>
-            <label style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "6px", fontWeight: 600 }}>
+            <label style={{ fontSize: "11px", color: "#888888", display: "block", marginBottom: "6px", fontWeight: 600 }}>
               Target Role <span style={{ color: "#475569", fontWeight: 400 }}>(optional — improves accuracy)</span>
             </label>
             <input
@@ -222,7 +222,7 @@ export default function ResumeScorePage() {
               onChange={(e) => setTargetRole(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && runScore()}
               placeholder="e.g. Product Manager at Flipkart, Senior Software Engineer..."
-              style={{ width: "100%", background: "rgba(15,8,30,0.8)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "12px", padding: "11px 16px", color: "#f1f5f9", fontSize: "14px", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
+              style={{ width: "100%", background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.12)", borderRadius: "12px", padding: "11px 16px", color: "#111111", fontSize: "14px", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
             />
           </div>
 
@@ -238,7 +238,7 @@ export default function ResumeScorePage() {
             style={{
               width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
               padding: "14px", borderRadius: "14px", border: "none", cursor: isScoring || !hasResume ? "not-allowed" : "pointer",
-              background: isScoring || !hasResume ? "rgba(124,58,237,0.3)" : "linear-gradient(135deg,#7c3aed,#f59e0b)",
+              background: isScoring || !hasResume ? "rgba(124,58,237,0.2)" : "#7c3aed",
               color: "white", fontSize: "15px", fontWeight: 800,
               boxShadow: isScoring || !hasResume ? "none" : "0 6px 24px rgba(124,58,237,0.35)",
             }}>
@@ -254,10 +254,10 @@ export default function ResumeScorePage() {
         {/* Loading state */}
         {isScoring && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            style={{ background: "rgba(18,10,36,0.9)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "20px", padding: "40px", textAlign: "center", marginBottom: "20px" }}>
+            style={{ background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.09)", borderRadius: "20px", padding: "40px", textAlign: "center", marginBottom: "20px" }}>
             {["Checking contact information…", "Analysing work experience quality…", "Evaluating ATS compatibility…", "Generating improvement tips…"].map((step, i) => (
               <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.8 }}
-                style={{ fontSize: "13px", color: "#64748b", marginBottom: "8px" }}>
+                style={{ fontSize: "13px", color: "#888888", marginBottom: "8px" }}>
                 {step}
               </motion.div>
             ))}
@@ -274,7 +274,7 @@ export default function ResumeScorePage() {
               {/* Grade ring */}
               <div style={{ position: "relative", width: "100px", height: "100px", flexShrink: 0 }}>
                 <svg style={{ width: "100%", height: "100%", transform: "rotate(-90deg)" }} viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+                  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="8" />
                   <motion.circle cx="50" cy="50" r="42" fill="none" stroke={gc} strokeWidth="8" strokeLinecap="round"
                     strokeDasharray={264}
                     initial={{ strokeDashoffset: 264 }}
@@ -287,7 +287,7 @@ export default function ResumeScorePage() {
                     style={{ fontSize: "28px", fontWeight: 900, color: gc, lineHeight: 1 }}>
                     {overall}
                   </motion.div>
-                  <div style={{ fontSize: "11px", color: "#64748b" }}>/ 100</div>
+                  <div style={{ fontSize: "11px", color: "#888888" }}>/ 100</div>
                 </div>
               </div>
 
@@ -298,10 +298,10 @@ export default function ResumeScorePage() {
                     {overall >= 85 ? "Excellent" : overall >= 70 ? "Good" : overall >= 55 ? "Needs Work" : "Needs Major Improvement"}
                   </span>
                 </div>
-                <p style={{ fontSize: "14px", color: "#94a3b8", lineHeight: 1.6, marginBottom: "12px", fontStyle: "italic" }}>
+                <p style={{ fontSize: "14px", color: "#888888", lineHeight: 1.6, marginBottom: "12px", fontStyle: "italic" }}>
                   &ldquo;{result.one_line_verdict as string}&rdquo;
                 </p>
-                <button onClick={runScore} style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", padding: "7px 14px", color: "#64748b", fontSize: "12px", cursor: "pointer" }}>
+                <button onClick={runScore} style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "1px solid rgba(0,0,0,0.1)", borderRadius: "10px", padding: "7px 14px", color: "#888888", fontSize: "12px", cursor: "pointer" }}>
                   <RefreshCw style={{ width: "13px", height: "13px" }} />Re-score
                 </button>
               </div>
@@ -309,8 +309,8 @@ export default function ResumeScorePage() {
 
             {/* Top 3 improvements */}
             {(result.top_improvements as unknown[])?.length > 0 && (
-              <div style={{ background: "rgba(18,10,36,0.9)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "20px", padding: "20px", marginBottom: "20px" }}>
-                <h3 style={{ fontSize: "15px", fontWeight: 800, color: "#f1f5f9", marginBottom: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <div style={{ background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.09)", borderRadius: "20px", padding: "20px", marginBottom: "20px" }}>
+                <h3 style={{ fontSize: "15px", fontWeight: 800, color: "#111111", marginBottom: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
                   <TrendingUp style={{ width: "16px", height: "16px", color: "#f59e0b" }} />Top 3 Improvements
                 </h3>
                 {(result.top_improvements as Array<{ title: string; detail: string }>).map((imp, i) => (
@@ -319,8 +319,8 @@ export default function ResumeScorePage() {
                       {i + 1}
                     </div>
                     <div>
-                      <div style={{ fontSize: "14px", fontWeight: 700, color: "#f1f5f9", marginBottom: "3px" }}>{imp.title}</div>
-                      <div style={{ fontSize: "13px", color: "#94a3b8", lineHeight: 1.55 }}>{imp.detail}</div>
+                      <div style={{ fontSize: "14px", fontWeight: 700, color: "#111111", marginBottom: "3px" }}>{imp.title}</div>
+                      <div style={{ fontSize: "13px", color: "#888888", lineHeight: 1.55 }}>{imp.detail}</div>
                     </div>
                   </div>
                 ))}
@@ -328,7 +328,7 @@ export default function ResumeScorePage() {
             )}
 
             {/* Category breakdown */}
-            <h3 style={{ fontSize: "15px", fontWeight: 800, color: "#f1f5f9", marginBottom: "12px" }}>
+            <h3 style={{ fontSize: "15px", fontWeight: 800, color: "#111111", marginBottom: "12px" }}>
               Detailed Breakdown
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -339,17 +339,17 @@ export default function ResumeScorePage() {
 
             {/* CTA for non-Pro */}
             <div style={{ marginTop: "24px", padding: "20px", borderRadius: "16px", background: "linear-gradient(135deg, rgba(124,58,237,0.1), rgba(245,158,11,0.06))", border: "1px solid rgba(124,58,237,0.2)", textAlign: "center" }}>
-              <p style={{ fontSize: "14px", fontWeight: 700, color: "#f1f5f9", marginBottom: "4px" }}>
+              <p style={{ fontSize: "14px", fontWeight: 700, color: "#111111", marginBottom: "4px" }}>
                 Ready to fix these issues?
               </p>
-              <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "14px" }}>
+              <p style={{ fontSize: "13px", color: "#888888", marginBottom: "14px" }}>
                 Use Resume Adaptor to auto-fix gaps for a specific job description.
               </p>
               <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
                 <a href="/resume-adaptor" style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 20px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", borderRadius: "12px", color: "white", textDecoration: "none", fontSize: "13px", fontWeight: 700 }}>
                   <Target style={{ width: "14px", height: "14px" }} />Adapt Resume
                 </a>
-                <a href="/resume-builder" style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 20px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "#94a3b8", textDecoration: "none", fontSize: "13px", fontWeight: 600 }}>
+                <a href="/resume-builder" style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 20px", background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.1)", borderRadius: "12px", color: "#555555", textDecoration: "none", fontSize: "13px", fontWeight: 600 }}>
                   <FileText style={{ width: "14px", height: "14px" }} />Edit Resume
                 </a>
               </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -45,25 +45,25 @@ interface Feedback {
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const card: React.CSSProperties = {
-  background: "rgba(18,10,36,0.9)",
-  border: "1px solid rgba(124,58,237,0.15)",
+  background: "#FFFFFF",
+  border: "1px solid rgba(124,58,237,0.2)",
   borderRadius: "16px",
   padding: "20px",
 };
 const inputStyle: React.CSSProperties = {
   width: "100%",
-  background: "rgba(15,8,30,0.8)",
-  border: "1px solid rgba(124,58,237,0.2)",
+  background: "#FFFFFF",
+  border: "1px solid rgba(0,0,0,0.12)",
   borderRadius: "10px",
   padding: "10px 14px",
-  color: "#f1f5f9",
+  color: "#111111",
   fontSize: "13px",
   outline: "none",
   fontFamily: "inherit",
 };
 const label: React.CSSProperties = {
   fontSize: "11px",
-  color: "#94a3b8",
+  color: "#888888",
   display: "block",
   marginBottom: "6px",
 };
@@ -91,7 +91,7 @@ const btnOutline: React.CSSProperties = {
   background: "none",
   border: "1px solid rgba(124,58,237,0.4)",
   borderRadius: "12px",
-  color: "#a78bfa",
+  color: "#7c3aed",
   fontSize: "13px",
   fontWeight: 600,
   cursor: "pointer",
@@ -102,10 +102,10 @@ function ScoreBar({ label: lbl, score }: { label: string; score: number }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
-        <span style={{ color: "#94a3b8" }}>{lbl}</span>
+        <span style={{ color: "#888888" }}>{lbl}</span>
         <span style={{ fontWeight: 700, color }}>{score}/10</span>
       </div>
-      <div style={{ height: "6px", borderRadius: "3px", overflow: "hidden", background: "rgba(255,255,255,0.06)" }}>
+      <div style={{ height: "6px", borderRadius: "3px", overflow: "hidden", background: "rgba(0,0,0,0.04)" }}>
         <motion.div style={{ height: "100%", borderRadius: "3px", background: color }} initial={{ width: 0 }} animate={{ width: `${score * 10}%` }} transition={{ duration: 0.8 }} />
       </div>
     </div>
@@ -119,7 +119,7 @@ export default function InterviewPrepPage() {
 
   if (!limits.interviewPrepAccess) {
     return (
-      <div style={{ height: "100%", overflowY: "auto", background: "#0a0614", padding: "24px 16px" }}>
+      <div style={{ height: "100%", overflowY: "auto", background: "#F7F7F5", padding: "24px 16px" }}>
         <div style={{ maxWidth: "480px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "16px" }}>
           <UpgradeGate
             requiredPlan="pro"
@@ -138,7 +138,7 @@ export default function InterviewPrepPage() {
             ].map((f) => (
               <div key={f.emoji} style={{ display: "flex", gap: "10px", marginBottom: "8px", alignItems: "flex-start" }}>
                 <span style={{ fontSize: "16px", flexShrink: 0 }}>{f.emoji}</span>
-                <span style={{ fontSize: "13px", color: "#94a3b8", lineHeight: 1.5 }}>{f.text}</span>
+                <span style={{ fontSize: "13px", color: "#888888", lineHeight: 1.5 }}>{f.text}</span>
               </div>
             ))}
           </div>
@@ -283,14 +283,14 @@ export default function InterviewPrepPage() {
   };
 
   return (
-    <div style={{ height: "100%", overflowY: "auto", background: "#0a0614" }}>
+    <div style={{ height: "100%", overflowY: "auto", background: "#F7F7F5" }}>
       <div className="ip-page" style={{ maxWidth: "1100px", margin: "0 auto", padding: "24px", display: "flex", flexDirection: "column", gap: "24px" }}>
 
         {/* Page header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#f1f5f9" }}>Interview Prep</h2>
-            <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "4px" }}>
+            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#111111" }}>Interview Prep</h2>
+            <p style={{ fontSize: "13px", color: "#888888", marginTop: "4px" }}>
               AI mock interviews — questions tailored to your exact role & company
             </p>
           </div>
@@ -314,8 +314,8 @@ export default function InterviewPrepPage() {
               <div className="ip-setup-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div style={card}>
-                    <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#f1f5f9", marginBottom: "4px" }}>Session Setup</h3>
-                    <p style={{ fontSize: "12px", color: "#475569", marginBottom: "16px" }}>
+                    <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#111111", marginBottom: "4px" }}>Session Setup</h3>
+                    <p style={{ fontSize: "12px", color: "#888888", marginBottom: "16px" }}>
                       The AI will become a specialized hiring manager for your exact role & company
                     </p>
                     <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
@@ -337,7 +337,7 @@ export default function InterviewPrepPage() {
                           placeholder="Google, Microsoft, Flipkart..."
                         />
                         {company && (
-                          <p style={{ fontSize: "11px", color: "#475569", marginTop: "4px" }}>
+                          <p style={{ fontSize: "11px", color: "#888888", marginTop: "4px" }}>
                             ✓ Questions will use {company}&apos;s specific competency framework
                           </p>
                         )}
@@ -389,7 +389,7 @@ export default function InterviewPrepPage() {
                 {/* Info panel */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div style={card}>
-                    <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#f1f5f9", marginBottom: "14px" }}>How It Works</h3>
+                    <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#111111", marginBottom: "14px" }}>How It Works</h3>
                     {[
                       { emoji: "🎯", title: "Role-specific AI", desc: "Questions match real interview patterns for your exact role & company" },
                       { emoji: "📋", title: "STAR Evaluation", desc: "Your answers scored on Situation, Task, Action, Result framework" },
@@ -399,15 +399,15 @@ export default function InterviewPrepPage() {
                       <div key={item.title} style={{ display: "flex", gap: "12px", marginBottom: "14px" }}>
                         <span style={{ fontSize: "20px", flexShrink: 0 }}>{item.emoji}</span>
                         <div>
-                          <div style={{ fontSize: "13px", fontWeight: 600, color: "#f1f5f9" }}>{item.title}</div>
-                          <div style={{ fontSize: "12px", color: "#475569", marginTop: "2px" }}>{item.desc}</div>
+                          <div style={{ fontSize: "13px", fontWeight: 600, color: "#111111" }}>{item.title}</div>
+                          <div style={{ fontSize: "12px", color: "#888888", marginTop: "2px" }}>{item.desc}</div>
                         </div>
                       </div>
                     ))}
                   </div>
                   <div style={{ ...card, borderColor: "rgba(249,115,22,0.2)", background: "rgba(249,115,22,0.04)" }}>
                     <p style={{ fontSize: "12px", color: "#fb923c", fontWeight: 600, marginBottom: "6px" }}>💡 Pro Tip</p>
-                    <p style={{ fontSize: "12px", color: "#94a3b8", lineHeight: 1.6 }}>
+                    <p style={{ fontSize: "12px", color: "#888888", lineHeight: 1.6 }}>
                       Specify the company for best results. The AI will simulate a {company || "Google/Amazon"} interviewer with their specific competency framework (Amazon = Leadership Principles, Google = Googleyness, etc.)
                     </p>
                   </div>
@@ -425,10 +425,10 @@ export default function InterviewPrepPage() {
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
                 />
-                <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#f1f5f9", marginBottom: "8px" }}>
+                <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#111111", marginBottom: "8px" }}>
                   Generating Your Interview Questions
                 </h3>
-                <p style={{ fontSize: "13px", color: "#475569" }}>
+                <p style={{ fontSize: "13px", color: "#888888" }}>
                   AI is creating {difficulty.toLowerCase()} {QUESTION_TYPES.find(t => t.value === selectedType)?.label.toLowerCase()} questions
                   {role ? ` for ${role}` : ""}
                   {company ? ` at ${company}` : ""}...
@@ -450,10 +450,10 @@ export default function InterviewPrepPage() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   {/* Progress */}
                   <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <div style={{ flex: 1, height: "6px", borderRadius: "3px", overflow: "hidden", background: "rgba(255,255,255,0.08)" }}>
+                    <div style={{ flex: 1, height: "6px", borderRadius: "3px", overflow: "hidden", background: "rgba(0,0,0,0.06)" }}>
                       <div style={{ height: "100%", borderRadius: "3px", background: "#f97316", width: `${((currentQ + 1) / questions.length) * 100}%`, transition: "width 0.3s ease" }} />
                     </div>
-                    <span style={{ fontSize: "12px", color: "#94a3b8", flexShrink: 0 }}>{currentQ + 1} / {questions.length}</span>
+                    <span style={{ fontSize: "12px", color: "#888888", flexShrink: 0 }}>{currentQ + 1} / {questions.length}</span>
                   </div>
 
                   {/* Question card */}
@@ -462,7 +462,7 @@ export default function InterviewPrepPage() {
                       <span style={{ fontSize: "11px", padding: "3px 10px", borderRadius: "12px", fontWeight: 600, background: "rgba(249,115,22,0.15)", color: "#fb923c" }}>
                         {questions[currentQ]?.type?.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
                       </span>
-                      <span style={{ fontSize: "12px", color: "#475569" }}>{questions[currentQ]?.category} · {questions[currentQ]?.difficulty}</span>
+                      <span style={{ fontSize: "12px", color: "#888888" }}>{questions[currentQ]?.category} · {questions[currentQ]?.difficulty}</span>
                       {questions[currentQ]?.what_they_evaluate && (
                         <button
                           onClick={() => setShowHints(!showHints)}
@@ -474,18 +474,18 @@ export default function InterviewPrepPage() {
                       )}
                     </div>
 
-                    <p style={{ color: "#f1f5f9", fontSize: "15px", lineHeight: "1.6", fontWeight: 600, marginBottom: "12px" }}>
+                    <p style={{ color: "#111111", fontSize: "15px", lineHeight: "1.6", fontWeight: 600, marginBottom: "12px" }}>
                       {questions[currentQ]?.question}
                     </p>
 
                     {showHints && questions[currentQ]?.what_they_evaluate && (
                       <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(249,115,22,0.06)", border: "1px solid rgba(249,115,22,0.15)", marginBottom: "12px" }}>
                         <div style={{ fontSize: "11px", color: "#fb923c", fontWeight: 600, marginBottom: "4px" }}>What they evaluate:</div>
-                        <div style={{ fontSize: "12px", color: "#94a3b8" }}>{questions[currentQ].what_they_evaluate}</div>
+                        <div style={{ fontSize: "12px", color: "#888888" }}>{questions[currentQ].what_they_evaluate}</div>
                         {questions[currentQ]?.ideal_answer_structure && (
                           <>
                             <div style={{ fontSize: "11px", color: "#fb923c", fontWeight: 600, marginTop: "8px", marginBottom: "4px" }}>Ideal structure:</div>
-                            <div style={{ fontSize: "12px", color: "#94a3b8" }}>{questions[currentQ].ideal_answer_structure}</div>
+                            <div style={{ fontSize: "12px", color: "#888888" }}>{questions[currentQ].ideal_answer_structure}</div>
                           </>
                         )}
                       </div>
@@ -518,7 +518,7 @@ export default function InterviewPrepPage() {
                       </button>
                       <button
                         onClick={nextQuestion}
-                        style={{ ...btnOutline, color: "#94a3b8", borderColor: "rgba(255,255,255,0.12)" }}
+                        style={{ ...btnOutline, color: "#888888", borderColor: "rgba(255,255,255,0.12)" }}
                       >
                         Skip →
                       </button>
@@ -528,18 +528,18 @@ export default function InterviewPrepPage() {
 
                 {/* Coach panel */}
                 <div style={{ ...card, display: "flex", flexDirection: "column", minHeight: "400px" }}>
-                  <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#111111", marginBottom: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
                     <MessageSquare style={{ width: "15px", height: "15px", color: "#fb923c" }} />Ask Coach
                   </h3>
                   <div style={{ flex: 1, overflowY: "auto", marginBottom: "12px", maxHeight: "320px", display: "flex", flexDirection: "column", gap: "8px" }}>
                     {coachMessages.length === 0 && (
                       <div style={{ textAlign: "center", padding: "24px 16px" }}>
-                        <Brain style={{ width: "36px", height: "36px", color: "#475569", margin: "0 auto 10px" }} />
-                        <p style={{ fontSize: "12px", color: "#475569" }}>Ask your AI coach anything about this question</p>
+                        <Brain style={{ width: "36px", height: "36px", color: "#888888", margin: "0 auto 10px" }} />
+                        <p style={{ fontSize: "12px", color: "#888888" }}>Ask your AI coach anything about this question</p>
                         <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "6px" }}>
                           {["How do I structure a STAR answer?", "What are common follow-ups?", "How long should my answer be?"].map((q) => (
                             <button key={q} onClick={() => setCoachInput(q)}
-                              style={{ width: "100%", textAlign: "left", fontSize: "11px", padding: "8px 12px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.03)", color: "#94a3b8", cursor: "pointer" }}>
+                              style={{ width: "100%", textAlign: "left", fontSize: "11px", padding: "8px 12px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.08)", background: "rgba(0,0,0,0.02)", color: "#888888", cursor: "pointer" }}>
                               {q}
                             </button>
                           ))}
@@ -547,7 +547,7 @@ export default function InterviewPrepPage() {
                       </div>
                     )}
                     {coachMessages.map((m, i) => (
-                      <div key={i} style={{ fontSize: "12px", lineHeight: "1.6", padding: "8px 12px", borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: m.role === "user" ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "rgba(26,16,51,0.9)", border: m.role === "user" ? "none" : "1px solid rgba(124,58,237,0.2)", color: m.role === "user" ? "white" : "#cbd5e1" }}>
+                      <div key={i} style={{ fontSize: "12px", lineHeight: "1.6", padding: "8px 12px", borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: m.role === "user" ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "rgba(26,16,51,0.9)", border: m.role === "user" ? "none" : "1px solid rgba(0,0,0,0.12)", color: m.role === "user" ? "white" : "#cbd5e1" }}>
                         {m.content || "..."}
                       </div>
                     ))}
@@ -573,8 +573,8 @@ export default function InterviewPrepPage() {
           {/* ── FEEDBACK PHASE ── */}
           {phase === "feedback" && feedback && (
             <motion.div key="feedback" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <div style={{ marginBottom: "12px", padding: "10px 14px", borderRadius: "10px", background: "rgba(255,255,255,0.03)", fontSize: "13px", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <strong style={{ color: "#cbd5e1" }}>Q{currentQ + 1}:</strong> {questions[currentQ]?.question}
+              <div style={{ marginBottom: "12px", padding: "10px 14px", borderRadius: "10px", background: "rgba(0,0,0,0.02)", fontSize: "13px", color: "#888888", border: "1px solid rgba(0,0,0,0.08)" }}>
+                <strong style={{ color: "#333333" }}>Q{currentQ + 1}:</strong> {questions[currentQ]?.question}
               </div>
 
               <div className="ip-feedback-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
@@ -584,7 +584,7 @@ export default function InterviewPrepPage() {
                     <div style={{ fontSize: "56px", fontWeight: 900, marginBottom: "8px", color: feedback.overall_score >= 80 ? "#10b981" : feedback.overall_score >= 60 ? "#f59e0b" : "#ef4444" }}>
                       {feedback.overall_score}
                     </div>
-                    <div style={{ fontSize: "13px", color: "#94a3b8", marginBottom: "20px" }}>Overall Score</div>
+                    <div style={{ fontSize: "13px", color: "#888888", marginBottom: "20px" }}>Overall Score</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px", textAlign: "left" }}>
                       {Object.entries(feedback.star_breakdown).map(([lbl, data]) => (
                         <ScoreBar key={lbl} label={lbl} score={data.quality} />
@@ -595,7 +595,7 @@ export default function InterviewPrepPage() {
                   {feedback.follow_up_prediction && (
                     <div style={{ ...card, borderColor: "rgba(249,115,22,0.2)", background: "rgba(249,115,22,0.04)" }}>
                       <h4 style={{ fontSize: "12px", fontWeight: 700, color: "#fb923c", marginBottom: "6px" }}>🎯 Likely Follow-up Question</h4>
-                      <p style={{ fontSize: "12px", color: "#94a3b8", lineHeight: 1.6 }}>{feedback.follow_up_prediction}</p>
+                      <p style={{ fontSize: "12px", color: "#888888", lineHeight: 1.6 }}>{feedback.follow_up_prediction}</p>
                     </div>
                   )}
 
@@ -613,7 +613,7 @@ export default function InterviewPrepPage() {
                     </h4>
                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                       {feedback.strengths.map((s, i) => (
-                        <div key={i} style={{ display: "flex", gap: "8px", fontSize: "13px", color: "#cbd5e1" }}>
+                        <div key={i} style={{ display: "flex", gap: "8px", fontSize: "13px", color: "#333333" }}>
                           <Check style={{ width: "15px", height: "15px", color: "#10b981", flexShrink: 0, marginTop: "2px" }} />{s}
                         </div>
                       ))}
@@ -626,7 +626,7 @@ export default function InterviewPrepPage() {
                     </h4>
                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                       {feedback.improvements.map((s, i) => (
-                        <div key={i} style={{ display: "flex", gap: "8px", fontSize: "13px", color: "#cbd5e1" }}>
+                        <div key={i} style={{ display: "flex", gap: "8px", fontSize: "13px", color: "#333333" }}>
                           <ChevronRight style={{ width: "15px", height: "15px", color: "#f59e0b", flexShrink: 0, marginTop: "2px" }} />{s}
                         </div>
                       ))}
@@ -634,21 +634,21 @@ export default function InterviewPrepPage() {
                   </div>
 
                   <div style={{ ...card, borderColor: "rgba(124,58,237,0.25)", background: "rgba(124,58,237,0.05)" }}>
-                    <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#a78bfa", marginBottom: "8px" }}>Ideal Closing Line</h4>
-                    <p style={{ fontSize: "13px", color: "#cbd5e1", fontStyle: "italic", lineHeight: "1.6" }}>&ldquo;{feedback.ideal_answer_snippet}&rdquo;</p>
+                    <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#7c3aed", marginBottom: "8px" }}>Ideal Closing Line</h4>
+                    <p style={{ fontSize: "13px", color: "#333333", fontStyle: "italic", lineHeight: "1.6" }}>&ldquo;{feedback.ideal_answer_snippet}&rdquo;</p>
                   </div>
 
                   <div style={card}>
-                    <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", marginBottom: "12px" }}>STAR Breakdown</h4>
+                    <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#111111", marginBottom: "12px" }}>STAR Breakdown</h4>
                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                       {Object.entries(feedback.star_breakdown).map(([lbl, data]) => (
-                        <div key={lbl} style={{ padding: "10px 12px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.02)" }}>
+                        <div key={lbl} style={{ padding: "10px 12px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.08)", background: "rgba(0,0,0,0.02)" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                            <span style={{ fontSize: "12px", fontWeight: 700, color: "#f1f5f9" }}>{lbl}</span>
+                            <span style={{ fontSize: "12px", fontWeight: 700, color: "#111111" }}>{lbl}</span>
                             {data.present ? <Check style={{ width: "12px", height: "12px", color: "#10b981" }} /> : <X style={{ width: "12px", height: "12px", color: "#ef4444" }} />}
                             <span style={{ fontSize: "12px", fontWeight: 700, marginLeft: "auto", color: data.quality >= 7 ? "#10b981" : "#f59e0b" }}>{data.quality}/10</span>
                           </div>
-                          <p style={{ fontSize: "11px", color: "#94a3b8" }}>{data.feedback}</p>
+                          <p style={{ fontSize: "11px", color: "#888888" }}>{data.feedback}</p>
                         </div>
                       ))}
                     </div>

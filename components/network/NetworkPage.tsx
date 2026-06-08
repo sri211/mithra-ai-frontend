@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/lib/auth";
@@ -33,12 +33,12 @@ const TYPE_LABELS: Record<string, { label: string; color: string; icon: string }
   team_member:    { label: "Team Member",     color: "#10b981", icon: "👥" },
   alumnus:        { label: "Alumnus",         color: "#f59e0b", icon: "🎓" },
   influencer:     { label: "Influencer",      color: "#ec4899", icon: "⭐" },
-  search_suggestion: { label: "Search More",  color: "#64748b", icon: "🔍" },
+  search_suggestion: { label: "Search More",  color: "#888888", icon: "🔍" },
 };
 
 function ConnectionCard({ conn, copiedId, onCopy }: { conn: Connection; copiedId: string | null; onCopy: (id: string, text: string) => void }) {
   const [expanded, setExpanded] = useState(false);
-  const typeInfo = TYPE_LABELS[conn.type] || { label: conn.type, color: "#94a3b8", icon: "👤" };
+  const typeInfo = TYPE_LABELS[conn.type] || { label: conn.type, color: "#888888", icon: "👤" };
   const linkedinUrl = conn.linkedin_url || conn.linkedin_search || `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent((conn.role || "") + " " + conn.company)}`;
 
   if (conn.is_search_card) {
@@ -48,11 +48,11 @@ function ConnectionCard({ conn, copiedId, onCopy }: { conn: Connection; copiedId
         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
           <div style={{ width: "44px", height: "44px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", background: "rgba(100,116,139,0.1)", flexShrink: 0 }}>🔍</div>
           <div>
-            <div style={{ fontSize: "13px", fontWeight: 700, color: "#94a3b8" }}>{conn.name}</div>
-            <div style={{ fontSize: "11px", color: "#475569" }}>{conn.role}</div>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#888888" }}>{conn.name}</div>
+            <div style={{ fontSize: "11px", color: "#888888" }}>{conn.role}</div>
           </div>
         </div>
-        <button onClick={() => window.open(linkedinUrl, "_blank")} style={{ width: "100%", padding: "10px", background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "10px", color: "#a78bfa", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+        <button onClick={() => window.open(linkedinUrl, "_blank")} style={{ width: "100%", padding: "10px", background: "rgba(124,58,237,0.1)", border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", color: "#7c3aed", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
           <LinkedInIcon style={{ width: "14px", height: "14px" }} />Search on LinkedIn
         </button>
       </motion.div>
@@ -61,7 +61,7 @@ function ConnectionCard({ conn, copiedId, onCopy }: { conn: Connection; copiedId
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-      style={{ background: "rgba(18,10,36,0.9)", border: `1px solid ${conn.is_real ? "rgba(16,185,129,0.2)" : "rgba(124,58,237,0.15)"}`, borderRadius: "16px", overflow: "hidden" }}>
+      style={{ background: "#FFFFFF", border: `1px solid ${conn.is_real ? "rgba(16,185,129,0.2)" : "rgba(124,58,237,0.15)"}`, borderRadius: "16px", overflow: "hidden" }}>
 
       {/* Header — always visible */}
       <div style={{ padding: "16px", display: "flex", gap: "12px", alignItems: "flex-start" }}>
@@ -71,11 +71,11 @@ function ConnectionCard({ conn, copiedId, onCopy }: { conn: Connection; copiedId
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px", marginBottom: "4px" }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: "15px", fontWeight: 700, color: "#f1f5f9", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" as const }}>
+              <div style={{ fontSize: "15px", fontWeight: 700, color: "#111111", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" as const }}>
                 {conn.name}
                 {conn.is_real && <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "4px", background: "rgba(16,185,129,0.15)", color: "#10b981", fontWeight: 600 }}>✓ Real</span>}
               </div>
-              <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "2px" }}>{conn.role}</div>
+              <div style={{ fontSize: "12px", color: "#888888", marginTop: "2px" }}>{conn.role}</div>
             </div>
             <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" style={{ flexShrink: 0, width: "34px", height: "34px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,102,194,0.15)", border: "1px solid rgba(10,102,194,0.25)", color: "#60a5fa", textDecoration: "none" }}>
               <LinkedInIcon style={{ width: "16px", height: "16px" }} />
@@ -88,13 +88,13 @@ function ConnectionCard({ conn, copiedId, onCopy }: { conn: Connection; copiedId
       </div>
 
       {/* Why connect — always visible */}
-      <div style={{ margin: "0 16px", padding: "10px 12px", borderRadius: "10px", fontSize: "12px", color: "#cbd5e1", lineHeight: "1.6", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", marginBottom: "12px" }}>
-        <span style={{ color: "#a78bfa", fontWeight: 600 }}>Why connect: </span>{conn.why}
+      <div style={{ margin: "0 16px", padding: "10px 12px", borderRadius: "10px", fontSize: "12px", color: "#333333", lineHeight: "1.6", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.08)", marginBottom: "12px" }}>
+        <span style={{ color: "#7c3aed", fontWeight: 600 }}>Why connect: </span>{conn.why}
       </div>
 
       {/* AI draft — expandable */}
       <div style={{ margin: "0 16px 12px" }}>
-        <button onClick={() => setExpanded(!expanded)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "10px", cursor: "pointer", fontSize: "12px", color: "#a78bfa", fontWeight: 600 }}>
+        <button onClick={() => setExpanded(!expanded)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "10px", cursor: "pointer", fontSize: "12px", color: "#7c3aed", fontWeight: 600 }}>
           <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <Sparkles style={{ width: "11px", height: "11px" }} />AI-Drafted Message
           </span>
@@ -104,9 +104,9 @@ function ConnectionCard({ conn, copiedId, onCopy }: { conn: Connection; copiedId
           {expanded && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: "hidden" }}>
               <div style={{ padding: "12px", background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.12)", borderTop: "none", borderRadius: "0 0 10px 10px" }}>
-                <p style={{ fontSize: "13px", color: "#cbd5e1", lineHeight: "1.65", marginBottom: "10px" }}>{conn.draft}</p>
+                <p style={{ fontSize: "13px", color: "#333333", lineHeight: "1.65", marginBottom: "10px" }}>{conn.draft}</p>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: "10px", color: "#475569" }}>{conn.draft?.length || 0} / 280 chars</span>
+                  <span style={{ fontSize: "10px", color: "#888888" }}>{conn.draft?.length || 0} / 280 chars</span>
                   <button onClick={() => onCopy(conn.id, conn.draft)} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: 600, background: "none", border: "none", cursor: "pointer", color: copiedId === conn.id ? "#10b981" : "#a78bfa", padding: "4px 8px", borderRadius: "6px" }}>
                     {copiedId === conn.id ? <><Check style={{ width: "12px", height: "12px" }} />Copied!</> : <><Copy style={{ width: "12px", height: "12px" }} />Copy</>}
                   </button>
@@ -119,10 +119,10 @@ function ConnectionCard({ conn, copiedId, onCopy }: { conn: Connection; copiedId
 
       {/* Email */}
       {conn.email_pattern && !conn.is_search_card && (
-        <div style={{ margin: "0 16px 12px", padding: "8px 12px", borderRadius: "8px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", fontSize: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
+        <div style={{ margin: "0 16px 12px", padding: "8px 12px", borderRadius: "8px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.08)", fontSize: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
           <span style={{ fontSize: "13px" }}>📧</span>
           <span style={{ color: conn.email_verified ? "#10b981" : "#64748b" }}>{conn.email_verified ? "✓ Verified:" : "Likely:"}</span>
-          <span style={{ color: "#94a3b8", fontFamily: "monospace", fontSize: "11px" }}>{conn.email_pattern}</span>
+          <span style={{ color: "#888888", fontFamily: "monospace", fontSize: "11px" }}>{conn.email_pattern}</span>
         </div>
       )}
 
@@ -185,11 +185,11 @@ export default function NetworkPage() {
   };
 
   const S = {
-    page: { height: "100%", overflowY: "auto" as const, background: "#0a0614" },
+    page: { height: "100%", overflowY: "auto" as const, background: "#F7F7F5" },
     inner: { maxWidth: "860px", margin: "0 auto", padding: "20px 16px", display: "flex", flexDirection: "column" as const, gap: "20px" },
-    card: { background: "rgba(18,10,36,0.9)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "16px", padding: "20px" },
-    inputBox: { display: "flex", alignItems: "center", gap: "8px", background: "rgba(15,8,30,0.8)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "12px", padding: "12px 14px" },
-    inputEl: { flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "14px", color: "#f1f5f9", fontFamily: "inherit" },
+    card: { background: "#FFFFFF", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "16px", padding: "20px" },
+    inputBox: { display: "flex", alignItems: "center", gap: "8px", background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.12)", borderRadius: "12px", padding: "12px 14px" },
+    inputEl: { flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "14px", color: "#111111", fontFamily: "inherit" },
   };
 
   return (
@@ -199,8 +199,8 @@ export default function NetworkPage() {
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" as const }}>
           <div>
-            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#f1f5f9", marginBottom: "4px" }}>Network Intelligence</h2>
-            <p style={{ fontSize: "13px", color: "#64748b" }}>Find the right people at target companies — real profiles, verified emails, AI outreach</p>
+            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#111111", marginBottom: "4px" }}>Network Intelligence</h2>
+            <p style={{ fontSize: "13px", color: "#888888" }}>Find the right people at target companies — real profiles, verified emails, AI outreach</p>
           </div>
           <span style={{ fontSize: "12px", padding: "6px 14px", borderRadius: "20px", border: "1px solid rgba(236,72,153,0.3)", background: "rgba(236,72,153,0.08)", color: "#f472b6", display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
             <Users style={{ width: "13px", height: "13px" }} />Agent 5
@@ -213,11 +213,11 @@ export default function NetworkPage() {
             {/* Row 1: Company + Role */}
             <div className="nw-search-row" style={{ display: "flex", gap: "12px" }}>
               <div style={S.inputBox}>
-                <Building2 style={{ width: "16px", height: "16px", color: "#475569", flexShrink: 0 }} />
+                <Building2 style={{ width: "16px", height: "16px", color: "#888888", flexShrink: 0 }} />
                 <input value={company} onChange={(e) => setCompany(e.target.value)} onKeyDown={(e) => e.key === "Enter" && findConnections()} style={S.inputEl} placeholder="Company (e.g. Glanbia, Flipkart)..." />
               </div>
               <div style={S.inputBox}>
-                <Search style={{ width: "16px", height: "16px", color: "#475569", flexShrink: 0 }} />
+                <Search style={{ width: "16px", height: "16px", color: "#888888", flexShrink: 0 }} />
                 <input value={role} onChange={(e) => setRole(e.target.value)} onKeyDown={(e) => e.key === "Enter" && findConnections()} style={S.inputEl} placeholder="Target role (e.g. HR Manager, Ecommerce Lead)..." />
               </div>
             </div>
@@ -225,7 +225,7 @@ export default function NetworkPage() {
             {/* Row 2: Location + Button */}
             <div style={{ display: "flex", gap: "12px", alignItems: "stretch" }}>
               <div style={{ ...S.inputBox, flex: 1 }}>
-                <MapPin style={{ width: "16px", height: "16px", color: "#475569", flexShrink: 0 }} />
+                <MapPin style={{ width: "16px", height: "16px", color: "#888888", flexShrink: 0 }} />
                 <input value={location} onChange={(e) => setLocation(e.target.value)} onKeyDown={(e) => e.key === "Enter" && findConnections()} style={S.inputEl} placeholder="Country / City (e.g. India, Bangalore)..." />
               </div>
               <button onClick={findConnections} disabled={isSearching || !company.trim() || !role.trim()} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "12px 24px", background: isSearching || !company.trim() || !role.trim() ? "rgba(124,58,237,0.4)" : "linear-gradient(135deg,#7c3aed,#6d28d9)", border: "none", borderRadius: "12px", color: "white", fontSize: "14px", fontWeight: 700, cursor: isSearching || !company.trim() || !role.trim() ? "not-allowed" : "pointer", flexShrink: 0, boxShadow: "0 4px 16px rgba(124,58,237,0.3)", minWidth: "140px" }}>
@@ -234,7 +234,7 @@ export default function NetworkPage() {
               </button>
             </div>
 
-            <p style={{ fontSize: "11px", color: "#475569" }}>
+            <p style={{ fontSize: "11px", color: "#888888" }}>
               💡 Be specific — "HR Manager" finds recruiters, HRBPs, talent acquisition. "Ecommerce" finds category managers, buyers, digital leads.
             </p>
           </div>
@@ -253,7 +253,7 @@ export default function NetworkPage() {
                 </div>
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: 700, color: s.color }}>{s.value}</div>
-                  <div style={{ fontSize: "11px", color: "#64748b" }}>{s.label}</div>
+                  <div style={{ fontSize: "11px", color: "#888888" }}>{s.label}</div>
                 </div>
               </div>
             ))}
@@ -264,8 +264,8 @@ export default function NetworkPage() {
         {isSearching && (
           <div style={{ ...S.card, textAlign: "center", padding: "40px 20px" }}>
             <motion.div style={{ width: "48px", height: "48px", borderRadius: "50%", border: "3px solid rgba(236,72,153,0.2)", borderTopColor: "#ec4899", margin: "0 auto 16px" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} />
-            <p style={{ fontSize: "14px", fontWeight: 600, color: "#f1f5f9", marginBottom: "6px" }}>Finding real people at {company}</p>
-            <p style={{ fontSize: "12px", color: "#475569" }}>Searching LinkedIn profiles, verifying emails, drafting outreach for {role}…</p>
+            <p style={{ fontSize: "14px", fontWeight: 600, color: "#111111", marginBottom: "6px" }}>Finding real people at {company}</p>
+            <p style={{ fontSize: "12px", color: "#888888" }}>Searching LinkedIn profiles, verifying emails, drafting outreach for {role}…</p>
           </div>
         )}
 
@@ -273,8 +273,8 @@ export default function NetworkPage() {
         {!isSearching && !hasSearched && (
           <div style={{ ...S.card, textAlign: "center", padding: "48px 20px" }}>
             <div style={{ fontSize: "48px", marginBottom: "16px" }}>🤝</div>
-            <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#f1f5f9", marginBottom: "8px" }}>Your next colleague exists.</h3>
-            <p style={{ fontSize: "13px", color: "#64748b", maxWidth: "320px", margin: "0 auto", lineHeight: 1.6 }}>
+            <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#111111", marginBottom: "8px" }}>Your next colleague exists.</h3>
+            <p style={{ fontSize: "13px", color: "#888888", maxWidth: "320px", margin: "0 auto", lineHeight: 1.6 }}>
               Enter a company name, target role, and location above to find real people with verified LinkedIn profiles and email addresses.
             </p>
           </div>
@@ -288,15 +288,15 @@ export default function NetworkPage() {
           return (
             <div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-                <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#f1f5f9" }}>
+                <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#111111" }}>
                   {connections.filter(c => !c.is_search_card).length} connections at{" "}
-                  <span style={{ color: "#a78bfa" }}>{company}</span>
-                  <span style={{ color: "#64748b", fontWeight: 400 }}> · {role}</span>
+                  <span style={{ color: "#7c3aed" }}>{company}</span>
+                  <span style={{ color: "#888888", fontWeight: 400 }}> · {role}</span>
                   {limits.networkContacts !== -1 && (
-                    <span style={{ color: "#64748b", fontWeight: 400, fontSize: "12px" }}> (showing {Math.min(visible.length, maxVisible)} of {connections.length})</span>
+                    <span style={{ color: "#888888", fontWeight: 400, fontSize: "12px" }}> (showing {Math.min(visible.length, maxVisible)} of {connections.length})</span>
                   )}
                 </h3>
-                <button onClick={() => { setConnections([]); setHasSearched(false); }} style={{ fontSize: "12px", color: "#64748b", background: "none", border: "none", cursor: "pointer", padding: "4px 8px" }}>
+                <button onClick={() => { setConnections([]); setHasSearched(false); }} style={{ fontSize: "12px", color: "#888888", background: "none", border: "none", cursor: "pointer", padding: "4px 8px" }}>
                   Clear
                 </button>
               </div>
@@ -308,10 +308,10 @@ export default function NetworkPage() {
                 ))}
               </div>
               {hidden > 0 && (
-                <div style={{ marginTop: "16px", padding: "16px 20px", borderRadius: "14px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.2)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" as const }}>
+                <div style={{ marginTop: "16px", padding: "16px 20px", borderRadius: "14px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(0,0,0,0.12)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" as const }}>
                   <div>
-                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", marginBottom: "3px" }}>+{hidden} more connections hidden</div>
-                    <div style={{ fontSize: "12px", color: "#64748b" }}>Upgrade to Pro to see all {connections.length} contacts with verified emails.</div>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#111111", marginBottom: "3px" }}>+{hidden} more connections hidden</div>
+                    <div style={{ fontSize: "12px", color: "#888888" }}>Upgrade to Pro to see all {connections.length} contacts with verified emails.</div>
                   </div>
                   <a href="/pricing" style={{ display: "flex", alignItems: "center", gap: "6px", padding: "9px 18px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", borderRadius: "10px", color: "white", fontSize: "13px", fontWeight: 700, textDecoration: "none", flexShrink: 0 }}>
                     👑 Upgrade to Pro
@@ -326,8 +326,8 @@ export default function NetworkPage() {
         {!isSearching && hasSearched && connections.length === 0 && (
           <div style={{ ...S.card, textAlign: "center", padding: "40px 20px" }}>
             <div style={{ fontSize: "40px", marginBottom: "12px" }}>🔍</div>
-            <p style={{ fontSize: "14px", fontWeight: 600, color: "#f1f5f9", marginBottom: "6px" }}>No results found</p>
-            <p style={{ fontSize: "12px", color: "#64748b" }}>Try a different company name or role. Make sure the company name is exact.</p>
+            <p style={{ fontSize: "14px", fontWeight: 600, color: "#111111", marginBottom: "6px" }}>No results found</p>
+            <p style={{ fontSize: "12px", color: "#888888" }}>Try a different company name or role. Make sure the company name is exact.</p>
           </div>
         )}
       </div>

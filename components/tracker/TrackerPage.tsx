@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X, MapPin, DollarSign, Calendar, Edit3, Trash2, RefreshCw } from "lucide-react";
@@ -9,7 +9,7 @@ import UpgradeGate from "@/components/ui/UpgradeGate";
 
 // ─── Types & Constants ──────────────────────────────────────────────────────
 const STAGES = [
-  { id: "bookmarked", label: "Saved",     color: "#64748b", emoji: "🔖" },
+  { id: "bookmarked", label: "Saved",     color: "#888888", emoji: "🔖" },
   { id: "applied",    label: "Applied",   color: "#6366f1", emoji: "📤" },
   { id: "screening",  label: "Screening", color: "#f59e0b", emoji: "📞" },
   { id: "interview",  label: "Interview", color: "#8b5cf6", emoji: "💼" },
@@ -67,9 +67,9 @@ function KanbanCard({ app, onMove, onDelete }: {
       exit={{ opacity: 0, scale: 0.9 }}
       style={{
         borderRadius: "12px",
-        border: "1px solid rgba(255,255,255,0.05)",
+        border: "1px solid rgba(0,0,0,0.08)",
         padding: "12px",
-        background: "rgba(255,255,255,0.04)",
+        background: "rgba(0,0,0,0.03)",
         cursor: "grab",
         marginBottom: "8px",
       }}
@@ -80,21 +80,21 @@ function KanbanCard({ app, onMove, onDelete }: {
           {app.logo}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: "12px", fontWeight: 700, color: "#f1f5f9", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{app.role}</div>
-          <div style={{ fontSize: "11px", color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{app.company}</div>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: "#111111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{app.role}</div>
+          <div style={{ fontSize: "11px", color: "#888888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{app.company}</div>
         </div>
-        <button onClick={() => setShowMenu(!showMenu)} style={{ background: "none", border: "none", cursor: "pointer", color: "#475569", padding: "2px", flexShrink: 0 }}>
+        <button onClick={() => setShowMenu(!showMenu)} style={{ background: "none", border: "none", cursor: "pointer", color: "#888888", padding: "2px", flexShrink: 0 }}>
           <Edit3 style={{ width: "12px", height: "12px" }} />
         </button>
       </div>
 
       {/* Move menu */}
       {showMenu && (
-        <div style={{ borderRadius: "10px", border: "1px solid rgba(124,58,237,0.2)", padding: "8px", marginBottom: "8px", background: "rgba(18,10,36,0.95)" }}>
-          <p style={{ fontSize: "10px", color: "#475569", padding: "0 4px", marginBottom: "4px" }}>Move to:</p>
+        <div style={{ borderRadius: "10px", border: "1px solid rgba(0,0,0,0.12)", padding: "8px", marginBottom: "8px", background: "#FFFFFF" }}>
+          <p style={{ fontSize: "10px", color: "#888888", padding: "0 4px", marginBottom: "4px" }}>Move to:</p>
           {STAGES.filter((s) => s.id !== app.status).map((s) => (
             <button key={s.id} onClick={() => { onMove(app.id, s.id as AppStatus); setShowMenu(false); }}
-              style={{ width: "100%", textAlign: "left", fontSize: "11px", padding: "6px 8px", borderRadius: "8px", border: "none", background: "transparent", color: "#cbd5e1", cursor: "pointer" }}
+              style={{ width: "100%", textAlign: "left", fontSize: "11px", padding: "6px 8px", borderRadius: "8px", border: "none", background: "transparent", color: "#333333", cursor: "pointer" }}
               onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
               {s.emoji} {s.label}
@@ -110,24 +110,24 @@ function KanbanCard({ app, onMove, onDelete }: {
       {/* Info rows */}
       <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
         {app.location && (
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "10px", color: "#475569" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "10px", color: "#888888" }}>
             <MapPin style={{ width: "10px", height: "10px" }} />{app.location}
           </div>
         )}
         {app.salary && (
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "10px", color: "#475569" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "10px", color: "#888888" }}>
             <DollarSign style={{ width: "10px", height: "10px" }} />{app.salary}
           </div>
         )}
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "10px", color: "#475569" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "10px", color: "#888888" }}>
           <Calendar style={{ width: "10px", height: "10px" }} />{app.appliedDate || "—"}
         </div>
       </div>
 
       {/* Next step */}
       {app.nextStep && (
-        <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-          <p style={{ fontSize: "10px", color: "#94a3b8", lineHeight: "1.4" }}>{app.nextStep}</p>
+        <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid rgba(0,0,0,0.08)" }}>
+          <p style={{ fontSize: "10px", color: "#888888", lineHeight: "1.4" }}>{app.nextStep}</p>
         </div>
       )}
     </motion.div>
@@ -143,7 +143,7 @@ export default function TrackerPage() {
 
   if (!limits.trackerAccess) {
     return (
-      <div style={{ height: "100%", overflowY: "auto", background: "#0a0614", padding: "24px 16px" }}>
+      <div style={{ height: "100%", overflowY: "auto", background: "#F7F7F5", padding: "24px 16px" }}>
         <div style={{ maxWidth: "480px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "16px" }}>
           <UpgradeGate
             requiredPlan="pro"
@@ -155,23 +155,23 @@ export default function TrackerPage() {
             <div style={{ fontSize: "13px", fontWeight: 700, color: "#818cf8", marginBottom: "12px" }}>What Pro unlocks:</div>
             <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px" }}>
               {[
-                { label: "Saved", color: "#64748b", emoji: "🔖", n: 4 },
+                { label: "Saved", color: "#888888", emoji: "🔖", n: 4 },
                 { label: "Applied", color: "#6366f1", emoji: "📤", n: 3 },
                 { label: "Interview", color: "#8b5cf6", emoji: "💼", n: 1 },
                 { label: "Offer", color: "#10b981", emoji: "🎉", n: 0 },
               ].map((s) => (
-                <div key={s.label} style={{ flexShrink: 0, width: "100px", borderRadius: "12px", padding: "10px 8px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <div key={s.label} style={{ flexShrink: 0, width: "100px", borderRadius: "12px", padding: "10px 8px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.08)" }}>
                   <div style={{ fontSize: "10px", fontWeight: 700, color: s.color, marginBottom: "6px", display: "flex", alignItems: "center", gap: "4px" }}>
                     <span>{s.emoji}</span>{s.label} <span style={{ opacity: 0.7 }}>({s.n})</span>
                   </div>
                   {[...Array(s.n)].map((_, i) => (
-                    <div key={i} style={{ height: "28px", borderRadius: "6px", background: "rgba(255,255,255,0.06)", marginBottom: "4px" }} />
+                    <div key={i} style={{ height: "28px", borderRadius: "6px", background: "rgba(0,0,0,0.04)", marginBottom: "4px" }} />
                   ))}
                   {s.n === 0 && <div style={{ height: "28px", borderRadius: "6px", border: "1px dashed rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", color: "#334155" }}>empty</div>}
                 </div>
               ))}
             </div>
-            <div style={{ marginTop: "10px", fontSize: "12px", color: "#64748b" }}>
+            <div style={{ marginTop: "10px", fontSize: "12px", color: "#888888" }}>
               + Response rate tracking · Salary comparison · Next steps for each application
             </div>
           </div>
@@ -290,22 +290,22 @@ export default function TrackerPage() {
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
-    background: "rgba(15,8,30,0.8)",
-    border: "1px solid rgba(124,58,237,0.2)",
+    background: "#FFFFFF",
+    border: "1px solid rgba(0,0,0,0.12)",
     borderRadius: "10px",
     padding: "10px 14px",
-    color: "#f1f5f9",
+    color: "#111111",
     fontSize: "13px",
     outline: "none",
     fontFamily: "inherit",
   };
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#0a0614" }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#F7F7F5" }}>
       {/* Stats bar */}
       <div className="tr-stats-bar" style={{ padding: "16px 24px", borderBottom: "1px solid rgba(124,58,237,0.1)", flexShrink: 0, display: "flex", alignItems: "center", gap: "32px" }}>
         {[
-          { label: "Total Tracked",        value: stats.total,                    color: "#a78bfa" },
+          { label: "Total Tracked",        value: stats.total,                    color: "#7c3aed" },
           { label: "Active Applications",  value: stats.applied,                  color: "#6366f1" },
           { label: "In Interview",          value: stats.interviews,               color: "#8b5cf6" },
           { label: "Offers",               value: stats.offers,                   color: "#10b981" },
@@ -313,12 +313,12 @@ export default function TrackerPage() {
         ].map((s) => (
           <div key={s.label} style={{ textAlign: "center" }}>
             <div style={{ fontSize: "22px", fontWeight: 900, color: s.color, lineHeight: "1" }}>{s.value}</div>
-            <div style={{ fontSize: "10px", color: "#475569", marginTop: "4px" }}>{s.label}</div>
+            <div style={{ fontSize: "10px", color: "#888888", marginTop: "4px" }}>{s.label}</div>
           </div>
         ))}
         <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
           <button onClick={loadApplications}
-            style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", color: "#94a3b8", fontSize: "12px", cursor: "pointer" }}>
+            style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 14px", background: "rgba(0,0,0,0.03)", border: "1px solid rgba(0,0,0,0.08)", borderRadius: "10px", color: "#888888", fontSize: "12px", cursor: "pointer" }}>
             <RefreshCw style={{ width: "13px", height: "13px" }} />Refresh
           </button>
           <button onClick={() => setShowAdd(true)}
@@ -334,10 +334,10 @@ export default function TrackerPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", background: "rgba(0,0,0,0.7)" }}>
             <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
-              style={{ background: "rgba(18,10,36,0.98)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: "20px", padding: "24px", width: "100%", maxWidth: "420px", boxShadow: "0 20px 80px rgba(0,0,0,0.6)" }}>
+              style={{ background: "#FFFFFF", border: "1px solid rgba(124,58,237,0.3)", borderRadius: "20px", padding: "24px", width: "100%", maxWidth: "420px", boxShadow: "0 20px 80px rgba(0,0,0,0.6)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-                <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#f1f5f9" }}>Add Application</h3>
-                <button onClick={() => setShowAdd(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8" }}>
+                <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#111111" }}>Add Application</h3>
+                <button onClick={() => setShowAdd(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#888888" }}>
                   <X style={{ width: "20px", height: "20px" }} />
                 </button>
               </div>
@@ -351,7 +351,7 @@ export default function TrackerPage() {
                   ["nextStep", "Next Step / Notes"],
                 ] as [string, string][]).map(([f, l]) => (
                   <div key={f}>
-                    <label style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "6px" }}>{l}</label>
+                    <label style={{ fontSize: "11px", color: "#888888", display: "block", marginBottom: "6px" }}>{l}</label>
                     <input
                       style={inputStyle}
                       value={(newApp as Record<string, string>)[f]}
@@ -367,7 +367,7 @@ export default function TrackerPage() {
                     Add
                   </button>
                   <button onClick={() => setShowAdd(false)}
-                    style={{ flex: 1, padding: "12px", background: "none", border: "1px solid rgba(124,58,237,0.3)", borderRadius: "12px", color: "#a78bfa", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
+                    style={{ flex: 1, padding: "12px", background: "none", border: "1px solid rgba(124,58,237,0.3)", borderRadius: "12px", color: "#7c3aed", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
                     Cancel
                   </button>
                 </div>
@@ -382,7 +382,7 @@ export default function TrackerPage() {
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div>
             <motion.div style={{ width: "40px", height: "40px", borderRadius: "50%", border: "3px solid rgba(124,58,237,0.2)", borderTopColor: "#7c3aed", margin: "0 auto 12px" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />
-            <p style={{ fontSize: "13px", color: "#475569", textAlign: "center" }}>Loading applications...</p>
+            <p style={{ fontSize: "13px", color: "#888888", textAlign: "center" }}>Loading applications...</p>
           </div>
         </div>
       ) : (
@@ -391,8 +391,8 @@ export default function TrackerPage() {
           {apps.length === 0 ? (
             <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px" }}>
               <div style={{ fontSize: "48px" }}>📋</div>
-              <p style={{ fontSize: "16px", fontWeight: 600, color: "#f1f5f9" }}>No applications tracked yet</p>
-              <p style={{ fontSize: "13px", color: "#475569" }}>Add your first job application to start tracking</p>
+              <p style={{ fontSize: "16px", fontWeight: 600, color: "#111111" }}>No applications tracked yet</p>
+              <p style={{ fontSize: "13px", color: "#888888" }}>Add your first job application to start tracking</p>
               <button onClick={() => setShowAdd(true)}
                 style={{ display: "flex", alignItems: "center", gap: "8px", padding: "12px 24px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", border: "none", borderRadius: "12px", color: "white", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
                 <Plus style={{ width: "16px", height: "16px" }} />Add First Application
@@ -406,12 +406,12 @@ export default function TrackerPage() {
                   <div key={stage.id} style={{ display: "flex", flexDirection: "column", width: "220px", flexShrink: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px", padding: "0 4px" }}>
                       <span style={{ fontSize: "16px" }}>{stage.emoji}</span>
-                      <span style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", flex: 1 }}>{stage.label}</span>
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: "#111111", flex: 1 }}>{stage.label}</span>
                       <span style={{ width: "20px", height: "20px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, background: `${stage.color}30`, color: stage.color }}>
                         {stageApps.length}
                       </span>
                     </div>
-                    <div style={{ flex: 1, borderRadius: "16px", padding: "8px", overflowY: "auto", background: "rgba(18,10,36,0.5)", border: "1px solid rgba(124,58,237,0.1)", minHeight: "400px" }}>
+                    <div style={{ flex: 1, borderRadius: "16px", padding: "8px", overflowY: "auto", background: "#FFFFFF", border: "1px solid rgba(124,58,237,0.1)", minHeight: "400px" }}>
                       <AnimatePresence>
                         {stageApps.map((app) => (
                           <KanbanCard key={app.id} app={app} onMove={moveApp} onDelete={deleteApp} />
@@ -419,7 +419,7 @@ export default function TrackerPage() {
                       </AnimatePresence>
                       {stageApps.length === 0 && (
                         <div style={{ height: "80px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <p style={{ fontSize: "11px", color: "#475569" }}>Drop cards here</p>
+                          <p style={{ fontSize: "11px", color: "#888888" }}>Drop cards here</p>
                         </div>
                       )}
                     </div>
