@@ -51,7 +51,7 @@ const PLAN_COLORS: Record<string, { bg: string; color: string; label: string }> 
 };
 
 // One reusable bottom-nav tab
-function BottomTab({ href, icon: Icon, label, color, active }: { href: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; label: string; color: string; active: boolean }) {
+function BottomTab({ href, icon: Icon, label, color: _color, active }: { href: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; label: string; color: string; active: boolean }) {
   return (
     <Link href={href}
       className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full py-1 relative"
@@ -59,19 +59,19 @@ function BottomTab({ href, icon: Icon, label, color, active }: { href: string; i
       {active && (
         <motion.div layoutId="mob-tab-indicator"
           className="absolute top-0 left-1/2 -translate-x-1/2 rounded-full"
-          style={{ width: "20px", height: "2.5px", background: color, boxShadow: `0 0 8px ${color}` }}
+          style={{ width: "20px", height: "2px", background: "#7c3aed" }}
           transition={{ type: "spring", stiffness: 500, damping: 35 }} />
       )}
-      <motion.div whileTap={{ scale: 0.82 }} transition={{ type: "spring", stiffness: 500, damping: 30 }}
+      <motion.div whileTap={{ scale: 0.85 }} transition={{ type: "spring", stiffness: 500, damping: 30 }}
         style={{
-          width: "40px", height: "36px", borderRadius: "12px",
+          width: "40px", height: "34px", borderRadius: "10px",
           display: "flex", alignItems: "center", justifyContent: "center",
-          background: active ? `${color}18` : "transparent",
-          transition: "background 0.2s",
+          background: active ? "rgba(124,58,237,0.1)" : "transparent",
+          transition: "background 0.15s",
         }}>
-        <Icon className="w-[20px] h-[20px]" style={{ color: active ? color : "#4b5563", filter: active ? `drop-shadow(0 0 6px ${color}80)` : "none" }} />
+        <Icon className="w-[19px] h-[19px]" style={{ color: active ? "#a78bfa" : "#3f3f46" }} />
       </motion.div>
-      <span style={{ fontSize: "10px", fontWeight: active ? 700 : 500, color: active ? color : "#4b5563", lineHeight: 1, letterSpacing: "-0.2px" }}>
+      <span style={{ fontSize: "10px", fontWeight: active ? 600 : 500, color: active ? "#f4f4f5" : "#3f3f46", lineHeight: 1, letterSpacing: "-0.2px" }}>
         {label}
       </span>
     </Link>
@@ -110,7 +110,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "#0f0a1e" }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: "#080810" }}>
 
       {/* ═══════════════════════════════════════════════════════
           DESKTOP SIDEBAR
@@ -119,16 +119,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         animate={{ width: collapsed ? 72 : 260 }}
         transition={{ duration: 0.25, ease: "easeInOut" }}
         className="relative hidden md:flex flex-col border-r shrink-0 overflow-hidden"
-        style={{ borderColor: "rgba(124,58,237,0.15)", background: "rgba(26,16,51,0.95)" }}>
+        style={{ borderColor: "rgba(255,255,255,0.06)", background: "#0c0c18" }}>
 
-        <div className="h-16 flex items-center px-4 border-b shrink-0" style={{ borderColor: "rgba(124,58,237,0.1)" }}>
+        <div className="h-16 flex items-center px-4 border-b shrink-0" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
           <Link href="/" className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-violet-800 flex items-center justify-center shrink-0" style={{ boxShadow: "0 0 15px rgba(124,58,237,0.4)" }}>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#7c3aed" }}>
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             <AnimatePresence>
               {!collapsed && (
-                <motion.span initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="text-lg font-black gradient-text truncate">
+                <motion.span initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="text-base font-bold truncate" style={{ color: "#f4f4f5", letterSpacing: "-0.2px" }}>
                   Mithra AI
                 </motion.span>
               )}
@@ -141,24 +141,24 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             const active = pathname?.startsWith(item.href);
             return (
               <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined}
-                className={cn("flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 group relative", active ? "text-white" : "text-slate-400 hover:text-white hover:bg-white/5")}
-                style={active ? { background: `${item.color}18`, boxShadow: `inset 0 0 0 1px ${item.color}30` } : {}}>
-                {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-r-full" style={{ background: item.color }} />}
-                <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all", active ? "text-white" : "text-slate-400 group-hover:text-white")} style={active ? { background: `${item.color}25` } : {}}>
-                  <item.icon className="w-4 h-4" style={active ? { color: item.color } : {}} />
+                className={cn("flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-150 group relative", active ? "" : "hover:bg-white/[0.04]")}
+                style={active ? { background: "rgba(124,58,237,0.08)" } : {}}>
+                {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full" style={{ background: "#7c3aed" }} />}
+                <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all")}>
+                  <item.icon className="w-4 h-4" style={{ color: active ? "#a78bfa" : "#3f3f46" }} />
                 </div>
                 <AnimatePresence>
                   {!collapsed && (
                     <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} className="min-w-0">
-                      <div className={cn("text-sm font-semibold truncate flex items-center gap-2", active ? "text-white" : "text-slate-300")} style={active ? { color: item.color } : {}}>
+                      <div className="text-sm font-medium truncate flex items-center gap-2" style={{ color: active ? "#f4f4f5" : "#71717a" }}>
                         {item.label}
                         {(item as { badge?: string }).badge && (
-                          <span style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "4px", background: "rgba(16,185,129,0.2)", color: "#10b981", fontWeight: 700, letterSpacing: "0.3px" }}>
+                          <span style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "4px", background: "rgba(16,185,129,0.12)", color: "#10b981", fontWeight: 700, letterSpacing: "0.3px" }}>
                             {(item as { badge?: string }).badge}
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-slate-500 truncate">{item.description}</div>
+                      <div className="text-[11px] truncate" style={{ color: "#3f3f46" }}>{item.description}</div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -167,40 +167,41 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           })}
 
           <Link href="/pricing" title={collapsed ? "Upgrade" : undefined}
-            className={cn("flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 group relative", isUpgradeActive ? "text-white" : "text-slate-400 hover:text-white hover:bg-white/5")}
-            style={isUpgradeActive ? { background: "rgba(245,158,11,0.18)", boxShadow: "inset 0 0 0 1px rgba(245,158,11,0.3)" } : {}}>
+            className={cn("flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-150 group relative")}
+            style={isUpgradeActive ? { background: "rgba(245,158,11,0.08)" } : { }}>
+            {isUpgradeActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full" style={{ background: "#f59e0b" }} />}
             <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
-              <Crown className="w-4 h-4" style={{ color: isUpgradeActive ? "#f59e0b" : undefined }} />
+              <Crown className="w-4 h-4" style={{ color: isUpgradeActive ? "#f59e0b" : "#3f3f46" }} />
             </div>
             <AnimatePresence>
               {!collapsed && (
                 <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} className="min-w-0">
-                  <div className="text-sm font-semibold truncate" style={isUpgradeActive ? { color: "#f59e0b" } : {}}>Upgrade</div>
-                  <div className="text-[11px] text-slate-500 truncate">Invest in your story</div>
+                  <div className="text-sm font-medium truncate" style={{ color: isUpgradeActive ? "#f4f4f5" : "#71717a" }}>Upgrade</div>
+                  <div className="text-[11px] truncate" style={{ color: "#3f3f46" }}>Unlock all agents</div>
                 </motion.div>
               )}
             </AnimatePresence>
           </Link>
         </nav>
 
-        <div className="p-2 border-t space-y-1" style={{ borderColor: "rgba(124,58,237,0.1)" }}>
-          <Link href="/referral" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-slate-400 hover:text-green-400 hover:bg-white/5 transition-all">
-            <Gift className="w-4 h-4 shrink-0 text-green-400" />
-            {!collapsed && <span className="text-sm">Refer & Earn</span>}
+        <div className="p-2 border-t space-y-0.5" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+          <Link href="/referral" className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-white/[0.04] transition-all">
+            <Gift className="w-4 h-4 shrink-0" style={{ color: "#3f3f46" }} />
+            {!collapsed && <span className="text-sm" style={{ color: "#71717a" }}>Refer &amp; Earn</span>}
           </Link>
-          <Link href="/" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-slate-400 hover:text-white hover:bg-white/5 transition-all">
-            <Home className="w-4 h-4 shrink-0" />
-            {!collapsed && <span className="text-sm">Home</span>}
+          <Link href="/" className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-white/[0.04] transition-all">
+            <Home className="w-4 h-4 shrink-0" style={{ color: "#3f3f46" }} />
+            {!collapsed && <span className="text-sm" style={{ color: "#71717a" }}>Home</span>}
           </Link>
           {user && (
-            <button onClick={() => logout()} className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-slate-500 hover:text-red-400 hover:bg-white/5 transition-all">
-              <LogOut className="w-4 h-4 shrink-0" />
-              {!collapsed && <span className="text-xs">Logout</span>}
+            <button onClick={() => logout()} className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-white/[0.04] transition-all">
+              <LogOut className="w-4 h-4 shrink-0" style={{ color: "#3f3f46" }} />
+              {!collapsed && <span className="text-xs" style={{ color: "#52525b" }}>Logout</span>}
             </button>
           )}
-          <button onClick={() => setCollapsed(!collapsed)} className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-all">
-            {collapsed ? <ChevronRight className="w-4 h-4 shrink-0" /> : <ChevronLeft className="w-4 h-4 shrink-0" />}
-            {!collapsed && <span className="text-xs">Collapse</span>}
+          <button onClick={() => setCollapsed(!collapsed)} className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-white/[0.04] transition-all">
+            {collapsed ? <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "#3f3f46" }} /> : <ChevronLeft className="w-4 h-4 shrink-0" style={{ color: "#3f3f46" }} />}
+            {!collapsed && <span className="text-xs" style={{ color: "#52525b" }}>Collapse</span>}
           </button>
         </div>
       </motion.aside>
@@ -211,26 +212,23 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Desktop top bar */}
-        <header className="hidden md:flex h-16 items-center justify-between px-6 border-b shrink-0" style={{ borderColor: "rgba(124,58,237,0.1)", background: "rgba(15,10,30,0.95)" }}>
+        <header className="hidden md:flex h-16 items-center justify-between px-6 border-b shrink-0" style={{ borderColor: "rgba(255,255,255,0.06)", background: "#080810" }}>
           <div>
-            <h1 className="text-base font-bold text-white">{currentPage?.label || "Dashboard"}</h1>
-            <p className="text-xs text-slate-500">{currentPage?.description}</p>
+            <h1 className="text-sm font-semibold" style={{ color: "#f4f4f5" }}>{currentPage?.label || "Dashboard"}</h1>
+            <p className="text-xs" style={{ color: "#3f3f46" }}>{currentPage?.description}</p>
           </div>
-          <div className="flex items-center gap-3">
-            {/* Notifications — link to referral/updates */}
+          <div className="flex items-center gap-2">
             <Link href="/referral" title="Referrals & Rewards"
-              className="relative w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-amber-400 hover:bg-white/5 transition-all">
+              className="relative w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/[0.04] transition-all" style={{ color: "#3f3f46" }}>
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-400" />
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-amber-400" />
             </Link>
 
-            {/* Settings — link to referral page for now (add /settings when built) */}
             <Link href="/referral" title="Settings"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-all">
+              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/[0.04] transition-all" style={{ color: "#3f3f46" }}>
               <Settings className="w-4 h-4" />
             </Link>
 
-            {/* Desktop Avatar dropdown — same as mobile */}
             <div ref={avatarRef} style={{ position: "relative" }}>
               <motion.button
                 whileTap={{ scale: 0.92 }}
@@ -238,11 +236,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 style={{
                   display: "flex", alignItems: "center", gap: "8px",
                   padding: "4px 10px 4px 4px",
-                  background: avatarOpen ? "rgba(124,58,237,0.15)" : "rgba(255,255,255,0.05)",
-                  border: `1px solid ${avatarOpen ? "rgba(124,58,237,0.4)" : "rgba(255,255,255,0.08)"}`,
+                  background: avatarOpen ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.07)",
                   borderRadius: "24px", cursor: "pointer",
                 }}>
-                <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 800, color: "white" }}>
+                <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: "#7c3aed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, color: "white" }}>
                   {userInitials}
                 </div>
                 {user && (
@@ -264,20 +262,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     transition={{ type: "spring", stiffness: 500, damping: 35 }}
                     style={{
                       position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 100,
-                      background: "rgba(14,8,30,0.98)", border: "1px solid rgba(124,58,237,0.2)",
-                      borderRadius: "16px", padding: "8px", minWidth: "220px",
-                      boxShadow: "0 16px 40px rgba(0,0,0,0.6)",
+                      background: "#0f0f1a", border: "1px solid rgba(255,255,255,0.07)",
+                      borderRadius: "12px", padding: "8px", minWidth: "220px",
+                      boxShadow: "0 16px 40px rgba(0,0,0,0.5)",
                     }}>
                     {user && (
                       <div style={{ padding: "10px 12px 12px" }}>
-                        <div style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", marginBottom: "2px" }}>{user.name}</div>
-                        <div style={{ fontSize: "11px", color: "#475569" }}>{user.email}</div>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: "#f4f4f5", marginBottom: "2px" }}>{user.name}</div>
+                        <div style={{ fontSize: "11px", color: "#3f3f46" }}>{user.email}</div>
                         <span style={{ display: "inline-block", marginTop: "6px", fontSize: "10px", padding: "2px 8px", borderRadius: "20px", fontWeight: 700, background: planStyle.bg, color: planStyle.color, textTransform: "uppercase" as const }}>
                           {planStyle.label}
                         </span>
                       </div>
                     )}
-                    <div style={{ height: "1px", background: "rgba(124,58,237,0.12)", margin: "4px 0" }} />
+                    <div style={{ height: "1px", background: "rgba(255,255,255,0.06)", margin: "4px 0" }} />
                     {[
                       { icon: Crown,    label: "Upgrade Plan",    href: "/pricing",  color: "#f59e0b" },
                       { icon: Gift,     label: "Refer & Earn",    href: "/referral", color: "#10b981" },
@@ -311,17 +309,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* ── MOBILE TOP BAR ── */}
         <header className="md:hidden flex h-14 items-center justify-between px-4 border-b shrink-0"
-          style={{ borderColor: "rgba(124,58,237,0.12)", background: "rgba(10,6,22,0.98)", zIndex: 30, backdropFilter: "blur(20px)" }}>
+          style={{ borderColor: "rgba(255,255,255,0.06)", background: "#080810", zIndex: 30 }}>
 
           {/* Left: Logo + page name */}
           <div className="flex items-center gap-2.5 min-w-0">
             <Link href="/" className="shrink-0">
-              <div style={{ width: "28px", height: "28px", borderRadius: "9px", background: "linear-gradient(135deg,#7c3aed,#5b21b6)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 12px rgba(124,58,237,0.5)" }}>
-                <Sparkles style={{ width: "13px", height: "13px", color: "white" }} />
+              <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#7c3aed", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Sparkles style={{ width: "12px", height: "12px", color: "white" }} />
               </div>
             </Link>
             <div className="min-w-0">
-              <div style={{ fontSize: "14px", fontWeight: 800, color: "#f1f5f9", lineHeight: 1, letterSpacing: "-0.3px" }} className="truncate">
+              <div style={{ fontSize: "14px", fontWeight: 700, color: "#f4f4f5", lineHeight: 1, letterSpacing: "-0.2px" }} className="truncate">
                 {currentPage?.label || "Mithra AI"}
               </div>
             </div>
@@ -336,8 +334,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 searchesToday={usage.searchesToday}
               />
             )}
-            <button className="relative w-9 h-9 rounded-xl flex items-center justify-center text-slate-400"
-              style={{ background: "rgba(255,255,255,0.04)" }}>
+            <button className="relative w-9 h-9 rounded-lg flex items-center justify-center"
+              style={{ background: "transparent", color: "#3f3f46" }}>
               <Bell style={{ width: "16px", height: "16px" }} />
               <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-amber-400" />
             </button>
@@ -350,12 +348,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 style={{
                   display: "flex", alignItems: "center", gap: "6px",
                   padding: "4px 8px 4px 4px",
-                  background: avatarOpen ? "rgba(124,58,237,0.15)" : "rgba(255,255,255,0.05)",
-                  border: `1px solid ${avatarOpen ? "rgba(124,58,237,0.4)" : "rgba(255,255,255,0.08)"}`,
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.07)",
                   borderRadius: "24px", cursor: "pointer",
-                  transition: "all 0.2s",
                 }}>
-                <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 800, color: "white" }}>
+                <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#7c3aed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "white" }}>
                   {userInitials}
                 </div>
                 <motion.div animate={{ rotate: avatarOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
@@ -373,26 +370,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     transition={{ type: "spring", stiffness: 500, damping: 35 }}
                     style={{
                       position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 100,
-                      background: "rgba(14,8,30,0.98)",
-                      border: "1px solid rgba(124,58,237,0.2)",
-                      borderRadius: "16px",
+                      background: "#0f0f1a",
+                      border: "1px solid rgba(255,255,255,0.07)",
+                      borderRadius: "12px",
                       padding: "8px",
                       minWidth: "200px",
-                      boxShadow: "0 16px 40px rgba(0,0,0,0.6)",
+                      boxShadow: "0 16px 40px rgba(0,0,0,0.5)",
                     }}>
 
-                    {/* User info */}
                     {user && (
                       <div style={{ padding: "10px 12px 10px", marginBottom: "4px" }}>
-                        <div style={{ fontSize: "13px", fontWeight: 700, color: "#f1f5f9", marginBottom: "2px" }}>{user.name}</div>
-                        <div style={{ fontSize: "11px", color: "#475569" }}>{user.email}</div>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: "#f4f4f5", marginBottom: "2px" }}>{user.name}</div>
+                        <div style={{ fontSize: "11px", color: "#3f3f46" }}>{user.email}</div>
                         <span style={{ display: "inline-block", marginTop: "6px", fontSize: "10px", padding: "2px 8px", borderRadius: "20px", fontWeight: 700, background: planStyle.bg, color: planStyle.color, textTransform: "uppercase" as const, letterSpacing: "0.5px" }}>
                           {planStyle.label}
                         </span>
                       </div>
                     )}
 
-                    <div style={{ height: "1px", background: "rgba(124,58,237,0.12)", margin: "4px 0" }} />
+                    <div style={{ height: "1px", background: "rgba(255,255,255,0.06)", margin: "4px 0" }} />
 
                     {/* Menu items */}
                     {[
@@ -439,10 +435,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       ═══════════════════════════════════════════════════════ */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40"
         style={{
-          background: "rgba(7,4,16,0.97)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          borderTop: "1px solid rgba(124,58,237,0.14)",
+          background: "rgba(8,8,16,0.97)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
           paddingBottom: "env(safe-area-inset-bottom)",
         }}>
         <div style={{ display: "flex", alignItems: "stretch", height: "64px", padding: "0 2px" }}>
@@ -505,22 +501,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               transition={{ type: "spring", damping: 30, stiffness: 320 }}
               className="fixed left-0 right-0 bottom-0 z-50 md:hidden"
               style={{
-                background: "rgba(10,5,22,0.99)",
-                border: "1px solid rgba(124,58,237,0.18)", borderBottom: "none",
-                borderRadius: "24px 24px 0 0",
+                background: "#0c0c18",
+                border: "1px solid rgba(255,255,255,0.07)", borderBottom: "none",
+                borderRadius: "20px 20px 0 0",
                 paddingBottom: "env(safe-area-inset-bottom)",
               }}>
 
-              {/* Drag handle */}
               <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 4px" }}>
-                <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: "rgba(124,58,237,0.25)" }} />
+                <div style={{ width: "32px", height: "3px", borderRadius: "2px", background: "rgba(255,255,255,0.1)" }} />
               </div>
 
-              {/* Header */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 20px 16px" }}>
-                <span style={{ fontSize: "16px", fontWeight: 800, color: "#f1f5f9" }}>More Tools</span>
-                <button onClick={() => setMoreOpen(false)} style={{ width: "32px", height: "32px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.06)", border: "none", cursor: "pointer" }}>
-                  <X style={{ width: "15px", height: "15px", color: "#64748b" }} />
+                <span style={{ fontSize: "15px", fontWeight: 700, color: "#f4f4f5" }}>More Tools</span>
+                <button onClick={() => setMoreOpen(false)} style={{ width: "30px", height: "30px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}>
+                  <X style={{ width: "13px", height: "13px", color: "#52525b" }} />
                 </button>
               </div>
 
@@ -535,20 +529,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                         style={{
                           display: "flex", flexDirection: "column", alignItems: "center", gap: "8px",
                           padding: "16px 6px 14px",
-                          borderRadius: "18px",
-                          background: active ? `${item.color}15` : "rgba(255,255,255,0.04)",
-                          border: `1px solid ${active ? item.color + "35" : "rgba(255,255,255,0.07)"}`,
+                          borderRadius: "14px",
+                          background: active ? "rgba(124,58,237,0.08)" : "rgba(255,255,255,0.03)",
+                          border: `1px solid ${active ? "rgba(124,58,237,0.2)" : "rgba(255,255,255,0.06)"}`,
                           position: "relative",
                         }}>
                         {(item.beta || typedItem.badge) && (
-                          <span style={{ position: "absolute", top: "7px", right: "7px", fontSize: "8px", fontWeight: 700, padding: "1px 4px", borderRadius: "4px", background: item.beta ? "rgba(245,158,11,0.2)" : "rgba(16,185,129,0.2)", color: item.beta ? "#f59e0b" : "#10b981", letterSpacing: "0.3px" }}>
+                          <span style={{ position: "absolute", top: "7px", right: "7px", fontSize: "8px", fontWeight: 700, padding: "1px 4px", borderRadius: "4px", background: item.beta ? "rgba(245,158,11,0.15)" : "rgba(16,185,129,0.12)", color: item.beta ? "#f59e0b" : "#10b981", letterSpacing: "0.3px" }}>
                             {item.beta ? "BETA" : typedItem.badge}
                           </span>
                         )}
-                        <div style={{ width: "44px", height: "44px", borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center", background: active ? `${item.color}20` : "rgba(255,255,255,0.07)", border: `1px solid ${active ? item.color + "30" : "rgba(255,255,255,0.08)"}` }}>
-                          <item.icon style={{ width: "20px", height: "20px", color: active ? item.color : "#64748b" }} />
+                        <div style={{ width: "42px", height: "42px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                          <item.icon style={{ width: "19px", height: "19px", color: active ? "#a78bfa" : "#52525b" }} />
                         </div>
-                        <span style={{ fontSize: "11px", fontWeight: 600, color: active ? item.color : "#94a3b8", textAlign: "center", lineHeight: 1.2 }}>
+                        <span style={{ fontSize: "11px", fontWeight: 600, color: active ? "#f4f4f5" : "#71717a", textAlign: "center", lineHeight: 1.2 }}>
                           {item.label}
                         </span>
                       </motion.div>
