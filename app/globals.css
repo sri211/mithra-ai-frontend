@@ -58,6 +58,10 @@
     0%   { opacity: 0; transform: scale(0.96); }
     100% { opacity: 1; transform: scale(1); }
   }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
 }
 
 :root {
@@ -92,6 +96,16 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
 
 @layer utilities {
+  /* Landing page marquee */
+  .marquee-track { animation: marquee 28s linear infinite; }
+  .marquee-track:hover { animation-play-state: paused; }
+
+  /* Annotation underline utility */
+  .lp-annotate {
+    position: relative;
+    display: inline-block;
+  }
+
   /* Gradient text — use only for hero moments, max once per page */
   .gradient-text {
     background: linear-gradient(135deg, #a78bfa 0%, #f59e0b 100%);
