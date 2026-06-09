@@ -8,6 +8,7 @@ export const API_BASE =
 export const api = axios.create({
   baseURL: API_BASE,
   headers: { "Content-Type": "application/json" },
+  timeout: 120000, // 2 min — Claude adaption can take 60-90s
 });
 
 export async function streamSSE(

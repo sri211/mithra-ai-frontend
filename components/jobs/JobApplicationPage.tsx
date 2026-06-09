@@ -246,7 +246,7 @@ export default function JobApplicationPage() {
             <p style={{ fontSize: "13px", color: "#888888", marginTop: "4px" }}>AI opens, analyzes, fills and submits job applications on your behalf</p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", padding: "6px 14px", borderRadius: "20px", border: "1px solid rgba(245,158,11,0.3)", background: "rgba(245,158,11,0.08)", color: "#f59e0b" }}>
-            <Zap style={{ width: "13px", height: "13px" }} />Agent 4 — Auto-Apply
+            <Zap style={{ width: "13px", height: "13px" }} />Auto-Apply
           </div>
         </div>
 
@@ -444,3 +444,4 @@ export default function JobApplicationPage() {
     </div>
   );
 }
+

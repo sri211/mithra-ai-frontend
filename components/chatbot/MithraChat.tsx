@@ -453,7 +453,7 @@ export default function MithraChat() {
               </div>
             </div>
             <p style={{ fontSize: "10px", color: "#334155", textAlign: "center", marginTop: "8px" }}>
-              Powered by Claude Opus 4.7 · Commands all 7 agents
+              Your AI career companion · Always by your side
             </p>
           </div>
         </div>

@@ -57,7 +57,8 @@ export default function LoginPage() {
     try {
       // Ensure GIS is loaded
       await loadGIS();
-      type GIS = { accounts: { id: { initialize: (c: object) => void; prompt: () => void } } };
+      type GISNotification = { isNotDisplayed: () => boolean; isSkippedMoment: () => boolean; getNotDisplayedReason: () => string };
+      type GIS = { accounts: { id: { initialize: (c: object) => void; prompt: (cb?: (n: GISNotification) => void) => void } } };
       const google = (window as Window & { google?: GIS }).google;
       if (!google?.accounts?.id) {
         setError("Google sign-in unavailable. Please use email login.");
@@ -74,13 +75,28 @@ export default function LoginPage() {
             const params = new URLSearchParams(window.location.search);
             router.push(params.get("callbackUrl") || "/resume-builder");
           } else {
-            setError("Google sign-in failed. Please try again.");
+            setError("Google sign-in failed. Please try again or use email login.");
           }
           setIsGoogleLoading(false);
         },
         ux_mode: "popup",
+        itp_support: true,
       });
-      google.accounts.id.prompt();
+      // prompt() with notification callback to catch silent failures
+      google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed()) {
+          const reason = notification.getNotDisplayedReason();
+          if (reason === "unregistered_origin" || reason === "suppressed_by_user") {
+            setError("Google sign-in is unavailable on this browser/domain. Please use email login instead.");
+          } else {
+            setError("Google sign-in could not open. Please allow pop-ups or use email login.");
+          }
+          setIsGoogleLoading(false);
+        } else if (notification.isSkippedMoment()) {
+          setError("Google sign-in was cancelled. Please try again.");
+          setIsGoogleLoading(false);
+        }
+      });
     } catch {
       setError("Google sign-in failed. Please try again.");
       setIsGoogleLoading(false);
@@ -223,46 +239,58 @@ export default function LoginPage() {
           />
         </div>
 
-        <div style={{ position: "relative" }}>
-          <Lock
-            style={{
-              position: "absolute",
-              left: "12px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              width: "16px",
-              height: "16px",
-              color: "#64748b",
-            }}
-          />
-          <input
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Your password"
-            required
-            style={{ ...input, paddingRight: "44px" }}
-            onFocus={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.5)")}
-            onBlur={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.25)")}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            style={{
-              position: "absolute",
-              right: "12px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: "#64748b",
-              padding: "2px",
-              display: "flex",
-            }}
-          >
-            {showPassword ? <EyeOff style={{ width: "15px", height: "15px" }} /> : <Eye style={{ width: "15px", height: "15px" }} />}
-          </button>
+        <div>
+          <div style={{ position: "relative" }}>
+            <Lock
+              style={{
+                position: "absolute",
+                left: "12px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                width: "16px",
+                height: "16px",
+                color: "#64748b",
+              }}
+            />
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Your password"
+              required
+              style={{ ...input, paddingRight: "44px" }}
+              onFocus={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.5)")}
+              onBlur={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.25)")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: "absolute",
+                right: "12px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "#64748b",
+                padding: "2px",
+                display: "flex",
+              }}
+            >
+              {showPassword ? <EyeOff style={{ width: "15px", height: "15px" }} /> : <Eye style={{ width: "15px", height: "15px" }} />}
+            </button>
+          </div>
+          <div style={{ textAlign: "right", marginTop: "6px" }}>
+            <Link
+              href="/forgot-password"
+              style={{ fontSize: "12px", color: "#a78bfa", textDecoration: "none" }}
+              onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
+              onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
+            >
+              Forgot password?
+            </Link>
+          </div>
         </div>
 
         {error && (

@@ -301,7 +301,7 @@ export default function InterviewPrepPage() {
               </button>
             )}
             <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", padding: "6px 14px", borderRadius: "20px", border: "1px solid rgba(249,115,22,0.3)", background: "rgba(249,115,22,0.08)", color: "#fb923c" }}>
-              <Brain style={{ width: "13px", height: "13px" }} />Agent 6 — Interview Coach
+              <Brain style={{ width: "13px", height: "13px" }} />Interview Coach
             </div>
           </div>
         </div>
@@ -662,3 +662,4 @@ export default function InterviewPrepPage() {
     </div>
   );
 }
+

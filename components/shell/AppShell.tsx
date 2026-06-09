@@ -28,18 +28,18 @@ const NAV_ITEMS = [
 ];
 
 const BOTTOM_PRIMARY = [
-  { href: "/resume-builder", icon: FileText, label: "Resume",   color: "#7c3aed" },
+  { href: "/resume-score",   icon: Award,    label: "Score",    color: "#10b981" },
   { href: "/resume-adaptor", icon: Target,   label: "Adaptor",  color: "#06b6d4" },
-  { href: "/job-finder",     icon: Search,   label: "Jobs",     color: "#10b981" },
   { href: "/interview-prep", icon: Brain,    label: "Interview",color: "#f97316" },
+  { href: "/network",        icon: Users,    label: "Network",  color: "#ec4899" },
 ];
 
 const MORE_ITEMS = [
-  { href: "/resume-score",   icon: Award,    label: "Resume Score", color: "#10b981", emoji: "🏆", badge: "Free" },
-  { href: "/network",        icon: Users,    label: "Network",      color: "#ec4899", emoji: "🤝" },
-  { href: "/tracker",        icon: BarChart3,label: "Tracker",      color: "#6366f1", emoji: "📊" },
-  { href: "/referral",       icon: Gift,     label: "Refer & Earn", color: "#10b981", emoji: "🎁" },
-  { href: "/job-application",icon: Zap,      label: "Auto Apply",   color: "#f59e0b", emoji: "⚡", beta: true },
+  { href: "/resume-builder", icon: FileText, label: "Resume Builder", color: "#7c3aed", emoji: "📄" },
+  { href: "/job-finder",     icon: Search,   label: "Job Finder",     color: "#10b981", emoji: "🔍" },
+  { href: "/tracker",        icon: BarChart3,label: "Tracker",        color: "#6366f1", emoji: "📊" },
+  { href: "/referral",       icon: Gift,     label: "Refer & Earn",   color: "#10b981", emoji: "🎁" },
+  { href: "/job-application",icon: Zap,      label: "Auto Apply",     color: "#f59e0b", emoji: "⚡", beta: true },
 ];
 
 const PLAN_COLORS: Record<string, { bg: string; color: string; label: string }> = {

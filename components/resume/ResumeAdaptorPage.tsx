@@ -321,11 +321,10 @@ export default function ResumeAdaptorPage() {
     const jd = jdForRequest();
     if (!jd.trim()) return;
 
-    // Gate: free users capped at 3 adaptations/month
+    // Gate: check cap before calling API (but only increment on success)
     if (limits.resumeAdaptations !== -1) {
-      const newCount = usage.incrementAdaptations();
-      if (newCount > limits.resumeAdaptations) {
-        // Show hard upgrade wall
+      const currentCount = usage.adaptationsUsed;
+      if (currentCount >= limits.resumeAdaptations) {
         setResult({
           ats_score_before: 0, ats_score_after: 0,
           missing_keywords: [], matched_keywords: [],
@@ -337,7 +336,21 @@ export default function ResumeAdaptorPage() {
         setRightTab("results");
         return;
       }
-      if (newCount >= 2) setShowAdaptNudge(true);
+    }
+
+    // Validate resume has content
+    const hasResume = resume && (resume.personal?.name || (resume.experience?.length ?? 0) > 0 || resume.summary);
+    if (!hasResume) {
+      setResult({
+        ats_score_before: 0, ats_score_after: 0,
+        missing_keywords: [], matched_keywords: [],
+        suggested_changes: [], changes_made: [],
+        cover_letter_hook: "",
+        interview_prep_tip: "No resume loaded. Please build or upload your resume in the Resume Builder first, then come back to adapt it.",
+        adapted_resume: undefined, style_preserved: true,
+      });
+      setRightTab("results");
+      return;
     }
 
     setIsAnalyzing(true); setResult(null); setAdaptedResume(null); setSuggestedChanges([]); setSelectedChangeIdxs(new Set());
@@ -348,10 +361,15 @@ export default function ResumeAdaptorPage() {
       setLoadingStep(`Researching ${companyName.trim()} hiring patterns...`);
       await new Promise((r) => setTimeout(r, 800));
     }
-    setLoadingStep("Adapting your resume...");
+    setLoadingStep("Adapting your resume — this takes ~30s...");
 
     try {
       const { data } = await api.post("/resume/adapt", requestBody);
+      // Only count a successful adaptation
+      if (limits.resumeAdaptations !== -1) {
+        const newCount = usage.incrementAdaptations();
+        if (newCount >= limits.resumeAdaptations - 1) setShowAdaptNudge(true);
+      }
       setResult(data);
       if (data.suggested_changes && Array.isArray(data.suggested_changes)) {
         const changes = data.suggested_changes as SuggestedChange[];

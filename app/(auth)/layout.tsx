@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Sparkles } from "lucide-react";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -29,8 +30,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         }}
       />
 
-      {/* Logo */}
-      <div style={{ marginBottom: "40px", textAlign: "center" }}>
+      {/* Logo — links back to homepage */}
+      <Link href="/" style={{ textDecoration: "none", marginBottom: "40px", textAlign: "center", display: "block" }}>
         <div
           style={{
             display: "inline-flex",
@@ -66,7 +67,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </span>
         </div>
         <p style={{ fontSize: "13px", color: "#475569" }}>Your AI Career Companion</p>
-      </div>
+      </Link>
 
       {/* Card */}
       <div

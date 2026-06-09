@@ -277,62 +277,87 @@ export default function LandingPage() {
       </section>
 
       {/* ════════════════ CAREER FACTS ════════════════ */}
-      <section id="features" style={{ background: "rgba(124,58,237,0.04)", borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "80px 32px" }}>
-        <div style={{ maxWidth: "640px", margin: "0 auto" }}>
-          <p style={{ fontSize: "11px", fontWeight: 700, color: C.violet, letterSpacing: "2px", textTransform: "uppercase", marginBottom: "32px", textAlign: "center" }}>
-            Transparency Label
-          </p>
+      {/* ════════════════ RESUME-FORMAT SHOWCASE ════════════════ */}
+      <section id="features" style={{ background: "rgba(124,58,237,0.03)", borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "80px 32px" }}>
+        <div style={{ maxWidth: "680px", margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "40px" }}>
+            <h2 style={{ fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 900, color: C.dark, letterSpacing: "-1.2px", lineHeight: 1.1, marginBottom: "12px" }}>
+              Everything you get.{" "}
+              <Annotated color={C.violet}>Laid out clearly.</Annotated>
+            </h2>
+            <p style={{ fontSize: "14px", color: C.mid, lineHeight: 1.7 }}>
+              No hidden tiers. No dark patterns. Read it like a resume — because that&apos;s what you came to build.
+            </p>
+          </div>
 
-          {/* Nutrition-facts-style panel */}
-          <div style={{ background: C.white, border: `2px solid ${C.dark}`, borderRadius: "4px", padding: "24px 28px", fontFamily: "Inter, system-ui, sans-serif" }}>
-            {/* Title */}
-            <div style={{ borderBottom: `8px solid ${C.dark}`, paddingBottom: "6px", marginBottom: "6px" }}>
-              <div style={{ fontSize: "28px", fontWeight: 900, color: C.dark, letterSpacing: "-0.5px", lineHeight: 1 }}>Career Facts</div>
-            </div>
-            <div style={{ borderBottom: `4px solid ${C.dark}`, paddingBottom: "8px", marginBottom: "8px" }}>
-              <div style={{ fontSize: "12px", color: C.mid, fontWeight: 500 }}>About 8 Specialist Agents Per Platform</div>
-              <div style={{ fontSize: "12px", color: C.mid, fontWeight: 500 }}>Serving size: 1 Career Platform</div>
-            </div>
+          {/* Resume-format card */}
+          <div style={{ background: C.white, border: `1px solid rgba(0,0,0,0.12)`, borderRadius: "12px", overflow: "hidden", boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
 
-            {/* Header row */}
-            <div style={{ borderBottom: `4px solid ${C.dark}`, paddingBottom: "4px", marginBottom: "2px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: "11px", fontWeight: 700, color: C.dark, textTransform: "uppercase", letterSpacing: "0.5px" }}>Feature</span>
-              <span style={{ fontSize: "11px", fontWeight: 700, color: C.dark, textTransform: "uppercase", letterSpacing: "0.5px" }}>Free plan</span>
-            </div>
-
-            {/* Fact rows */}
-            {CAREER_FACTS.map((f, i) => (
-              <div key={f.label} style={{
-                display: "flex", justifyContent: "space-between", alignItems: "center",
-                padding: "8px 0",
-                borderBottom: `1px solid ${i < CAREER_FACTS.length - 1 ? C.border : "transparent"}`,
-              }}>
-                <span style={{ fontSize: "14px", fontWeight: f.highlight ? 700 : 500, color: C.dark }}>{f.label}</span>
-                <span style={{
-                  fontSize: "13px", fontWeight: 700,
-                  color: f.highlight ? C.violet : C.dark,
-                  background: f.highlight ? C.violetL : "transparent",
-                  padding: f.highlight ? "2px 8px" : "0",
-                  borderRadius: f.highlight ? "100px" : "0",
-                }}>
-                  {f.value}
-                </span>
+            {/* Resume header */}
+            <div style={{ padding: "28px 32px 20px", borderBottom: `1px solid ${C.border}` }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+                <div>
+                  <div style={{ fontSize: "26px", fontWeight: 900, color: C.dark, letterSpacing: "-0.8px", lineHeight: 1 }}>Mithra AI</div>
+                  <div style={{ fontSize: "13px", color: C.mid, marginTop: "4px", fontWeight: 500 }}>AI Career Platform · 8 Specialist Agents · Free to start</div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
+                  <span style={{ fontSize: "11px", padding: "3px 10px", borderRadius: "20px", background: "rgba(16,185,129,0.1)", color: "#10b981", fontWeight: 700, border: "1px solid rgba(16,185,129,0.2)" }}>Free Plan Available</span>
+                  <span style={{ fontSize: "11px", color: C.muted }}>mithraai.in</span>
+                </div>
               </div>
-            ))}
+            </div>
 
-            {/* Divider */}
-            <div style={{ borderTop: `4px solid ${C.dark}`, marginTop: "12px", paddingTop: "12px" }}>
-              {NOT_IN_MITHRA.map((item) => (
-                <div key={item} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "4px 0" }}>
-                  <span style={{ fontSize: "13px", color: "#10b981", fontWeight: 700 }}>✓</span>
-                  <span style={{ fontSize: "12px", color: C.mid, fontWeight: 500 }}>{item}</span>
+            {/* Summary section */}
+            <div style={{ padding: "16px 32px", borderBottom: `1px solid ${C.border}`, background: "rgba(124,58,237,0.03)" }}>
+              <div style={{ fontSize: "10px", fontWeight: 800, color: C.violet, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: "8px" }}>Summary</div>
+              <p style={{ fontSize: "13px", color: C.mid, lineHeight: 1.7, margin: 0 }}>
+                Built for serious job seekers. Not a job board, not a resume template site — a full AI-powered career co-pilot. Eight agents handle every step from resume to offer letter, working together in one platform.
+              </p>
+            </div>
+
+            {/* Core capabilities */}
+            <div style={{ padding: "20px 32px", borderBottom: `1px solid ${C.border}` }}>
+              <div style={{ fontSize: "10px", fontWeight: 800, color: C.violet, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: "14px" }}>Core Capabilities (Free Plan)</div>
+              {[
+                { skill: "Resume Builder",   detail: "Unlimited AI preview · LinkedIn import · Q&A builder",          badge: null },
+                { skill: "ATS Score Check",  detail: "7-dimension analysis — always free, no limit",                  badge: "Always Free" },
+                { skill: "Resume Adaptor",   detail: "3 AI adaptations/month · 5-lens analysis",                     badge: null },
+                { skill: "Job Finder",       detail: "50+ portals · 5 searches/day · 8 results visible",             badge: null },
+                { skill: "Interview Prep",   detail: "AI mock interviews · Company-specific questions",              badge: "Now Free" },
+                { skill: "App Tracker",      detail: "Kanban board · Full pipeline · Status updates",                badge: "Now Free" },
+                { skill: "Network Intel",    detail: "Find decision-makers · AI-drafted outreach",                   badge: null },
+                { skill: "AI Chat (Mithra)", detail: "15 messages/day · Commands all 8 agents",                     badge: null },
+              ].map((item, i, arr) => (
+                <div key={item.skill} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", padding: "9px 0", borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : "none" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ fontSize: "14px", fontWeight: 600, color: C.dark }}>{item.skill}</span>
+                    <span style={{ fontSize: "12px", color: C.mid, marginLeft: "10px" }}>{item.detail}</span>
+                  </div>
+                  {item.badge && (
+                    <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "20px", fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, background: item.badge === "Always Free" ? "rgba(16,185,129,0.1)" : "rgba(124,58,237,0.1)", color: item.badge === "Always Free" ? "#10b981" : C.violet, border: `1px solid ${item.badge === "Always Free" ? "rgba(16,185,129,0.2)" : "rgba(124,58,237,0.2)"}` }}>
+                      {item.badge}
+                    </span>
+                  )}
                 </div>
               ))}
+            </div>
+
+            {/* Commitments */}
+            <div style={{ padding: "16px 32px 20px" }}>
+              <div style={{ fontSize: "10px", fontWeight: 800, color: C.violet, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: "12px" }}>Our Commitments</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "8px" }}>
+                {NOT_IN_MITHRA.map((item) => (
+                  <div key={item} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <Check style={{ width: "14px", height: "14px", color: "#10b981", flexShrink: 0 }} />
+                    <span style={{ fontSize: "13px", color: C.mid, fontWeight: 500 }}>{item}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           <p style={{ textAlign: "center", fontSize: "12px", color: C.muted, marginTop: "16px" }}>
-            * Upgrade to Pro/Elite for unlimited access to all features
+            Upgrade to Pro/Elite for unlimited access · <Link href="/pricing" style={{ color: C.violet, textDecoration: "none", fontWeight: 600 }}>See pricing →</Link>
           </p>
         </div>
       </section>
