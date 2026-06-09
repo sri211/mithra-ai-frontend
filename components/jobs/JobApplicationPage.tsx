@@ -287,19 +287,19 @@ export default function JobApplicationPage() {
                   {DOCS.map((doc) => {
                     const active = docActive[doc.name] ?? doc.defaultActive;
                     return (
-                      <div key={doc.name} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", borderRadius: "10px", border: `1px solid ${active ? "rgba(124,58,237,0.3)" : "rgba(255,255,255,0.06)"}`, background: "rgba(0,0,0,0.02)" }}>
+                      <div key={doc.name} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", borderRadius: "10px", border: `1px solid ${active ? "rgba(124,58,237,0.3)" : "rgba(0,0,0,0.09)"}`, background: "rgba(0,0,0,0.02)" }}>
                         <FileText style={{ width: "16px", height: "16px", color: "#7c3aed", flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: "12px", fontWeight: 500, color: "#111111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{doc.name}</div>
                           <div style={{ fontSize: "10px", color: "#888888" }}>{doc.type}</div>
                         </div>
-                        <button onClick={() => toggleDoc(doc.name)} style={{ width: "20px", height: "20px", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer", background: active ? "#7c3aed" : "rgba(255,255,255,0.1)", flexShrink: 0 }}>
+                        <button onClick={() => toggleDoc(doc.name)} style={{ width: "20px", height: "20px", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer", background: active ? "#7c3aed" : "rgba(0,0,0,0.08)", flexShrink: 0 }}>
                           {active && <Check style={{ width: "12px", height: "12px", color: "white" }} />}
                         </button>
                       </div>
                     );
                   })}
-                  <button style={{ width: "100%", display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderRadius: "10px", border: "1px dashed rgba(255,255,255,0.1)", background: "transparent", color: "#888888", fontSize: "12px", cursor: "pointer" }}>
+                  <button style={{ width: "100%", display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderRadius: "10px", border: "1px dashed rgba(0,0,0,0.08)", background: "transparent", color: "#888888", fontSize: "12px", cursor: "pointer" }}>
                     <Upload style={{ width: "14px", height: "14px" }} />Upload New Document
                   </button>
                 </div>
@@ -365,7 +365,7 @@ export default function JobApplicationPage() {
                       return (
                         <div key={step.status} style={{ padding: "8px 12px", borderRadius: "10px", border: isLast && isApplying ? "1px solid rgba(124,58,237,0.3)" : "1px solid transparent", background: isLast && isApplying ? "rgba(124,58,237,0.1)" : "transparent", transition: "all 0.3s" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                            <div style={{ width: "20px", height: "20px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, background: isDone ? "#10b981" : isLast && isApplying ? "#7c3aed" : "rgba(255,255,255,0.05)" }}>
+                            <div style={{ width: "20px", height: "20px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, background: isDone ? "#10b981" : isLast && isApplying ? "#7c3aed" : "rgba(0,0,0,0.05)" }}>
                               {isDone ? (
                                 <Check style={{ width: "12px", height: "12px", color: "white" }} />
                               ) : isLast && isApplying ? (
@@ -375,7 +375,7 @@ export default function JobApplicationPage() {
                               )}
                             </div>
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: "12px", color: isDone ? "#34d399" : isLast && isApplying ? "#f1f5f9" : "#475569", fontWeight: isLast && isApplying ? 600 : 400 }}>
+                              <div style={{ fontSize: "12px", color: isDone ? "#34d399" : isLast && isApplying ? "#111111" : "#475569", fontWeight: isLast && isApplying ? 600 : 400 }}>
                                 {step.message}
                               </div>
                               {step.detail && (
@@ -444,4 +444,5 @@ export default function JobApplicationPage() {
     </div>
   );
 }
+
 

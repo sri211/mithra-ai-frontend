@@ -95,7 +95,7 @@ function KanbanCard({ app, onMove, onDelete }: {
           {STAGES.filter((s) => s.id !== app.status).map((s) => (
             <button key={s.id} onClick={() => { onMove(app.id, s.id as AppStatus); setShowMenu(false); }}
               style={{ width: "100%", textAlign: "left", fontSize: "11px", padding: "6px 8px", borderRadius: "8px", border: "none", background: "transparent", color: "#333333", cursor: "pointer" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.05)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
               {s.emoji} {s.label}
             </button>
@@ -167,7 +167,7 @@ export default function TrackerPage() {
                   {[...Array(s.n)].map((_, i) => (
                     <div key={i} style={{ height: "28px", borderRadius: "6px", background: "rgba(0,0,0,0.04)", marginBottom: "4px" }} />
                   ))}
-                  {s.n === 0 && <div style={{ height: "28px", borderRadius: "6px", border: "1px dashed rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", color: "#334155" }}>empty</div>}
+                  {s.n === 0 && <div style={{ height: "28px", borderRadius: "6px", border: "1px dashed rgba(0,0,0,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", color: "#555555" }}>empty</div>}
                 </div>
               ))}
             </div>
@@ -433,3 +433,4 @@ export default function TrackerPage() {
     </div>
   );
 }
+

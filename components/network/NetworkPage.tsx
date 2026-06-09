@@ -203,7 +203,7 @@ export default function NetworkPage() {
             <p style={{ fontSize: "13px", color: "#888888" }}>Find the right people at target companies — real profiles, verified emails, AI outreach</p>
           </div>
           <span style={{ fontSize: "12px", padding: "6px 14px", borderRadius: "20px", border: "1px solid rgba(236,72,153,0.3)", background: "rgba(236,72,153,0.08)", color: "#f472b6", display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
-            <Users style={{ width: "13px", height: "13px" }} />Agent 5
+            <Users style={{ width: "13px", height: "13px" }} />Network Finder
           </span>
         </div>
 
@@ -334,4 +334,6 @@ export default function NetworkPage() {
     </div>
   );
 }
+
+
 

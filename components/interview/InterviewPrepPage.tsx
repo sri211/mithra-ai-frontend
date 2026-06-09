@@ -349,7 +349,7 @@ export default function InterviewPrepPage() {
                             <button
                               key={t.value}
                               onClick={() => setSelectedType(t.value)}
-                              style={{ fontSize: "12px", padding: "6px 14px", borderRadius: "8px", fontWeight: 500, border: `1px solid ${selectedType === t.value ? "rgba(249,115,22,0.4)" : "rgba(255,255,255,0.08)"}`, background: selectedType === t.value ? "rgba(249,115,22,0.2)" : "rgba(255,255,255,0.04)", color: selectedType === t.value ? "#fb923c" : "#94a3b8", cursor: "pointer" }}
+                              style={{ fontSize: "12px", padding: "6px 14px", borderRadius: "8px", fontWeight: 500, border: `1px solid ${selectedType === t.value ? "rgba(249,115,22,0.4)" : "rgba(0,0,0,0.08)"}`, background: selectedType === t.value ? "rgba(249,115,22,0.2)" : "rgba(0,0,0,0.04)", color: selectedType === t.value ? "#fb923c" : "#888888", cursor: "pointer" }}
                             >
                               {t.label}
                             </button>
@@ -363,7 +363,7 @@ export default function InterviewPrepPage() {
                             <button
                               key={d}
                               onClick={() => setDifficulty(d)}
-                              style={{ flex: 1, fontSize: "12px", padding: "8px", borderRadius: "8px", fontWeight: 500, border: `1px solid ${difficulty === d ? "rgba(249,115,22,0.4)" : "rgba(255,255,255,0.08)"}`, background: difficulty === d ? "rgba(249,115,22,0.2)" : "rgba(255,255,255,0.04)", color: difficulty === d ? "#fb923c" : "#94a3b8", cursor: "pointer" }}
+                              style={{ flex: 1, fontSize: "12px", padding: "8px", borderRadius: "8px", fontWeight: 500, border: `1px solid ${difficulty === d ? "rgba(249,115,22,0.4)" : "rgba(0,0,0,0.08)"}`, background: difficulty === d ? "rgba(249,115,22,0.2)" : "rgba(0,0,0,0.04)", color: difficulty === d ? "#fb923c" : "#888888", cursor: "pointer" }}
                             >
                               {d}
                             </button>
@@ -662,4 +662,5 @@ export default function InterviewPrepPage() {
     </div>
   );
 }
+
 

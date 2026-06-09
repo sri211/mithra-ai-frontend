@@ -29,9 +29,9 @@ const NAV_ITEMS = [
 
 const BOTTOM_PRIMARY = [
   { href: "/resume-score",   icon: Award,    label: "Score",    color: "#10b981" },
+  { href: "/resume-builder", icon: FileText, label: "Builder",  color: "#7c3aed" },
   { href: "/resume-adaptor", icon: Target,   label: "Adaptor",  color: "#06b6d4" },
   { href: "/interview-prep", icon: Brain,    label: "Interview",color: "#f97316" },
-  { href: "/network",        icon: Users,    label: "Network",  color: "#ec4899" },
 ];
 
 const MORE_ITEMS = [

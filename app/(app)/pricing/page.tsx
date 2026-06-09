@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { PricingCard } from "@/components/pricing/PricingCard";
 import { useUser } from "@/lib/auth";
 
@@ -6,7 +6,7 @@ const PLANS = [
   {
     plan: "free" as const,
     name: "Free",
-    price: "₹0/month",
+    price: "â‚¹0/month",
     accent: "#64748b",
     features: [
       "5 resume adaptations/month",
@@ -20,14 +20,14 @@ const PLANS = [
   {
     plan: "pro" as const,
     name: "Pro",
-    price: "₹198/month",
+    price: "â‚¹198/month",
     accent: "#7c3aed",
     isPopular: true,
     features: [
       "Unlimited resume adaptations",
       "All 6 templates + PDF export",
       "Full network (up to 10 contacts)",
-      "Interview Prep — AI mock sessions",
+      "Interview Prep â€” AI mock sessions",
       "Application Tracker (Kanban board)",
       "Priority email support",
     ],
@@ -35,7 +35,7 @@ const PLANS = [
   {
     plan: "elite" as const,
     name: "Elite",
-    price: "₹498/month",
+    price: "â‚¹498/month",
     accent: "#f59e0b",
     features: [
       "Everything in Pro",
@@ -133,7 +133,7 @@ export default function PricingPage() {
           textAlign: "center",
           marginTop: "40px",
           fontSize: "13px",
-          color: "#334155",
+          color: "#555555",
         }}
       >
         All plans are month-to-month. Cancel anytime. Prices in INR, inclusive of taxes.
@@ -141,3 +141,4 @@ export default function PricingPage() {
     </div>
   );
 }
+

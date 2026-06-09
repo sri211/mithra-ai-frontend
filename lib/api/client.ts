@@ -11,6 +11,18 @@ export const api = axios.create({
   timeout: 120000, // 2 min — Claude adaption can take 60-90s
 });
 
+// Attach Bearer token on every request
+api.interceptors.request.use((config) => {
+  try {
+    const raw = typeof window !== "undefined" ? localStorage.getItem("mithra-auth") : null;
+    if (raw) {
+      const token = JSON.parse(raw)?.state?.accessToken;
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+    }
+  } catch { /* ignore */ }
+  return config;
+});
+
 export async function streamSSE(
   url: string,
   body: object,

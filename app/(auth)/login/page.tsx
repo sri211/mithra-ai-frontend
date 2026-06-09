@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/stores/authStore";
@@ -7,16 +7,44 @@ import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react";
 
 const GOOGLE_CLIENT_ID = "958679936304-i304otpjmb8becedetj403u2m2kvbktf.apps.googleusercontent.com";
 
-// Load Google Identity Services script once
+type GISNotification = {
+  isNotDisplayed: () => boolean;
+  isSkippedMoment: () => boolean;
+  isDismissedMoment: () => boolean;
+  getNotDisplayedReason: () => string;
+  getSkippedReason: () => string;
+};
+type GIS = {
+  accounts: {
+    id: {
+      initialize: (c: object) => void;
+      prompt: (cb?: (n: GISNotification) => void) => void;
+      cancel: () => void;
+    };
+  };
+};
+
 function loadGIS(): Promise<void> {
   return new Promise((resolve) => {
-    if (document.getElementById("gis-script")) { resolve(); return; }
+    if (typeof window === "undefined") return;
+    if ((window as Window & { google?: GIS }).google?.accounts?.id) { resolve(); return; }
+    if (document.getElementById("gis-script")) {
+      // Script tag exists but not loaded yet — wait for it
+      const check = setInterval(() => {
+        if ((window as Window & { google?: GIS }).google?.accounts?.id) {
+          clearInterval(check);
+          resolve();
+        }
+      }, 50);
+      return;
+    }
     const s = document.createElement("script");
     s.id = "gis-script";
     s.src = "https://accounts.google.com/gsi/client";
     s.async = true;
     s.defer = true;
     s.onload = () => resolve();
+    s.onerror = () => resolve(); // resolve anyway so UI doesn't hang
     document.head.appendChild(s);
   });
 }
@@ -30,9 +58,34 @@ export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const { login, loginWithGoogle } = useAuthStore();
+  const gisReady = useRef(false);
 
-  // Pre-load GIS on mount
-  useEffect(() => { loadGIS(); }, []);
+  // Pre-load AND pre-initialize GIS on mount so prompt() can be called synchronously
+  useEffect(() => {
+    loadGIS().then(() => {
+      const google = (window as Window & { google?: GIS }).google;
+      if (!google?.accounts?.id) return;
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async (res: { credential: string }) => {
+          setIsGoogleLoading(true);
+          const ok = await loginWithGoogle(res.credential);
+          if (ok) {
+            document.cookie = `mithra-token=1; path=/; max-age=${7 * 86400}; SameSite=Lax`;
+            const params = new URLSearchParams(window.location.search);
+            router.push(params.get("callbackUrl") || "/resume-builder");
+          } else {
+            setError("Google sign-in failed. Please try again or use email login.");
+            setIsGoogleLoading(false);
+          }
+        },
+        // No ux_mode: "popup" — use default overlay (cannot be blocked by popup blockers)
+        cancel_on_tap_outside: false,
+      });
+      gisReady.current = true;
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +93,6 @@ export default function LoginPage() {
     setIsLoading(true);
     const ok = await login(email, password);
     if (ok) {
-      // Set cookie for middleware
       document.cookie = `mithra-token=1; path=/; max-age=${7 * 86400}; SameSite=Lax`;
       const params = new URLSearchParams(window.location.search);
       router.push(params.get("callbackUrl") || "/resume-builder");
@@ -51,59 +103,35 @@ export default function LoginPage() {
     setIsLoading(false);
   };
 
-  const handleGoogle = async () => {
-    setIsGoogleLoading(true);
+  // Called synchronously from click — no await before prompt() so browser gesture is intact
+  const handleGoogle = () => {
     setError("");
-    try {
-      // Ensure GIS is loaded
-      await loadGIS();
-      type GISNotification = { isNotDisplayed: () => boolean; isSkippedMoment: () => boolean; getNotDisplayedReason: () => string };
-      type GIS = { accounts: { id: { initialize: (c: object) => void; prompt: (cb?: (n: GISNotification) => void) => void } } };
-      const google = (window as Window & { google?: GIS }).google;
-      if (!google?.accounts?.id) {
-        setError("Google sign-in unavailable. Please use email login.");
-        setIsGoogleLoading(false);
-        return;
-      }
-      // Use popup/One Tap — no redirect URI needed, only JS origins
-      google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: async (res: { credential: string }) => {
-          const ok = await loginWithGoogle(res.credential);
-          if (ok) {
-            document.cookie = `mithra-token=1; path=/; max-age=${7 * 86400}; SameSite=Lax`;
-            const params = new URLSearchParams(window.location.search);
-            router.push(params.get("callbackUrl") || "/resume-builder");
-          } else {
-            setError("Google sign-in failed. Please try again or use email login.");
-          }
-          setIsGoogleLoading(false);
-        },
-        ux_mode: "popup",
-        itp_support: true,
-      });
-      // prompt() with notification callback to catch silent failures
-      google.accounts.id.prompt((notification) => {
-        if (notification.isNotDisplayed()) {
-          const reason = notification.getNotDisplayedReason();
-          if (reason === "unregistered_origin" || reason === "suppressed_by_user") {
-            setError("Google sign-in is unavailable on this browser/domain. Please use email login instead.");
-          } else {
-            setError("Google sign-in could not open. Please allow pop-ups or use email login.");
-          }
-          setIsGoogleLoading(false);
-        } else if (notification.isSkippedMoment()) {
-          setError("Google sign-in was cancelled. Please try again.");
-          setIsGoogleLoading(false);
-        }
-      });
-    } catch {
-      setError("Google sign-in failed. Please try again.");
-      setIsGoogleLoading(false);
+    const google = (window as Window & { google?: GIS }).google;
+    if (!gisReady.current || !google?.accounts?.id) {
+      setError("Google sign-in is loading. Please wait a moment and try again.");
+      return;
     }
+    setIsGoogleLoading(true);
+    // prompt() called synchronously — browser popup-blocker allows it
+    google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed()) {
+        const reason = notification.getNotDisplayedReason();
+        if (reason === "unregistered_origin") {
+          setError("Google sign-in is not enabled for this domain yet. Please use email login.");
+        } else if (reason === "suppressed_by_user") {
+          setError("Google One Tap was dismissed. Click 'Sign in with Google' again to retry.");
+        } else {
+          setError(`Google sign-in unavailable (${reason}). Please use email login or try a different browser.`);
+        }
+        setIsGoogleLoading(false);
+      } else if (notification.isSkippedMoment() || notification.isDismissedMoment()) {
+        setError("Google sign-in was cancelled.");
+        setIsGoogleLoading(false);
+      }
+    });
   };
 
-  const input = {
+  const input: React.CSSProperties = {
     width: "100%",
     background: "rgba(15,8,30,0.8)",
     border: "1px solid rgba(124,58,237,0.25)",
@@ -113,21 +141,14 @@ export default function LoginPage() {
     fontSize: "14px",
     outline: "none",
     fontFamily: "inherit",
-    boxSizing: "border-box" as const,
+    boxSizing: "border-box",
     transition: "border-color 0.2s",
   };
 
   return (
     <>
       <div style={{ textAlign: "center", marginBottom: "28px" }}>
-        <h1
-          style={{
-            fontSize: "22px",
-            fontWeight: 800,
-            color: "#f1f5f9",
-            marginBottom: "8px",
-          }}
-        >
+        <h1 style={{ fontSize: "22px", fontWeight: 800, color: "#f1f5f9", marginBottom: "8px" }}>
           Welcome back
         </h1>
         <p style={{ fontSize: "14px", color: "#64748b", lineHeight: 1.6 }}>
@@ -158,12 +179,8 @@ export default function LoginPage() {
           transition: "all 0.2s",
           opacity: isGoogleLoading || isLoading ? 0.6 : 1,
         }}
-        onMouseEnter={(e) => {
-          if (!isGoogleLoading && !isLoading) e.currentTarget.style.background = "rgba(255,255,255,0.1)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-        }}
+        onMouseEnter={(e) => { if (!isGoogleLoading && !isLoading) e.currentTarget.style.background = "rgba(255,255,255,0.1)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
       >
         {isGoogleLoading ? (
           <Loader2 style={{ width: "16px", height: "16px", animation: "spin 1s linear infinite" }} />
@@ -216,17 +233,7 @@ export default function LoginPage() {
       {/* Email/Password Form */}
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
         <div style={{ position: "relative" }}>
-          <Mail
-            style={{
-              position: "absolute",
-              left: "12px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              width: "16px",
-              height: "16px",
-              color: "#64748b",
-            }}
-          />
+          <Mail style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", width: "16px", height: "16px", color: "#64748b" }} />
           <input
             type="email"
             value={email}
@@ -241,17 +248,7 @@ export default function LoginPage() {
 
         <div>
           <div style={{ position: "relative" }}>
-            <Lock
-              style={{
-                position: "absolute",
-                left: "12px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                width: "16px",
-                height: "16px",
-                color: "#64748b",
-              }}
-            />
+            <Lock style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", width: "16px", height: "16px", color: "#64748b" }} />
             <input
               type={showPassword ? "text" : "password"}
               value={password}
@@ -265,18 +262,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: "absolute",
-                right: "12px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                color: "#64748b",
-                padding: "2px",
-                display: "flex",
-              }}
+              style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#64748b", padding: "2px", display: "flex" }}
             >
               {showPassword ? <EyeOff style={{ width: "15px", height: "15px" }} /> : <Eye style={{ width: "15px", height: "15px" }} />}
             </button>
@@ -294,16 +280,7 @@ export default function LoginPage() {
         </div>
 
         {error && (
-          <div
-            style={{
-              padding: "10px 12px",
-              borderRadius: "8px",
-              background: "rgba(239,68,68,0.08)",
-              border: "1px solid rgba(239,68,68,0.2)",
-              fontSize: "13px",
-              color: "#f87171",
-            }}
-          >
+          <div style={{ padding: "10px 12px", borderRadius: "8px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", fontSize: "13px", color: "#f87171" }}>
             {error}
           </div>
         )}
@@ -314,10 +291,7 @@ export default function LoginPage() {
           style={{
             width: "100%",
             padding: "12px",
-            background:
-              isLoading || isGoogleLoading
-                ? "rgba(124,58,237,0.4)"
-                : "linear-gradient(135deg,#7c3aed,#6d28d9)",
+            background: isLoading || isGoogleLoading ? "rgba(124,58,237,0.4)" : "linear-gradient(135deg,#7c3aed,#6d28d9)",
             border: "none",
             borderRadius: "10px",
             color: "white",
