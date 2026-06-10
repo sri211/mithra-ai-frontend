@@ -7,8 +7,10 @@ import {
   FileText, Target, Search, Zap, Users, Brain, BarChart3,
   Sparkles, ChevronLeft, ChevronRight, LogOut, Crown,
   Home, MoreHorizontal, X, Bell, Settings, ChevronDown,
-  Award, Gift,
+  Award, Gift, ShieldCheck,
 } from "lucide-react";
+
+const ADMIN_EMAILS = ["srinathreddy.ksr@gmail.com", "sri@mithraai.in"];
 import { cn } from "@/lib/cn";
 import MithraChat from "@/components/chatbot/MithraChat";
 import { useUser, logout } from "@/lib/auth";
@@ -88,6 +90,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const avatarRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
 
+  const isAdmin = ADMIN_EMAILS.includes(user?.email ?? "");
   const currentPage = NAV_ITEMS.find((n) => pathname?.startsWith(n.href));
   const plan = (user?.plan ?? "free") as keyof typeof PLAN_COLORS;
   const planStyle = PLAN_COLORS[plan] ?? PLAN_COLORS.free;
@@ -193,6 +196,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="p-2 border-t space-y-0.5" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+          {isAdmin && (
+            <Link href="/admin" title={collapsed ? "Admin" : undefined}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all"
+              style={pathname?.startsWith("/admin") ? { background: "rgba(124,58,237,0.07)" } : {}}
+              onMouseEnter={(e) => { if (!pathname?.startsWith("/admin")) e.currentTarget.style.background = "rgba(124,58,237,0.05)"; }}
+              onMouseLeave={(e) => { if (!pathname?.startsWith("/admin")) e.currentTarget.style.background = "transparent"; }}>
+              <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: pathname?.startsWith("/admin") ? "#7c3aed" : "#7c3aed88" }} />
+              {!collapsed && <span className="text-sm font-medium" style={{ color: pathname?.startsWith("/admin") ? "#7c3aed" : "#7c3aed" }}>Admin</span>}
+            </Link>
+          )}
           <Link href="/referral"
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all"
             onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.03)")}
@@ -304,10 +317,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     )}
                     <div style={{ height: "1px", background: "rgba(0,0,0,0.07)", margin: "4px 0" }} />
                     {[
-                      { icon: Crown,  label: "Upgrade Plan",  href: "/pricing",      color: "#f59e0b" },
-                      { icon: Gift,   label: "Refer & Earn",  href: "/referral",     color: "#10b981" },
-                      { icon: Award,  label: "Resume Score",  href: "/resume-score", color: "#7c3aed" },
-                      { icon: Home,   label: "Back to Home",  href: "/",             color: "#888888" },
+                      { icon: Crown,       label: "Upgrade Plan",      href: "/pricing",      color: "#f59e0b" },
+                      { icon: Gift,        label: "Refer & Earn",      href: "/referral",     color: "#10b981" },
+                      { icon: Award,       label: "Resume Score",      href: "/resume-score", color: "#7c3aed" },
+                      ...(isAdmin ? [{ icon: ShieldCheck, label: "Admin Dashboard", href: "/admin", color: "#7c3aed" }] : []),
+                      { icon: Home,        label: "Back to Home",      href: "/",             color: "#888888" },
                     ].map(({ icon: Icon, label, href, color }) => (
                       <Link key={label} href={href} onClick={() => setAvatarOpen(false)}
                         style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "10px", textDecoration: "none", color: "#333333", fontSize: "13px", fontWeight: 500 }}
@@ -530,7 +544,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </div>
 
               <div style={{ padding: "0 16px 24px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
-                {MORE_ITEMS.map((item) => {
+                {[...MORE_ITEMS, ...(isAdmin ? [{ href: "/admin", icon: ShieldCheck, label: "Admin", color: "#7c3aed", emoji: "🛡️" }] : [])].map((item) => {
                   const active = pathname?.startsWith(item.href);
                   const typedItem = item as typeof item & { badge?: string };
                   return (
