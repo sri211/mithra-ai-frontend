@@ -1,5 +1,5 @@
 "use client";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, Zap, Star, Sparkles } from "lucide-react";
 import { useUser } from "@/lib/auth";
 import { api } from "@/lib/api/client";
 import { useState } from "react";
@@ -7,7 +7,8 @@ import { useState } from "react";
 interface PricingCardProps {
   plan: "free" | "pro" | "elite";
   name: string;
-  price: string;
+  price: number;
+  tagline: string;
   features: string[];
   accent: string;
   isPopular?: boolean;
@@ -21,17 +22,20 @@ declare global {
   }
 }
 
+const PLAN_ICONS = {
+  free:  <Zap style={{ width: "14px", height: "14px" }} />,
+  pro:   <Star style={{ width: "14px", height: "14px" }} />,
+  elite: <Sparkles style={{ width: "14px", height: "14px" }} />,
+};
+
 export function PricingCard({
-  plan, name, price, features, accent, isPopular, isCurrent,
+  plan, name, price, tagline, features, accent, isPopular, isCurrent,
 }: PricingCardProps) {
   const { user, accessToken } = useUser();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleUpgrade = async () => {
-    if (!user || !accessToken) {
-      window.location.href = "/login";
-      return;
-    }
+    if (!user || !accessToken) { window.location.href = "/login"; return; }
     if (plan === "free") return;
     setIsLoading(true);
     try {
@@ -40,8 +44,6 @@ export function PricingCard({
         { plan },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-
-      // Load Razorpay script if not already loaded
       if (!window.Razorpay) {
         await new Promise<void>((resolve) => {
           const script = document.createElement("script");
@@ -50,7 +52,6 @@ export function PricingCard({
           document.body.appendChild(script);
         });
       }
-
       const options = {
         key: data.key_id,
         amount: data.amount,
@@ -58,21 +59,13 @@ export function PricingCard({
         name: "Mithra AI",
         description: `${name} Plan — Monthly`,
         order_id: data.order_id,
-        prefill: {
-          name: data.user_name,
-          email: data.user_email,
-        },
+        prefill: { name: data.user_name, email: data.user_email },
         theme: { color: accent },
         handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
           try {
             await api.post(
               "/payments/verify",
-              {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                plan,
-              },
+              { ...response, plan },
               { headers: { Authorization: `Bearer ${accessToken}` } }
             );
             window.location.reload();
@@ -81,9 +74,7 @@ export function PricingCard({
           }
         },
       };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      new window.Razorpay(options).open();
     } catch (err) {
       console.error("Payment initiation failed:", err);
       alert("Could not initiate payment. Please try again.");
@@ -92,114 +83,172 @@ export function PricingCard({
     }
   };
 
+  const buttonLabel = isCurrent
+    ? "Current Plan"
+    : plan === "free"
+    ? "Always Free"
+    : isLoading
+    ? "Processing..."
+    : `Upgrade to ${name}`;
+
   return (
-    <div
-      style={{
-        borderRadius: "20px",
-        padding: "32px",
-        background: isPopular
-          ? `linear-gradient(135deg, ${accent}18 0%, rgba(15,8,30,0.95) 100%)`
-          : "rgba(20,13,40,0.8)",
-        border: `1px solid ${isPopular ? accent + "50" : "rgba(124,58,237,0.15)"}`,
-        position: "relative",
-        boxShadow: isPopular ? `0 20px 60px ${accent}18` : "none",
-        flex: 1,
-      }}
+    <div style={{
+      display: "flex",
+      background: "#FFFFFF",
+      borderRadius: "16px",
+      overflow: "hidden",
+      boxShadow: isPopular
+        ? `0 8px 40px ${accent}22, 0 2px 12px rgba(0,0,0,0.07)`
+        : "0 2px 16px rgba(0,0,0,0.07)",
+      border: `1px solid ${isPopular ? accent + "35" : "rgba(0,0,0,0.08)"}`,
+      position: "relative",
+      flex: "1 1 280px",
+      maxWidth: "340px",
+      minWidth: "260px",
+      transform: isPopular ? "translateY(-4px)" : "none",
+      transition: "box-shadow 0.2s, transform 0.2s",
+    }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = isPopular ? `0 12px 50px ${accent}30, 0 4px 16px rgba(0,0,0,0.1)` : "0 6px 24px rgba(0,0,0,0.12)"; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = isPopular ? `0 8px 40px ${accent}22, 0 2px 12px rgba(0,0,0,0.07)` : "0 2px 16px rgba(0,0,0,0.07)"; }}
     >
-      {isPopular && (
-        <div
-          style={{
+      {/* Left accent stripe — resume column marker */}
+      <div style={{
+        width: "5px",
+        flexShrink: 0,
+        background: `linear-gradient(180deg, ${accent} 0%, ${accent}66 100%)`,
+      }} />
+
+      <div style={{ padding: "28px 22px", flex: 1, display: "flex", flexDirection: "column" }}>
+
+        {/* Popular badge */}
+        {isPopular && (
+          <div style={{
             position: "absolute",
-            top: "-1px",
-            left: "50%",
-            transform: "translateX(-50%)",
+            top: "-1px", right: "18px",
             background: `linear-gradient(135deg,${accent},${accent}cc)`,
             color: "white",
-            fontSize: "11px",
+            fontSize: "10px",
             fontWeight: 700,
-            padding: "4px 16px",
-            borderRadius: "0 0 10px 10px",
-            letterSpacing: "0.5px",
+            padding: "4px 12px",
+            borderRadius: "0 0 9px 9px",
+            letterSpacing: "0.6px",
             textTransform: "uppercase",
-          }}
-        >
-          Most Popular
-        </div>
-      )}
-
-      <div style={{ marginBottom: "24px" }}>
-        <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#f1f5f9", marginBottom: "4px" }}>{name}</h3>
-        <div
-          style={{
-            fontSize: "36px",
-            fontWeight: 900,
-            background: `linear-gradient(135deg,${accent},${accent}99)`,
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            marginBottom: "4px",
-          }}
-        >
-          {price}
-        </div>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "28px" }}>
-        {features.map((f) => (
-          <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-            <Check
-              style={{
-                width: "15px",
-                height: "15px",
-                color: accent,
-                flexShrink: 0,
-                marginTop: "2px",
-              }}
-            />
-            <span style={{ fontSize: "13px", color: "#94a3b8", lineHeight: 1.5 }}>{f}</span>
+          }}>
+            Most Popular
           </div>
-        ))}
-      </div>
+        )}
 
-      <button
-        onClick={handleUpgrade}
-        disabled={plan === "free" || isCurrent || isLoading}
-        style={{
-          width: "100%",
-          padding: "13px",
-          background:
-            isCurrent
-              ? "rgba(124,58,237,0.15)"
+        {/* Plan header — resume name block style */}
+        <div style={{ marginBottom: "18px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+            <div style={{
+              width: "26px", height: "26px",
+              borderRadius: "7px",
+              background: `${accent}15`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: accent,
+            }}>
+              {PLAN_ICONS[plan]}
+            </div>
+            <span style={{ fontSize: "13px", fontWeight: 800, color: "#111111", letterSpacing: "1.5px", textTransform: "uppercase" }}>
+              {name}
+            </span>
+          </div>
+          <p style={{ fontSize: "12px", color: "#888888", marginLeft: "34px" }}>{tagline}</p>
+        </div>
+
+        {/* Price — large and clear */}
+        <div style={{ marginBottom: "20px" }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
+            <span style={{ fontSize: "14px", fontWeight: 700, color: accent, lineHeight: 1 }}>₹</span>
+            <span style={{ fontSize: "40px", fontWeight: 900, color: accent, lineHeight: 1 }}>
+              {price.toLocaleString("en-IN")}
+            </span>
+            <span style={{ fontSize: "13px", color: "#888888", marginLeft: "2px" }}>/month</span>
+          </div>
+          {plan === "free" && (
+            <span style={{
+              display: "inline-block",
+              marginTop: "6px",
+              fontSize: "11px",
+              fontWeight: 600,
+              color: "#10b981",
+              background: "rgba(16,185,129,0.08)",
+              padding: "2px 8px",
+              borderRadius: "4px",
+            }}>
+              No credit card needed
+            </span>
+          )}
+        </div>
+
+        {/* Section divider — resume-style rule */}
+        <div style={{ height: "1px", background: "rgba(0,0,0,0.07)", marginBottom: "18px", position: "relative" }}>
+          <div style={{
+            position: "absolute", left: 0, top: "-1px",
+            width: "32px", height: "2px",
+            background: accent, borderRadius: "1px",
+          }} />
+        </div>
+
+        {/* Features — resume bullet point style */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "9px", flex: 1, marginBottom: "22px" }}>
+          {features.map((f) => (
+            <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: "9px" }}>
+              <div style={{
+                width: "17px", height: "17px",
+                borderRadius: "50%",
+                background: `${accent}13`,
+                flexShrink: 0,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginTop: "1px",
+              }}>
+                <Check style={{ width: "10px", height: "10px", color: accent }} />
+              </div>
+              <span style={{ fontSize: "13px", color: "#444444", lineHeight: 1.5 }}>{f}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA button */}
+        <button
+          onClick={handleUpgrade}
+          disabled={plan === "free" || isCurrent || isLoading}
+          style={{
+            width: "100%",
+            padding: "12px",
+            background: isCurrent
+              ? "rgba(0,0,0,0.04)"
               : plan === "free"
-              ? "rgba(100,116,139,0.1)"
+              ? "rgba(16,185,129,0.08)"
               : `linear-gradient(135deg,${accent},${accent}cc)`,
-          border: isCurrent
-            ? `1px solid ${accent}30`
-            : plan === "free"
-            ? "1px solid rgba(100,116,139,0.2)"
-            : "none",
-          borderRadius: "12px",
-          color: isCurrent ? accent : plan === "free" ? "#64748b" : "white",
-          fontSize: "14px",
-          fontWeight: 700,
-          cursor: plan === "free" || isCurrent || isLoading ? "not-allowed" : "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "8px",
-          boxShadow:
-            plan !== "free" && !isCurrent ? `0 4px 20px ${accent}30` : "none",
-          opacity: isLoading ? 0.7 : 1,
-        }}
-      >
-        {isLoading && <Loader2 style={{ width: "15px", height: "15px", animation: "spin 1s linear infinite" }} />}
-        {isCurrent
-          ? "Current Plan"
-          : plan === "free"
-          ? "Always Free"
-          : isLoading
-          ? "Processing..."
-          : `Upgrade to ${name}`}
-      </button>
+            border: isCurrent
+              ? `1px solid rgba(0,0,0,0.1)`
+              : plan === "free"
+              ? "1px solid rgba(16,185,129,0.2)"
+              : "none",
+            borderRadius: "10px",
+            color: isCurrent
+              ? "#888888"
+              : plan === "free"
+              ? "#10b981"
+              : "white",
+            fontSize: "14px",
+            fontWeight: 700,
+            cursor: plan === "free" || isCurrent || isLoading ? "not-allowed" : "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
+            boxShadow: plan !== "free" && !isCurrent ? `0 4px 16px ${accent}30` : "none",
+            opacity: isLoading ? 0.7 : 1,
+            transition: "opacity 0.2s, box-shadow 0.2s",
+            fontFamily: "inherit",
+          }}
+          onMouseEnter={(e) => { if (!isCurrent && plan !== "free" && !isLoading) (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 6px 24px ${accent}45`; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.boxShadow = plan !== "free" && !isCurrent ? `0 4px 16px ${accent}30` : "none"; }}
+        >
+          {isLoading && <Loader2 style={{ width: "14px", height: "14px", animation: "spin 1s linear infinite" }} />}
+          {buttonLabel}
+        </button>
+      </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );

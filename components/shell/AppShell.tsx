@@ -15,6 +15,7 @@ import { useUser, logout } from "@/lib/auth";
 import { getLimits } from "@/lib/planLimits";
 import { useUsageTracker } from "@/lib/useUsageTracker";
 import { UsagePill } from "@/components/ui/UpgradeNudge";
+import { trackPage } from "@/lib/analytics";
 
 const NAV_ITEMS = [
   { href: "/resume-builder", icon: FileText, label: "Resume Builder", color: "#7c3aed", description: "Every line you write is a promise to your future self." },
@@ -99,6 +100,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const limits = getLimits(user?.plan ?? "free");
   const usage = useUsageTracker(user?.id ?? "guest");
   const showUsagePill = limits.resumeAdaptations !== -1 || limits.jobSearchesPerDay !== -1;
+
+  // Track page view on every route change
+  useEffect(() => {
+    if (pathname) trackPage(pathname, user?.id);
+  }, [pathname, user?.id]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
