@@ -47,7 +47,6 @@ const PLANS = [
       "Unlimited network contacts",
       "Priority AI processing",
       "1-on-1 career coaching session/month",
-      "1-on-1 career strategy consultation",
     ],
   },
 ];
