@@ -14,12 +14,23 @@ type GISNotification = {
   getNotDisplayedReason: () => string;
   getSkippedReason: () => string;
 };
+type TokenClient = {
+  requestAccessToken: (overrides?: { prompt?: string }) => void;
+};
 type GIS = {
   accounts: {
     id: {
       initialize: (c: object) => void;
       prompt: (cb?: (n: GISNotification) => void) => void;
       cancel: () => void;
+    };
+    oauth2: {
+      initTokenClient: (config: {
+        client_id: string;
+        scope: string;
+        callback: (response: { access_token?: string; error?: string }) => void;
+        error_callback?: (err: { type: string }) => void;
+      }) => TokenClient;
     };
   };
 };
@@ -57,7 +68,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState("");
-  const { login, loginWithGoogle } = useAuthStore();
+  const { login, loginWithGoogle, loginWithGoogleAccessToken } = useAuthStore();
   const gisReady = useRef(false);
 
   // Pre-load AND pre-initialize GIS on mount so prompt() can be called synchronously
@@ -103,6 +114,41 @@ export default function LoginPage() {
     setIsLoading(false);
   };
 
+  // Falls back to OAuth2 popup when One Tap is blocked (mobile/cookie-restricted browsers)
+  const triggerOAuthPopup = (google: GIS) => {
+    if (!google.accounts?.oauth2) {
+      setError("Google sign-in is unavailable in this browser. Please use email login.");
+      setIsGoogleLoading(false);
+      return;
+    }
+    const tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: "openid email profile",
+      callback: async (response) => {
+        if (response.access_token) {
+          const ok = await loginWithGoogleAccessToken(response.access_token);
+          if (ok) {
+            document.cookie = `mithra-token=1; path=/; max-age=${7 * 86400}; SameSite=Lax`;
+            const params = new URLSearchParams(window.location.search);
+            router.push(params.get("callbackUrl") || "/resume-builder");
+          } else {
+            setError("Google sign-in failed. Please try again or use email login.");
+            setIsGoogleLoading(false);
+          }
+        } else {
+          setError("Google sign-in was cancelled.");
+          setIsGoogleLoading(false);
+        }
+      },
+      error_callback: () => {
+        setError("Google sign-in failed. Please try again or use email login.");
+        setIsGoogleLoading(false);
+      },
+    });
+    // requestAccessToken must be called synchronously inside a click handler
+    tokenClient.requestAccessToken({ prompt: "select_account" });
+  };
+
   // Called synchronously from click — no await before prompt() so browser gesture is intact
   const handleGoogle = () => {
     setError("");
@@ -112,18 +158,17 @@ export default function LoginPage() {
       return;
     }
     setIsGoogleLoading(true);
-    // prompt() called synchronously — browser popup-blocker allows it
     google.accounts.id.prompt((notification) => {
       if (notification.isNotDisplayed()) {
         const reason = notification.getNotDisplayedReason();
         if (reason === "unregistered_origin") {
           setError("Google sign-in is not enabled for this domain yet. Please use email login.");
-        } else if (reason === "suppressed_by_user") {
-          setError("Google One Tap was dismissed. Click 'Sign in with Google' again to retry.");
+          setIsGoogleLoading(false);
         } else {
-          setError(`Google sign-in unavailable (${reason}). Please use email login or try a different browser.`);
+          // One Tap blocked (opt_out_or_no_session, cookies_disabled, etc.)
+          // Auto-fallback to full OAuth2 popup — works on all mobile browsers
+          triggerOAuthPopup(google);
         }
-        setIsGoogleLoading(false);
       } else if (notification.isSkippedMoment() || notification.isDismissedMoment()) {
         setError("Google sign-in was cancelled.");
         setIsGoogleLoading(false);

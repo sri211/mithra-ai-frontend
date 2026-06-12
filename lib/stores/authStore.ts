@@ -55,6 +55,7 @@ interface AuthStore {
   setHasHydrated: (v: boolean) => void;
   login: (email: string, password: string) => Promise<boolean>;
   loginWithGoogle: (idToken: string) => Promise<boolean>;
+  loginWithGoogleAccessToken: (accessToken: string) => Promise<boolean>;
   register: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
   clearError: () => void;
@@ -101,6 +102,29 @@ export const useAuthStore = create<AuthStore>()(
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id_token: idToken }),
+          });
+          if (!res.ok) {
+            set({ error: "Google sign-in failed", isLoading: false });
+            return false;
+          }
+          const data = await res.json();
+          clearGuestData();
+          set({ user: data.user, accessToken: data.access_token, isLoading: false, error: null });
+          await loadUserCloudData(data.access_token);
+          return true;
+        } catch {
+          set({ error: "Google sign-in failed", isLoading: false });
+          return false;
+        }
+      },
+
+      loginWithGoogleAccessToken: async (accessToken) => {
+        set({ isLoading: true, error: null });
+        try {
+          const res = await fetch(`${API_BASE}/auth/google-access-token`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ access_token: accessToken }),
           });
           if (!res.ok) {
             set({ error: "Google sign-in failed", isLoading: false });
