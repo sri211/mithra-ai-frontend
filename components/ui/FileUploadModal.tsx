@@ -22,10 +22,15 @@ export function FileUploadModal({ isOpen, onClose, onResumeParsed }: FileUploadM
   const [success, setSuccess] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const resetInput = () => {
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
   const handleFile = (f: File) => {
     const ext = f.name.split(".").pop()?.toLowerCase();
     if (!["pdf", "docx", "txt"].includes(ext || "")) {
       setError("Please upload a PDF, DOCX, or TXT file.");
+      resetInput();
       return;
     }
     setFile(f);
@@ -60,26 +65,35 @@ export function FileUploadModal({ isOpen, onClose, onResumeParsed }: FileUploadM
     const ext = file.name.split(".").pop()?.toLowerCase() || "";
     try {
       if (ext === "pdf" || ext === "docx") {
-        // Binary upload — backend uses PyMuPDF/python-docx for proper extraction
         const formData = new FormData();
         formData.append("file", file);
-        const response = await fetch(
-          `${API_BASE}/resume/upload`,
-          { method: "POST", body: formData }
-        );
-        if (response.status === 404) {
-          throw new Error("Backend needs restart — stop the server and run .\\start-backend.ps1 again (new /upload endpoint not loaded yet)");
+        // 90s timeout — large detailed CVs take 20-40s to parse
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 90000);
+        let response: Response;
+        try {
+          response = await fetch(`${API_BASE}/resume/upload`, {
+            method: "POST",
+            body: formData,
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timer);
         }
         if (!response.ok) {
-          let detail = `HTTP ${response.status}`;
-          try { const e = await response.json(); detail = e.detail || detail; } catch { /* ignore */ }
-          throw new Error(detail);
+          let detail = "";
+          try { const e = await response.json(); detail = e.detail || ""; } catch { /* ignore */ }
+          // Strip internal error details — show clean message to user
+          if (detail.toLowerCase().includes("unterminated") || detail.toLowerCase().includes("json")) {
+            throw new Error("Your CV is very detailed — try removing images or reducing formatting, then upload again.");
+          }
+          throw new Error(detail || `Upload failed (${response.status}). Please try again.`);
         }
         const data = await response.json();
         setSuccess(true);
+        resetInput();
         setTimeout(() => { onResumeParsed(data.resume); onClose(); setFile(null); setSuccess(false); }, 800);
       } else {
-        // TXT — read as text client-side
         let text = "";
         try { text = await readFileText(file); } catch { text = ""; }
         if (!text.trim() || text.length < 50) {
@@ -89,11 +103,16 @@ export function FileUploadModal({ isOpen, onClose, onResumeParsed }: FileUploadM
         }
         const { data } = await api.post("/resume/parse-file", { file_text: text, file_name: file.name });
         setSuccess(true);
+        resetInput();
         setTimeout(() => { onResumeParsed(data.resume); onClose(); setFile(null); setSuccess(false); }, 800);
       }
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Upload failed";
-      setError(`Could not parse: ${msg}. Make sure the backend is running.`);
+      if (e instanceof Error && e.name === "AbortError") {
+        setError("Parsing timed out. Your CV may be very large — try a smaller file or paste your resume text instead.");
+      } else {
+        const msg = e instanceof Error ? e.message : "Upload failed";
+        setError(msg);
+      }
     } finally {
       setIsParsing(false);
     }
@@ -109,6 +128,7 @@ export function FileUploadModal({ isOpen, onClose, onResumeParsed }: FileUploadM
     setFile(null);
     setError(null);
     setSuccess(false);
+    resetInput();
     onClose();
   };
 
@@ -192,7 +212,7 @@ export function FileUploadModal({ isOpen, onClose, onResumeParsed }: FileUploadM
                     <p className="text-xs text-slate-400 mt-0.5">{formatSize(file.size)}</p>
                   </div>
                   <button
-                    onClick={(e) => { e.stopPropagation(); setFile(null); }}
+                    onClick={(e) => { e.stopPropagation(); setFile(null); resetInput(); }}
                     className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
                     Remove file
                   </button>
