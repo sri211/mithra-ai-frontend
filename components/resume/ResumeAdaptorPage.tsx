@@ -220,6 +220,7 @@ export default function ResumeAdaptorPage() {
   const [jobBanner, setJobBanner] = useState<{ title: string; company: string } | null>(null);
   const [loadingStep, setLoadingStep] = useState<string>("");
   const [isSavingAdapted, setIsSavingAdapted] = useState(false);
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
   const [savedAdaptedId, setSavedAdaptedId] = useState<string | null>(null);
   const [myAdaptedResumes, setMyAdaptedResumes] = useState<AdaptedResumeCard[]>([]);
   const [showMyAdapted, setShowMyAdapted] = useState(false);
@@ -478,17 +479,37 @@ export default function ResumeAdaptorPage() {
     a.click();
   };
 
-  const downloadPDF = () => {
+  const downloadPDF = async () => {
     const previewEl = document.getElementById("adapted-resume-preview");
     if (!previewEl) { setRightTab("preview"); setTimeout(downloadPDF, 400); return; }
     const name = (adaptedResume || resume).personal.name || "adapted_resume";
-    const w = window.open("", "_blank", "width=900,height=1200");
-    if (!w) return;
-    w.document.write(`<!DOCTYPE html><html><head><title>${name} - Adapted Resume</title>
-<style>@page{margin:0;size:A4}body{margin:0;padding:0}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style>
-</head><body>${previewEl.innerHTML}
-<script>window.onload=function(){window.print();setTimeout(function(){window.close()},1000)}<\/script></body></html>`);
-    w.document.close();
+    setIsPdfLoading(true);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+      const canvas = await html2canvas(previewEl, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+      });
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const pageW = 210;
+      const pageH = 297;
+      const imgHeightMm = (canvas.height / canvas.width) * pageW;
+      let yOffset = 0;
+      let page = 0;
+      while (yOffset < imgHeightMm) {
+        if (page > 0) pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, -yOffset, pageW, imgHeightMm);
+        yOffset += pageH;
+        page++;
+      }
+      pdf.save(`${name}_resume.pdf`);
+    } finally {
+      setIsPdfLoading(false);
+    }
   };
 
   const tabs = [
@@ -904,9 +925,9 @@ export default function ResumeAdaptorPage() {
                     style={{ flex: 1, minWidth: "140px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", border: "none", borderRadius: "12px", color: "white", fontSize: "13px", fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(124,58,237,0.3)" }}>
                     <Edit3 style={{ width: "15px", height: "15px" }} />Edit in Builder
                   </button>
-                  <button onClick={downloadPDF}
-                    style={{ flex: 1, minWidth: "140px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px", background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", borderRadius: "12px", color: "#0f0a1e", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}>
-                    <Download style={{ width: "15px", height: "15px" }} />Export PDF
+                  <button onClick={downloadPDF} disabled={isPdfLoading}
+                    style={{ flex: 1, minWidth: "140px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px", background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", borderRadius: "12px", color: "#0f0a1e", fontSize: "13px", fontWeight: 700, cursor: isPdfLoading ? "not-allowed" : "pointer", opacity: isPdfLoading ? 0.7 : 1 }}>
+                    <Download style={{ width: "15px", height: "15px" }} />{isPdfLoading ? "Generating…" : "Export PDF"}
                   </button>
                   <button onClick={downloadTXT}
                     style={{ flex: 1, minWidth: "140px", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "11px", background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.1)", borderRadius: "12px", color: "#555555", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
@@ -960,8 +981,8 @@ export default function ResumeAdaptorPage() {
               <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
                 <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                   <div style={{ fontSize: "13px", color: "#888888", flex: 1 }}>ATS-adapted resume — ready to download or edit</div>
-                  <button onClick={downloadPDF} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", borderRadius: "8px", color: "#0f0a1e", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}>
-                    <Download style={{ width: "13px", height: "13px" }} />Export PDF
+                  <button onClick={downloadPDF} disabled={isPdfLoading} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", borderRadius: "8px", color: "#0f0a1e", fontSize: "12px", fontWeight: 700, cursor: isPdfLoading ? "not-allowed" : "pointer", opacity: isPdfLoading ? 0.7 : 1 }}>
+                    <Download style={{ width: "13px", height: "13px" }} />{isPdfLoading ? "Generating…" : "Export PDF"}
                   </button>
                   <button onClick={loadInBuilder} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 14px", background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)", borderRadius: "8px", color: "#7c3aed", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
                     <Edit3 style={{ width: "13px", height: "13px" }} />Edit in Builder

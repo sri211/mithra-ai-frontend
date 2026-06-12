@@ -611,6 +611,7 @@ export default function ResumeBuilderPage() {
   const [editorMessages, setEditorMessages] = useState<{ role: string; content: string }[]>([]);
   const [editorInput, setEditorInput] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const editorEndRef = useRef<HTMLDivElement>(null);
 
@@ -820,35 +821,40 @@ export default function ResumeBuilderPage() {
     } finally { setIsEditing(false); }
   };
 
-  const downloadPDF = () => {
-    // Gate PDF downloads for free users
+  const downloadPDF = async () => {
     if (limits.pdfDownloadsPerMonth !== -1) {
       const newCount = usage.incrementPdfDownloads();
-      if (newCount > limits.pdfDownloadsPerMonth) {
-        // Already over limit — don't download
-        return;
-      }
+      if (newCount > limits.pdfDownloadsPerMonth) return;
     }
     const content = document.getElementById("resume-preview-content");
     if (!content) { alert("Build a resume first, then export."); return; }
-    const name = resume.personal.name || "resume";
-    const w = window.open("", "_blank", "width=900,height=1200");
-    if (!w) return;
-    w.document.write(`<!DOCTYPE html>
-<html>
-  <head>
-    <title>${name} - Resume</title>
-    <style>
-      @page { margin: 0; size: A4; }
-      body { margin: 0; padding: 0; }
-      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    </style>
-  </head>
-  <body>${content.outerHTML}
-  <script>window.onload=function(){window.print();setTimeout(function(){window.close()},1000);}<\/script>
-  </body>
-</html>`);
-    w.document.close();
+    setIsPdfLoading(true);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const { jsPDF } = await import("jspdf");
+      const canvas = await html2canvas(content, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+      });
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const pageW = 210;
+      const pageH = 297;
+      const imgHeightMm = (canvas.height / canvas.width) * pageW;
+      let yOffset = 0;
+      let page = 0;
+      while (yOffset < imgHeightMm) {
+        if (page > 0) pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, -yOffset, pageW, imgHeightMm);
+        yOffset += pageH;
+        page++;
+      }
+      pdf.save(`${resume.personal.name || "resume"}_resume.pdf`);
+    } finally {
+      setIsPdfLoading(false);
+    }
   };
 
   const downloadTXT = () => {
@@ -1325,8 +1331,8 @@ The more text you paste, the more complete your resume will be.`}
                       🔒 Export PDF — Upgrade to Pro
                     </button>
                   ) : (
-                    <button onClick={downloadPDF} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 16px", borderRadius: "8px", border: "none", fontSize: "13px", fontWeight: 700, background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white", cursor: "pointer", boxShadow: "0 4px 12px rgba(124,58,237,0.3)" }}>
-                      ⬇ Export PDF {pdfCap !== -1 && <span style={{ fontSize: "10px", opacity: 0.7 }}>({pdfCap - pdfUsed} left)</span>}
+                    <button onClick={downloadPDF} disabled={isPdfLoading} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 16px", borderRadius: "8px", border: "none", fontSize: "13px", fontWeight: 700, background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white", cursor: isPdfLoading ? "not-allowed" : "pointer", opacity: isPdfLoading ? 0.7 : 1, boxShadow: "0 4px 12px rgba(124,58,237,0.3)" }}>
+                      {isPdfLoading ? "⏳ Generating..." : <>⬇ Export PDF {pdfCap !== -1 && <span style={{ fontSize: "10px", opacity: 0.7 }}>({pdfCap - pdfUsed} left)</span>}</>}
                     </button>
                   );
                 })()}
@@ -1349,8 +1355,8 @@ The more text you paste, the more complete your resume will be.`}
                     🔒 PDF
                   </button>
                 ) : (
-                  <button onClick={downloadPDF} title="Export PDF" style={{ display: "flex", alignItems: "center", gap: "4px", padding: "6px 12px", borderRadius: "8px", border: "none", fontSize: "12px", fontWeight: 700, background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white", cursor: "pointer", flexShrink: 0 }}>
-                    ⬇ PDF
+                  <button onClick={downloadPDF} disabled={isPdfLoading} title="Export PDF" style={{ display: "flex", alignItems: "center", gap: "4px", padding: "6px 12px", borderRadius: "8px", border: "none", fontSize: "12px", fontWeight: 700, background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white", cursor: isPdfLoading ? "not-allowed" : "pointer", opacity: isPdfLoading ? 0.7 : 1, flexShrink: 0 }}>
+                    {isPdfLoading ? "⏳" : "⬇ PDF"}
                   </button>
                 );
               })()}
