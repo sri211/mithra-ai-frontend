@@ -8,7 +8,7 @@ import {
   ChevronRight, BookOpen, Eye, Edit3, Briefcase, X, Save, Cloud,
   ChevronDown,
 } from "lucide-react";
-import { api } from "@/lib/api/client";
+import { api, API_BASE } from "@/lib/api/client";
 import { useResumeStore } from "@/lib/stores/resumeStore";
 import { useAgentStore } from "@/lib/stores/agentStore";
 import { useJobStore } from "@/lib/stores/jobStore";
@@ -485,28 +485,37 @@ export default function ResumeAdaptorPage() {
     const name = (adaptedResume || resume).personal.name || "adapted_resume";
     setIsPdfLoading(true);
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const { jsPDF } = await import("jspdf");
-      const canvas = await html2canvas(previewEl, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  @page { margin: 0; size: A4 portrait; }
+  html, body { margin: 0; padding: 0; }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, 'Segoe UI', Arial, sans-serif; }
+</style>
+</head>
+<body>${previewEl.outerHTML}</body>
+</html>`;
+      const res = await fetch(`${API_BASE}/resume/export-pdf`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) },
+        body: JSON.stringify({ html, name }),
       });
-      const imgData = canvas.toDataURL("image/jpeg", 0.92);
-      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-      const pageW = 210;
-      const pageH = 297;
-      const imgHeightMm = (canvas.height / canvas.width) * pageW;
-      let yOffset = 0;
-      let page = 0;
-      while (yOffset < imgHeightMm) {
-        if (page > 0) pdf.addPage();
-        pdf.addImage(imgData, "JPEG", 0, -yOffset, pageW, imgHeightMm);
-        yOffset += pageH;
-        page++;
-      }
-      pdf.save(`${name}_resume.pdf`);
+      if (!res.ok) throw new Error("PDF generation failed on server");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${name}_resume.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      alert("PDF export failed. Please try again.");
     } finally {
       setIsPdfLoading(false);
     }
