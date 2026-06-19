@@ -82,7 +82,6 @@ export default function LoginPage() {
           setIsGoogleLoading(true);
           const ok = await loginWithGoogle(res.credential);
           if (ok) {
-            document.cookie = `mithra-token=1; path=/; max-age=${7 * 86400}; SameSite=Lax`;
             const params = new URLSearchParams(window.location.search);
             router.push(params.get("callbackUrl") || "/resume-builder");
           } else {
@@ -104,7 +103,6 @@ export default function LoginPage() {
     setIsLoading(true);
     const ok = await login(email, password);
     if (ok) {
-      document.cookie = `mithra-token=1; path=/; max-age=${7 * 86400}; SameSite=Lax`;
       const params = new URLSearchParams(window.location.search);
       router.push(params.get("callbackUrl") || "/resume-builder");
     } else {
@@ -128,7 +126,6 @@ export default function LoginPage() {
         if (response.access_token) {
           const ok = await loginWithGoogleAccessToken(response.access_token);
           if (ok) {
-            document.cookie = `mithra-token=1; path=/; max-age=${7 * 86400}; SameSite=Lax`;
             const params = new URLSearchParams(window.location.search);
             router.push(params.get("callbackUrl") || "/resume-builder");
           } else {

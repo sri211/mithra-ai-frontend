@@ -31,7 +31,7 @@ function RegisterForm() {
     setIsLoading(true);
     const ok = await register(name, email, password);
     if (ok) {
-      document.cookie = `mithra-token=1; path=/; max-age=${7 * 86400}; SameSite=Lax`;
+      // Cookie is set inside authStore.register() with 90-day lifetime
 
       // Auto-apply referral code if provided
       if (referralCode.trim()) {
