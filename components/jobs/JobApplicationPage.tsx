@@ -1,13 +1,14 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, MapPin, Briefcase, Target, ChevronRight, ChevronDown,
   ExternalLink, Check, BarChart2, RefreshCw, Trash2,
   AlertCircle, ArrowLeft, Loader2, TrendingUp, Bot,
-  Building2, IndianRupee, X, Camera, Play, Terminal,
+  Building2, IndianRupee, X, Camera, KeyRound, Shield, Lock,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
+import { useAuthStore } from "@/lib/stores/authStore";
 import { useResumeStore } from "@/lib/stores/resumeStore";
 import { useUser } from "@/lib/auth";
 import { getLimits } from "@/lib/planLimits";
@@ -26,7 +27,7 @@ interface Job {
 
 type CardStatus =
   | "idle" | "preparing" | "ready"
-  | "autosubmitting" | "waiting_user" | "autoresult"
+  | "autosubmitting" | "waiting_input" | "needs_credentials" | "autoresult"
   | "confirming" | "done" | "skipped";
 
 interface JobWithState extends Job {
@@ -36,9 +37,8 @@ interface JobWithState extends Job {
 }
 
 interface AutoSubmitResult {
-  success: boolean; portal: string; title: string;
-  fields_filled: number; message: string;
-  screenshot?: string; apply_url: string;
+  success: boolean; portal: string; fields_filled: number;
+  message: string; screenshot?: string; apply_url: string;
 }
 
 interface Application {
@@ -53,21 +53,23 @@ interface Campaign {
   ctc_max: number; experience_level: string;
 }
 
-interface CompanionCallbacks {
-  onStatus: (msg: string) => void;
-  onScreenshot: (b64: string) => void;
-  onWaiting: (reason: string, msg: string, screenshot?: string) => void;
-  onDone: (result: AutoSubmitResult) => void;
-}
+interface PortalCred { portal: string; username: string; }
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const AMBER = "#f59e0b";
+const AMBER  = "#f59e0b";
 const VIOLET = "#7c3aed";
-const GREEN = "#10b981";
+const GREEN  = "#10b981";
 const LS_APPS_KEY = "mithra-applied-apps";
 const LS_CAMP_KEY = "mithra-campaign";
-const COMPANION_WS = "ws://localhost:7777";
+const API_BASE    = "/api/backend";
+
+const PORTALS = [
+  { id: "linkedin",   label: "LinkedIn",    url: "linkedin.com"   },
+  { id: "naukri",     label: "Naukri",      url: "naukri.com"     },
+  { id: "instahyre",  label: "Instahyre",   url: "instahyre.com"  },
+  { id: "indeed",     label: "Indeed",      url: "indeed.com"     },
+];
 
 const LOCATIONS = [
   "Bangalore", "Mumbai", "Delhi NCR", "Hyderabad", "Chennai",
@@ -82,18 +84,18 @@ const EXP_LEVELS = [
 ];
 
 const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
-  applied:     { label: "Applied",      color: "#6366f1", bg: "rgba(99,102,241,0.12)" },
-  viewed:      { label: "Viewed",       color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
-  shortlisted: { label: "Shortlisted",  color: "#8b5cf6", bg: "rgba(139,92,246,0.12)" },
-  interview:   { label: "Interview",    color: "#10b981", bg: "rgba(16,185,129,0.12)" },
-  offer:       { label: "Offer 🎉",     color: "#10b981", bg: "rgba(16,185,129,0.18)" },
-  rejected:    { label: "Rejected",     color: "#ef4444", bg: "rgba(239,68,68,0.12)" },
+  applied:     { label: "Applied",      color: "#6366f1", bg: "rgba(99,102,241,0.12)"  },
+  viewed:      { label: "Viewed",       color: "#f59e0b", bg: "rgba(245,158,11,0.12)"  },
+  shortlisted: { label: "Shortlisted",  color: "#8b5cf6", bg: "rgba(139,92,246,0.12)"  },
+  interview:   { label: "Interview",    color: "#10b981", bg: "rgba(16,185,129,0.12)"  },
+  offer:       { label: "Offer 🎉",     color: "#10b981", bg: "rgba(16,185,129,0.18)"  },
+  rejected:    { label: "Rejected",     color: "#ef4444", bg: "rgba(239,68,68,0.12)"   },
 };
 
 // ── LocalStorage helpers ───────────────────────────────────────────────────────
 
 function saveAppsLocally(apps: Application[]) {
-  try { localStorage.setItem(LS_APPS_KEY, JSON.stringify(apps)); } catch { /* ignore */ }
+  try { localStorage.setItem(LS_APPS_KEY, JSON.stringify(apps)); } catch { }
 }
 function loadAppsLocally(): Application[] {
   try { const r = localStorage.getItem(LS_APPS_KEY); return r ? JSON.parse(r) : []; } catch { return []; }
@@ -103,17 +105,15 @@ function mergeApps(backend: Application[], local: Application[]): Application[] 
   return [...backend, ...local.filter((a) => !ids.has(a.job_id)).map((a) => ({ ...a, _local: true }))];
 }
 function saveCampaignLocally(c: Campaign) {
-  try { localStorage.setItem(LS_CAMP_KEY, JSON.stringify(c)); } catch { /* ignore */ }
+  try { localStorage.setItem(LS_CAMP_KEY, JSON.stringify(c)); } catch { }
 }
 function loadCampaignLocally(): Campaign | null {
   try { const r = localStorage.getItem(LS_CAMP_KEY); return r ? JSON.parse(r) : null; } catch { return null; }
 }
 
-// ── Small helpers ──────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
-function scoreColor(s: number) {
-  return s >= 80 ? GREEN : s >= 60 ? AMBER : "#ef4444";
-}
+function scoreColor(s: number) { return s >= 80 ? GREEN : s >= 60 ? AMBER : "#ef4444"; }
 function formatCtc(min: number, max: number) {
   const f = (n: number) => n >= 100_000 ? `${(n / 100_000).toFixed(0)}L` : `${(n / 1_000).toFixed(0)}K`;
   return `₹${f(min)}–${f(max)}`;
@@ -123,6 +123,9 @@ function daysAgo(d: string) {
     const n = Math.floor((Date.now() - new Date(d).getTime()) / 86_400_000);
     return n === 0 ? "Today" : n === 1 ? "Yesterday" : `${n}d ago`;
   } catch { return ""; }
+}
+function getAuthToken(): string {
+  try { return (useAuthStore.getState() as any).accessToken || ""; } catch { return ""; }
 }
 
 // ── Score Ring ─────────────────────────────────────────────────────────────────
@@ -146,73 +149,105 @@ function ScoreRing({ score, size = 46 }: { score: number; size?: number }) {
   );
 }
 
-// ── Companion Setup Modal ──────────────────────────────────────────────────────
+// ── Portal Credentials Modal ───────────────────────────────────────────────────
 
-function CompanionSetupModal({ onClose }: { onClose: () => void }) {
+function PortalCredentialsModal({
+  initialPortal = "linkedin",
+  onClose,
+  onSaved,
+}: {
+  initialPortal?: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [portal, setPortal]     = useState(initialPortal);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [saving, setSaving]     = useState(false);
+  const [error, setError]       = useState("");
+
+  const save = async () => {
+    if (!username.trim() || !password.trim()) return;
+    setSaving(true); setError("");
+    try {
+      await api.post("/auto-apply/credentials", { portal, username: username.trim(), password });
+      onSaved();
+      onClose();
+    } catch (e: any) {
+      setError(e?.response?.data?.detail || "Failed to save. Try again.");
+      setSaving(false);
+    }
+  };
+
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-      <div style={{ background: "#fff", borderRadius: "20px", padding: "28px", maxWidth: "500px", width: "100%", position: "relative" }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+      <div style={{ background: "#fff", borderRadius: "20px", padding: "28px", maxWidth: "420px", width: "100%", position: "relative" }}>
         <button onClick={onClose} style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", cursor: "pointer", color: "#888" }}>
           <X style={{ width: "18px", height: "18px" }} />
         </button>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
-          <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "rgba(124,58,237,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <Bot style={{ width: "22px", height: "22px", color: VIOLET }} />
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "22px" }}>
+          <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "rgba(124,58,237,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Lock style={{ width: "20px", height: "20px", color: VIOLET }} />
           </div>
           <div>
-            <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#111", margin: 0 }}>Enable Live Browser Mode</h3>
-            <p style={{ fontSize: "12px", color: "#888", margin: "2px 0 0" }}>Opens a real Chrome window on your screen — bot fills forms, you handle login</p>
+            <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#111", margin: 0 }}>Save Portal Login</h3>
+            <p style={{ fontSize: "12px", color: "#888", margin: "2px 0 0" }}>Used only for Auto Submit — encrypted at rest</p>
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          {[
-            {
-              n: "1",
-              title: "Install (run once in terminal)",
-              code: ["pip install playwright websockets", "playwright install chromium"],
-            },
-            {
-              n: "2",
-              title: "Download & run the companion",
-              code: ["python mithra_companion.py"],
-              note: "Download mithra_companion.py from the Mithra AI settings page",
-            },
-            {
-              n: "3",
-              title: "Come back here — green dot appears on Auto Submit",
-              code: [],
-              note: "The companion reconnects automatically every time you run it.",
-            },
-          ].map((s) => (
-            <div key={s.n} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
-              <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: VIOLET, color: "#fff", fontSize: "12px", fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>{s.n}</div>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: "13px", fontWeight: 600, color: "#111", margin: "0 0 6px" }}>{s.title}</p>
-                {s.code.length > 0 && (
-                  <div style={{ background: "#1a1a2e", borderRadius: "8px", padding: "10px 14px" }}>
-                    {s.code.map((line, i) => (
-                      <p key={i} style={{ fontSize: "12px", color: "#a8e6cf", margin: 0, fontFamily: "monospace", lineHeight: "1.8" }}>{line}</p>
-                    ))}
-                  </div>
-                )}
-                {s.note && <p style={{ fontSize: "11px", color: "#888", margin: "5px 0 0" }}>{s.note}</p>}
-              </div>
-            </div>
+        {/* Portal selector */}
+        <div style={{ display: "flex", gap: "8px", marginBottom: "18px", flexWrap: "wrap" }}>
+          {PORTALS.map((p) => (
+            <button key={p.id} onClick={() => setPortal(p.id)}
+              style={{ padding: "6px 14px", borderRadius: "20px", border: `1.5px solid ${portal === p.id ? VIOLET : "rgba(0,0,0,0.12)"}`, background: portal === p.id ? "rgba(124,58,237,0.08)" : "#fff", color: portal === p.id ? VIOLET : "#555", fontSize: "12px", fontWeight: portal === p.id ? 700 : 400, cursor: "pointer" }}>
+              {p.label}
+            </button>
           ))}
         </div>
 
-        <div style={{ marginTop: "20px", padding: "12px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)" }}>
-          <p style={{ fontSize: "12px", color: "#555", margin: 0, lineHeight: "1.7" }}>
-            <strong>How it works:</strong> Chrome opens on your screen. The bot navigates and fills your details automatically.
-            When it hits a login or captcha, it <strong>pauses and tells you</strong>. You complete it in the browser,
-            then click <strong>"I'm done — Continue"</strong> and the bot takes over again.
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "18px" }}>
+          <div>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#555", marginBottom: "6px" }}>
+              Email / Username
+            </label>
+            <input
+              type="email" value={username} onChange={(e) => setUsername(e.target.value)}
+              placeholder={`Your ${PORTALS.find(p => p.id === portal)?.label} email`}
+              style={{ width: "100%", padding: "11px 14px", borderRadius: "10px", border: "1.5px solid rgba(0,0,0,0.12)", fontSize: "14px", color: "#111", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
+              onFocus={(e) => (e.target.style.borderColor = VIOLET)}
+              onBlur={(e) => (e.target.style.borderColor = "rgba(0,0,0,0.12)")}
+            />
+          </div>
+          <div>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#555", marginBottom: "6px" }}>
+              Password
+            </label>
+            <input
+              type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              style={{ width: "100%", padding: "11px 14px", borderRadius: "10px", border: "1.5px solid rgba(0,0,0,0.12)", fontSize: "14px", color: "#111", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
+              onFocus={(e) => (e.target.style.borderColor = VIOLET)}
+              onBlur={(e) => (e.target.style.borderColor = "rgba(0,0,0,0.12)")}
+              onKeyDown={(e) => e.key === "Enter" && save()}
+            />
+          </div>
+        </div>
+
+        {error && <p style={{ fontSize: "12px", color: "#ef4444", margin: "0 0 12px" }}>{error}</p>}
+
+        <button onClick={save} disabled={saving || !username.trim() || !password.trim()}
+          style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "none", background: username.trim() && password.trim() ? `linear-gradient(135deg,${VIOLET},#5b21b6)` : "rgba(0,0,0,0.07)", color: username.trim() && password.trim() ? "#fff" : "#bbb", fontSize: "14px", fontWeight: 700, cursor: username.trim() && password.trim() ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+          {saving ? <Loader2 style={{ width: "14px", height: "14px", animation: "spin 1s linear infinite" }} /> : <Shield style={{ width: "14px", height: "14px" }} />}
+          {saving ? "Saving…" : "Save Credentials"}
+        </button>
+
+        <div style={{ marginTop: "14px", padding: "10px 14px", borderRadius: "10px", background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.2)" }}>
+          <p style={{ fontSize: "11px", color: "#555", margin: 0, lineHeight: "1.7" }}>
+            <strong>Privacy:</strong> Your password is encrypted before storage and never returned to the browser.
+            It's used only by the Mithra AI server to log in on your behalf during Auto Submit.
           </p>
         </div>
-        <p style={{ fontSize: "11px", color: "#aaa", margin: "10px 0 0", textAlign: "center" }}>
-          Runs only on your machine. Your credentials never leave your browser.
-        </p>
       </div>
     </div>
   );
@@ -223,26 +258,24 @@ function CompanionSetupModal({ onClose }: { onClose: () => void }) {
 interface JobCardProps {
   job: JobWithState;
   resume: ResumeData;
-  companionReady: boolean;
-  companionBusy: boolean;
-  onCompanionSubmit: (jobUrl: string, profile: object, cbs: CompanionCallbacks) => void;
-  onCompanionContinue: () => void;
+  savedPortals: string[];
+  onNeedsCredentials: (portal: string) => void;
   onApplied: (job: Job, opts: { coverLetter: string; autoSubmitted: boolean }) => void;
   onSkip: (id: string) => void;
 }
 
-function JobCard({
-  job, resume, companionReady, companionBusy,
-  onCompanionSubmit, onCompanionContinue, onApplied, onSkip,
-}: JobCardProps) {
-  const [st, setSt] = useState<JobWithState>(job);
-  const [expanded, setExpanded] = useState(false);
-  const [autoMsg, setAutoMsg] = useState("");
+function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onSkip }: JobCardProps) {
+  const [st, setSt]                   = useState<JobWithState>(job);
+  const [expanded, setExpanded]       = useState(false);
+  const [autoMsg, setAutoMsg]         = useState("");
   const [liveScreenshot, setLiveScreenshot] = useState<string | undefined>();
-  const [waitingMsg, setWaitingMsg] = useState("");
-  const [waitingReason, setWaitingReason] = useState("");
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [waitingField, setWaitingField] = useState("");
+  const [waitingMsg, setWaitingMsg]   = useState("");
+  const [neededPortal, setNeededPortal] = useState("");
+  const [otpValue, setOtpValue]       = useState("");
 
-  const isActive = st.uiStatus === "autosubmitting" || st.uiStatus === "waiting_user";
+  const isActive = st.uiStatus === "autosubmitting" || st.uiStatus === "waiting_input";
 
   const prepare = async () => {
     setSt((p) => ({ ...p, uiStatus: "preparing" }));
@@ -263,80 +296,97 @@ function JobCard({
     setSt((p) => ({ ...p, uiStatus: "confirming" }));
   };
 
-  // Companion: real visible browser on user's machine
-  const autoSubmitCompanion = () => {
+  // SSE-based auto-submit — everything runs on the server
+  const autoSubmit = async () => {
     setSt((p) => ({ ...p, uiStatus: "autosubmitting" }));
     setExpanded(true);
     setLiveScreenshot(undefined);
-    setAutoMsg("Opening browser on your screen…");
+    setAutoMsg("Starting…");
 
-    onCompanionSubmit(
-      st.url || st.portal_url,
-      {
-        name: resume?.personal?.name || "",
-        email: resume?.personal?.email || "",
-        phone: resume?.personal?.phone || "",
-        location: resume?.personal?.location || "",
-        linkedin: resume?.personal?.linkedin || "",
-      },
-      {
-        onStatus: (msg) => setAutoMsg(msg),
-        onScreenshot: (b64) => setLiveScreenshot(b64),
-        onWaiting: (reason, msg, ss) => {
-          setWaitingReason(reason);
-          setWaitingMsg(msg);
-          if (ss) setLiveScreenshot(ss);
-          setSt((p) => ({ ...p, uiStatus: "waiting_user" }));
-        },
-        onDone: (result) => {
-          setSt((p) => ({ ...p, uiStatus: "autoresult", autoResult: result }));
-        },
-      }
-    );
-  };
+    const profile = {
+      name:     resume?.personal?.name     || "",
+      email:    resume?.personal?.email    || "",
+      phone:    resume?.personal?.phone    || "",
+      location: resume?.personal?.location || "",
+      linkedin: resume?.personal?.linkedin || "",
+    };
 
-  // Server fallback: headless screenshot only
-  const autoSubmitServer = async () => {
-    setSt((p) => ({ ...p, uiStatus: "autosubmitting" }));
-    setExpanded(true);
-    setAutoMsg("Connecting to server browser…");
-    const msgs = [
-      "Opening job portal…", "Loading page…", "Scanning form fields…", "Pre-filling details…",
-    ];
-    let i = 0;
-    const ticker = setInterval(() => { i = Math.min(i + 1, msgs.length - 1); setAutoMsg(msgs[i]); }, 3000);
     try {
-      const { data } = await api.post("/auto-apply/submit", {
+      // Start session
+      const { data } = await api.post("/auto-apply/submit/start", {
         job_url: st.url || st.portal_url, job_id: st.id,
-        company: st.company, role: st.title, match_score: st.match_score,
-        profile: {
-          name: resume?.personal?.name || "",
-          email: resume?.personal?.email || "",
-          phone: resume?.personal?.phone || "",
-          location: resume?.personal?.location || "",
-          linkedin: resume?.personal?.linkedin || "",
-        },
+        company: st.company, role: st.title,
+        match_score: st.match_score, profile,
       });
-      clearInterval(ticker);
-      setSt((p) => ({ ...p, uiStatus: "autoresult", autoResult: data }));
+      const sid: string = data.session_id;
+      setActiveSessionId(sid);
+
+      // Open SSE stream with auth header
+      const token = getAuthToken();
+      const resp = await fetch(`${API_BASE}/auto-apply/submit/stream/${sid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!resp.ok || !resp.body) throw new Error("Stream failed");
+
+      const reader  = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split("\n");
+        buf = lines.pop() || "";
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const event = JSON.parse(line.slice(6));
+            if (event.type === "keepalive") continue;
+
+            if (event.type === "status") {
+              setAutoMsg(event.message);
+            } else if (event.type === "screenshot") {
+              setLiveScreenshot(event.data);
+            } else if (event.type === "input_needed") {
+              setWaitingField(event.field || "otp");
+              setWaitingMsg(event.message || "");
+              if (event.screenshot) setLiveScreenshot(event.screenshot);
+              setSt((p) => ({ ...p, uiStatus: "waiting_input" }));
+            } else if (event.type === "needs_credentials") {
+              setNeededPortal(event.portal || "");
+              if (event.screenshot) setLiveScreenshot(event.screenshot);
+              setSt((p) => ({ ...p, uiStatus: "needs_credentials" }));
+            } else if (event.type === "done") {
+              setSt((p) => ({
+                ...p,
+                uiStatus: "autoresult",
+                autoResult: {
+                  success:      event.success ?? false,
+                  portal:       event.portal  || "",
+                  fields_filled: event.fields_filled || 0,
+                  message:      event.message || "",
+                  screenshot:   event.screenshot,
+                  apply_url:    event.apply_url || st.url || st.portal_url,
+                },
+              }));
+            }
+          } catch { /* malformed SSE line */ }
+        }
+      }
     } catch {
-      clearInterval(ticker);
       setSt((p) => ({ ...p, uiStatus: "idle" }));
     }
   };
 
-  const autoSubmit = () => {
-    if (companionReady && !companionBusy) {
-      autoSubmitCompanion();
-    } else {
-      autoSubmitServer();
-    }
-  };
-
-  const handleContinue = () => {
-    setSt((p) => ({ ...p, uiStatus: "autosubmitting" }));
-    setAutoMsg("Resuming — bot is taking over…");
-    onCompanionContinue();
+  const submitOtp = async () => {
+    if (!activeSessionId || !otpValue.trim()) return;
+    try {
+      await api.post(`/auto-apply/submit/input/${activeSessionId}`, { value: otpValue.trim() });
+      setSt((p) => ({ ...p, uiStatus: "autosubmitting" }));
+      setAutoMsg("OTP submitted — logging in…");
+      setOtpValue("");
+    } catch { /* ignore, stream will handle timeout */ }
   };
 
   const confirmApplied = (autoSubmitted = false) => {
@@ -393,12 +443,9 @@ function JobCard({
               <Zap style={{ width: "13px", height: "13px" }} /> Quick Apply
             </button>
             <button onClick={autoSubmit}
-              title={companionReady ? "Opens real Chrome on your screen — bot fills forms, you handle login" : "Server mode: takes a screenshot of the job page"}
-              style={{ padding: "10px 12px", borderRadius: "10px", border: `1.5px solid ${VIOLET}`, background: "rgba(124,58,237,0.06)", color: VIOLET, fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", position: "relative" }}>
+              title="Server opens the job page, logs in with your saved credentials, and auto-fills the form"
+              style={{ padding: "10px 12px", borderRadius: "10px", border: `1.5px solid ${VIOLET}`, background: "rgba(124,58,237,0.06)", color: VIOLET, fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}>
               <Bot style={{ width: "13px", height: "13px" }} /> Auto Submit
-              {companionReady && (
-                <span style={{ position: "absolute", top: "-5px", right: "-5px", width: "9px", height: "9px", borderRadius: "50%", background: GREEN, border: "2px solid #fff" }} />
-              )}
             </button>
             <button onClick={() => setExpanded((p) => !p)} style={{ padding: "10px 11px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", cursor: "pointer", color: "#666" }}>
               <ChevronDown style={{ width: "15px", height: "15px", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
@@ -428,51 +475,70 @@ function JobCard({
           </>
         )}
 
-        {/* LOADING */}
         {st.uiStatus === "autosubmitting" && (
           <div style={{ flex: 1, padding: "12px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.2)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <Loader2 style={{ width: "14px", height: "14px", color: VIOLET, animation: "spin 1s linear infinite", flexShrink: 0 }} />
               <span style={{ fontSize: "13px", color: VIOLET, fontWeight: 600 }}>{autoMsg}</span>
             </div>
-            {companionReady && (
-              <p style={{ fontSize: "11px", color: "#888", margin: "6px 0 0" }}>
-                Watch the Chrome window that just opened on your screen.
+          </div>
+        )}
+
+        {/* OTP / input needed */}
+        {st.uiStatus === "waiting_input" && (
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div style={{ padding: "12px 14px", borderRadius: "10px", background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.3)" }}>
+              <p style={{ fontSize: "13px", fontWeight: 700, color: "#111", margin: "0 0 4px" }}>
+                {waitingField === "otp" ? "🔐 OTP required" : "⚠️ Login issue"}
               </p>
+              <p style={{ fontSize: "12px", color: "#666", margin: 0, lineHeight: "1.6" }}>{waitingMsg}</p>
+            </div>
+            {waitingField === "otp" && (
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input
+                  type="text" value={otpValue} onChange={(e) => setOtpValue(e.target.value)}
+                  placeholder="Enter OTP…" maxLength={10}
+                  onKeyDown={(e) => e.key === "Enter" && submitOtp()}
+                  style={{ flex: 1, padding: "10px 14px", borderRadius: "10px", border: "1.5px solid rgba(124,58,237,0.4)", fontSize: "16px", color: "#111", outline: "none", fontFamily: "inherit", letterSpacing: "0.15em", textAlign: "center" }}
+                />
+                <button onClick={submitOtp} disabled={!otpValue.trim()}
+                  style={{ padding: "10px 16px", borderRadius: "10px", border: "none", background: otpValue.trim() ? `linear-gradient(135deg,${VIOLET},#5b21b6)` : "rgba(0,0,0,0.07)", color: otpValue.trim() ? "#fff" : "#bbb", fontSize: "13px", fontWeight: 700, cursor: otpValue.trim() ? "pointer" : "not-allowed" }}>
+                  Submit
+                </button>
+              </div>
             )}
           </div>
         )}
 
-        {/* WAITING FOR USER */}
-        {st.uiStatus === "waiting_user" && (
+        {/* Needs credentials */}
+        {st.uiStatus === "needs_credentials" && (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "10px" }}>
-            <div style={{ padding: "12px 14px", borderRadius: "10px", background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.3)" }}>
-              <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-                <span style={{ fontSize: "22px", flexShrink: 0 }}>
-                  {waitingReason === "captcha" ? "🤖" : "🔐"}
-                </span>
-                <div>
-                  <p style={{ fontSize: "13px", fontWeight: 700, color: "#111", margin: "0 0 4px" }}>
-                    {waitingReason === "captcha" ? "Captcha detected" : "Login required in browser"}
-                  </p>
-                  <p style={{ fontSize: "12px", color: "#666", margin: 0, lineHeight: "1.7", whiteSpace: "pre-line" }}>
-                    {waitingMsg || "Please complete the step in the Chrome window on your screen, then click Continue."}
-                  </p>
-                </div>
-              </div>
+            <div style={{ padding: "12px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.2)" }}>
+              <p style={{ fontSize: "13px", fontWeight: 700, color: "#111", margin: "0 0 4px" }}>
+                🔑 {neededPortal ? `${neededPortal.charAt(0).toUpperCase() + neededPortal.slice(1)} login required` : "Login required"}
+              </p>
+              <p style={{ fontSize: "12px", color: "#666", margin: 0, lineHeight: "1.6" }}>
+                Save your {neededPortal || "portal"} credentials so Mithra can log in automatically. This is a one-time setup.
+              </p>
             </div>
-            <button onClick={handleContinue}
-              style={{ padding: "12px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${VIOLET},#5b21b6)`, color: "#fff", fontSize: "14px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-              <Play style={{ width: "14px", height: "14px" }} /> I'm done — Continue
-            </button>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button onClick={() => { onNeedsCredentials(neededPortal); setSt((p) => ({ ...p, uiStatus: "idle" })); }}
+                style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${VIOLET},#5b21b6)`, color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                <KeyRound style={{ width: "13px", height: "13px" }} /> Add Credentials
+              </button>
+              <a href={st.url || st.portal_url} target="_blank" rel="noopener"
+                style={{ padding: "10px 12px", borderRadius: "10px", border: `1px solid ${GREEN}`, background: "#fff", color: GREEN, display: "flex", alignItems: "center", textDecoration: "none" }}>
+                <ExternalLink style={{ width: "13px", height: "13px" }} />
+              </a>
+            </div>
           </div>
         )}
 
-        {/* AUTO RESULT */}
+        {/* Auto result */}
         {st.uiStatus === "autoresult" && st.autoResult && (
           <div style={{ flex: 1, display: "flex", gap: "8px" }}>
-            <button onClick={() => confirmApplied(true)} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${GREEN},#059669)`, color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-              <Check style={{ width: "13px", height: "13px" }} /> Confirm Applied ✓
+            <button onClick={() => confirmApplied(st.autoResult!.success)} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${GREEN},#059669)`, color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+              <Check style={{ width: "13px", height: "13px" }} /> {st.autoResult.success ? "Confirm Applied ✓" : "Mark Applied"}
             </button>
             {st.autoResult.apply_url && (
               <a href={st.autoResult.apply_url} target="_blank" rel="noopener" style={{ padding: "10px 12px", borderRadius: "10px", border: `1px solid ${GREEN}`, background: "#fff", color: GREEN, display: "flex", alignItems: "center", textDecoration: "none" }}>
@@ -483,7 +549,7 @@ function JobCard({
           </div>
         )}
 
-        {/* CONFIRMING manual */}
+        {/* Manual confirming */}
         {st.uiStatus === "confirming" && (
           <div style={{ flex: 1, display: "flex", gap: "8px" }}>
             <button onClick={() => confirmApplied(false)} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${GREEN},#059669)`, color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
@@ -497,7 +563,7 @@ function JobCard({
 
       {/* Expanded panel */}
       <AnimatePresence>
-        {(expanded || isActive || st.uiStatus === "autoresult") && (
+        {(expanded || isActive || st.uiStatus === "autoresult" || st.uiStatus === "needs_credentials" || st.uiStatus === "waiting_input") && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
             style={{ overflow: "hidden", borderTop: "1px solid rgba(0,0,0,0.05)" }}>
             <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -508,25 +574,20 @@ function JobCard({
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
                     <Camera style={{ width: "13px", height: "13px", color: VIOLET }} />
                     <span style={{ fontSize: "11px", fontWeight: 700, color: VIOLET, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                      {st.uiStatus === "waiting_user" ? "Browser — waiting for you" : "Live Screenshot"}
+                      {st.uiStatus === "waiting_input" ? "Browser — OTP required" : "Server Browser View"}
                     </span>
-                    {st.autoResult?.fields_filled ? (
+                    {(st.autoResult?.fields_filled || 0) > 0 && (
                       <span style={{ marginLeft: "auto", fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: "rgba(16,185,129,0.1)", color: GREEN, fontWeight: 600 }}>
-                        {st.autoResult.fields_filled} fields filled ✓
+                        {st.autoResult!.fields_filled} fields filled ✓
                       </span>
-                    ) : null}
+                    )}
                   </div>
-                  <div style={{ borderRadius: "10px", overflow: "hidden", border: st.uiStatus === "waiting_user" ? "2px solid rgba(245,158,11,0.5)" : "1px solid rgba(0,0,0,0.1)", position: "relative" }}>
+                  <div style={{ borderRadius: "10px", overflow: "hidden", border: st.uiStatus === "waiting_input" ? "2px solid rgba(245,158,11,0.5)" : "1px solid rgba(0,0,0,0.1)" }}>
                     <img
                       src={`data:image/jpeg;base64,${liveScreenshot || st.autoResult?.screenshot}`}
-                      alt="Browser view"
+                      alt="Server browser view"
                       style={{ width: "100%", display: "block", maxHeight: "260px", objectFit: "cover", objectPosition: "top" }}
                     />
-                    {st.uiStatus === "waiting_user" && (
-                      <div style={{ position: "absolute", bottom: "8px", left: "8px", padding: "4px 10px", borderRadius: "20px", background: "rgba(245,158,11,0.9)", fontSize: "10px", color: "#fff", fontWeight: 700 }}>
-                        ⏸ Bot paused — complete the step above
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -545,8 +606,8 @@ function JobCard({
                 </div>
               )}
 
-              {/* JD snippet when just expanded */}
-              {!st.autoResult && !st.adaptedCoverLetter && !isActive && (
+              {/* JD snippet */}
+              {!st.autoResult && !st.adaptedCoverLetter && !isActive && st.uiStatus !== "needs_credentials" && (
                 <div>
                   <p style={{ fontSize: "11px", fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 5px" }}>Job Description</p>
                   <p style={{ fontSize: "12px", color: "#555", lineHeight: "1.6", margin: 0 }}>
@@ -571,94 +632,34 @@ function JobCard({
 // ── Main Component ─────────────────────────────────────────────────────────────
 
 export default function JobApplicationPage() {
-  const { user } = useUser();
-  const limits = getLimits(user?.plan ?? "free");
+  const { user }  = useUser();
+  const limits    = getLimits(user?.plan ?? "free");
   const { resume } = useResumeStore();
-  const hasResume = Boolean(resume?.personal?.name || resume?.experience?.length);
+  const hasResume  = Boolean(resume?.personal?.name || resume?.experience?.length);
 
-  // ── Companion WebSocket ──────────────────────────────────────────────────────
-  const wsRef = useRef<WebSocket | null>(null);
-  const companionCallbacksRef = useRef<CompanionCallbacks | null>(null);
-  const [companionReady, setCompanionReady] = useState(false);
-  const [companionBusy, setCompanionBusy] = useState(false);
-  const [showCompanionSetup, setShowCompanionSetup] = useState(false);
+  // ── State ────────────────────────────────────────────────────────────────────
 
-  const connectCompanion = useCallback(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const ws = new WebSocket(COMPANION_WS);
-      ws.onopen = () => {
-        wsRef.current = ws;
-        setCompanionReady(true);
-        ws.send(JSON.stringify({ type: "ping" }));
-      };
-      ws.onmessage = (e) => {
-        try {
-          const data = JSON.parse(e.data);
-          if (data.type === "pong") return;
-          const cbs = companionCallbacksRef.current;
-          if (!cbs) return;
-          if (data.type === "status") cbs.onStatus(data.message);
-          else if (data.type === "screenshot") cbs.onScreenshot(data.data);
-          else if (data.type === "waiting") cbs.onWaiting(data.reason || "login", data.message, data.screenshot);
-          else if (data.type === "done") {
-            setCompanionBusy(false);
-            companionCallbacksRef.current = null;
-            cbs.onDone({
-              success: data.success ?? true,
-              portal: "Local Browser",
-              title: "",
-              fields_filled: data.fields_filled || 0,
-              message: data.message || "",
-              screenshot: data.screenshot,
-              apply_url: "",
-            });
-          }
-        } catch { /* ignore */ }
-      };
-      ws.onerror = () => {};
-      ws.onclose = () => {
-        setCompanionReady(false);
-        wsRef.current = null;
-        setTimeout(connectCompanion, 5000);
-      };
-    } catch { /* ignore in SSR */ }
-  }, []);
-
-  useEffect(() => {
-    connectCompanion();
-    return () => { wsRef.current?.close(); };
-  }, [connectCompanion]);
-
-  const startCompanionSubmit = useCallback((
-    jobUrl: string, profile: object, cbs: CompanionCallbacks
-  ) => {
-    if (!wsRef.current || companionBusy) return;
-    setCompanionBusy(true);
-    companionCallbacksRef.current = cbs;
-    wsRef.current.send(JSON.stringify({ type: "submit", job_url: jobUrl, profile }));
-  }, [companionBusy]);
-
-  const sendContinue = useCallback(() => {
-    wsRef.current?.send(JSON.stringify({ type: "continue" }));
-  }, []);
-
-  // ── App state ────────────────────────────────────────────────────────────────
-
-  const [view, setView]             = useState<"setup" | "dashboard">("setup");
-  const [setupStep, setSetupStep]   = useState(1);
-  const [campaign, setCampaign]     = useState<Campaign | null>(null);
-  const [activeTab, setActiveTab]   = useState<"queue" | "applied">("queue");
-  const [role, setRole]             = useState("");
-  const [location, setLocation]     = useState("Bangalore");
-  const [ctcMin, setCtcMin]         = useState(10);
-  const [ctcMax, setCtcMax]         = useState(40);
-  const [expLevel, setExpLevel]     = useState("mid");
-  const [jobs, setJobs]             = useState<JobWithState[]>([]);
+  const [view, setView]              = useState<"setup" | "dashboard">("setup");
+  const [setupStep, setSetupStep]    = useState(1);
+  const [campaign, setCampaign]      = useState<Campaign | null>(null);
+  const [activeTab, setActiveTab]    = useState<"queue" | "applied">("queue");
+  const [role, setRole]              = useState("");
+  const [location, setLocation]      = useState("Bangalore");
+  const [ctcMin, setCtcMin]          = useState(10);
+  const [ctcMax, setCtcMax]          = useState(40);
+  const [expLevel, setExpLevel]      = useState("mid");
+  const [jobs, setJobs]              = useState<JobWithState[]>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
-  const [jobsError, setJobsError]   = useState("");
+  const [jobsError, setJobsError]    = useState("");
   const [appliedList, setAppliedList] = useState<Application[]>([]);
   const [loadingApplied, setLoadingApplied] = useState(false);
+
+  // Portal credentials state
+  const [savedCreds, setSavedCreds]        = useState<PortalCred[]>([]);
+  const [showCredsModal, setShowCredsModal] = useState(false);
+  const [modalPortal, setModalPortal]      = useState("linkedin");
+
+  // ── Init ─────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const localApps = loadAppsLocally();
@@ -670,8 +671,16 @@ export default function JobApplicationPage() {
       setView("dashboard"); discoverJobs(localCamp.role, localCamp.location);
     }
     syncFromBackend(localApps, localCamp);
+    loadCredentials();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const loadCredentials = async () => {
+    try {
+      const { data } = await api.get("/auto-apply/credentials");
+      setSavedCreds(data.credentials || []);
+    } catch { /* ignore */ }
+  };
 
   const syncFromBackend = async (localApps: Application[], localCamp: Campaign | null) => {
     try {
@@ -706,13 +715,13 @@ export default function JobApplicationPage() {
   const saveCampaign = async () => {
     const c: Campaign = { role, location, ctc_min: ctcMin, ctc_max: ctcMax, experience_level: expLevel };
     setCampaign(c); saveCampaignLocally(c); setView("dashboard"); discoverJobs(role, location);
-    try { await api.post("/auto-apply/campaign", c); } catch { /* best effort */ }
+    try { await api.post("/auto-apply/campaign", c); } catch { }
   };
 
   const resetCampaign = async () => {
     setCampaign(null); setView("setup"); setSetupStep(1); setJobs([]);
-    try { localStorage.removeItem(LS_CAMP_KEY); } catch { /* ignore */ }
-    try { await api.delete("/auto-apply/campaign"); } catch { /* ignore */ }
+    try { localStorage.removeItem(LS_CAMP_KEY); } catch { }
+    try { await api.delete("/auto-apply/campaign"); } catch { }
   };
 
   const handleApplied = async (job: Job, opts: { coverLetter: string; autoSubmitted: boolean }) => {
@@ -738,21 +747,27 @@ export default function JobApplicationPage() {
     } catch { /* localStorage saved */ }
   };
 
-  const handleSkip = (id: string) => setJobs((prev) => prev.filter((j) => j.id !== id));
+  const handleSkip         = (id: string) => setJobs((prev) => prev.filter((j) => j.id !== id));
+  const handleNeedsCreds   = (portal: string) => { setModalPortal(portal || "linkedin"); setShowCredsModal(true); };
 
   const updateAppStatus = async (appId: string, jobId: string, newStatus: string) => {
     setAppliedList((prev) => { const next = prev.map((a) => (a.id === appId || a.job_id === jobId) ? { ...a, status: newStatus } : a); saveAppsLocally(next); return next; });
-    try { await api.patch(`/auto-apply/applications/${appId}/status`, { status: newStatus }); } catch { /* ignore */ }
+    try { await api.patch(`/auto-apply/applications/${appId}/status`, { status: newStatus }); } catch { }
   };
 
   const deleteApp = async (appId: string, jobId: string) => {
     setAppliedList((prev) => { const next = prev.filter((a) => a.id !== appId && a.job_id !== jobId); saveAppsLocally(next); return next; });
-    if (!appId.startsWith("local-")) { try { await api.delete(`/auto-apply/applications/${appId}`); } catch { /* ignore */ } }
+    if (!appId.startsWith("local-")) { try { await api.delete(`/auto-apply/applications/${appId}`); } catch { } }
+  };
+
+  const removeCred = async (portal: string) => {
+    try { await api.delete(`/auto-apply/credentials/${portal}`); loadCredentials(); } catch { }
   };
 
   const queueCount   = jobs.length;
   const appliedCount = appliedList.length;
   const avgScore     = jobs.length ? Math.round(jobs.reduce((s, j) => s + j.match_score, 0) / jobs.length) : 0;
+  const savedPortalIds = savedCreds.map((c) => c.portal);
 
   if (!limits.autoApplyAccess) {
     return (
@@ -765,7 +780,7 @@ export default function JobApplicationPage() {
     );
   }
 
-  // ── Setup Wizard ───────────────────────────────────────────────────────────
+  // ── Setup Wizard ─────────────────────────────────────────────────────────────
 
   if (view === "setup") {
     return (
@@ -789,6 +804,7 @@ export default function JobApplicationPage() {
             </div>
           )}
 
+          {/* Step indicator */}
           <div style={{ display: "flex", alignItems: "center", marginBottom: "28px" }}>
             {[1, 2, 3].map((s, i) => (
               <div key={s} style={{ display: "flex", alignItems: "center", flex: i < 2 ? 1 : "none" }}>
@@ -903,11 +919,17 @@ export default function JobApplicationPage() {
     );
   }
 
-  // ── Dashboard ──────────────────────────────────────────────────────────────
+  // ── Dashboard ─────────────────────────────────────────────────────────────────
 
   return (
     <div style={{ height: "100%", overflowY: "auto", background: "#F7F7F5" }}>
-      {showCompanionSetup && <CompanionSetupModal onClose={() => setShowCompanionSetup(false)} />}
+      {showCredsModal && (
+        <PortalCredentialsModal
+          initialPortal={modalPortal}
+          onClose={() => setShowCredsModal(false)}
+          onSaved={loadCredentials}
+        />
+      )}
 
       <div style={{ maxWidth: "780px", margin: "0 auto", padding: "20px 16px" }}>
 
@@ -924,24 +946,46 @@ export default function JobApplicationPage() {
               <button onClick={resetCampaign} style={{ fontSize: "11px", color: VIOLET, background: "none", border: "none", cursor: "pointer", padding: 0, marginLeft: "4px", fontWeight: 600 }}>Edit</button>
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            {companionReady ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 12px", borderRadius: "20px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
-                <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: GREEN }} />
-                <span style={{ fontSize: "11px", fontWeight: 700, color: GREEN }}>Companion Active</span>
-              </div>
-            ) : (
-              <button onClick={() => setShowCompanionSetup(true)}
-                style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 12px", borderRadius: "20px", background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.12)", cursor: "pointer" }}>
-                <Terminal style={{ width: "11px", height: "11px", color: "#888" }} />
-                <span style={{ fontSize: "11px", fontWeight: 600, color: "#666" }}>Enable Live Browser</span>
-              </button>
-            )}
-            <button onClick={() => discoverJobs(campaign?.role || "", campaign?.location || "")} disabled={isLoadingJobs}
-              style={{ padding: "8px 14px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.12)", background: "#fff", color: "#555", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", opacity: isLoadingJobs ? 0.6 : 1 }}>
-              <RefreshCw style={{ width: "13px", height: "13px" }} /> Refresh
+          <button onClick={() => discoverJobs(campaign?.role || "", campaign?.location || "")} disabled={isLoadingJobs}
+            style={{ padding: "8px 14px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.12)", background: "#fff", color: "#555", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", opacity: isLoadingJobs ? 0.6 : 1 }}>
+            <RefreshCw style={{ width: "13px", height: "13px" }} /> Refresh
+          </button>
+        </div>
+
+        {/* Portal Credentials Banner */}
+        <div style={{ background: "#fff", borderRadius: "14px", padding: "14px 16px", border: "1px solid rgba(0,0,0,0.07)", marginBottom: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <Shield style={{ width: "14px", height: "14px", color: VIOLET }} />
+              <span style={{ fontSize: "12px", fontWeight: 700, color: "#111" }}>Portal Auto-Login</span>
+              <span style={{ fontSize: "10px", color: "#888", fontWeight: 400 }}>Saved once, used automatically</span>
+            </div>
+            <button onClick={() => { setModalPortal("linkedin"); setShowCredsModal(true); }}
+              style={{ fontSize: "11px", padding: "4px 12px", borderRadius: "20px", border: `1px solid ${VIOLET}`, background: "rgba(124,58,237,0.06)", color: VIOLET, cursor: "pointer", fontWeight: 600 }}>
+              + Add
             </button>
           </div>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            {PORTALS.map((p) => {
+              const saved = savedCreds.find((c) => c.portal === p.id);
+              return (
+                <div key={p.id}
+                  style={{ display: "flex", alignItems: "center", gap: "6px", padding: "5px 12px", borderRadius: "20px", border: `1px solid ${saved ? "rgba(16,185,129,0.3)" : "rgba(0,0,0,0.1)"}`, background: saved ? "rgba(16,185,129,0.06)" : "rgba(0,0,0,0.03)" }}>
+                  <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: saved ? GREEN : "#ddd" }} />
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: saved ? GREEN : "#888" }}>{p.label}</span>
+                  {saved && (
+                    <button onClick={() => removeCred(p.id)} title="Remove"
+                      style={{ marginLeft: "2px", padding: 0, background: "none", border: "none", cursor: "pointer", color: "#bbb", display: "flex", lineHeight: 1 }}>
+                      <X style={{ width: "10px", height: "10px" }} />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <p style={{ fontSize: "10px", color: "#aaa", margin: "8px 0 0" }}>
+            Credentials are encrypted at rest. Auto Submit uses them to log in before filling your application.
+          </p>
         </div>
 
         {/* Stats */}
@@ -1002,11 +1046,10 @@ export default function JobApplicationPage() {
             )}
             <AnimatePresence>
               {!isLoadingJobs && jobs.map((job) => (
-                <JobCard key={job.id} job={job} resume={resume}
-                  companionReady={companionReady}
-                  companionBusy={companionBusy}
-                  onCompanionSubmit={startCompanionSubmit}
-                  onCompanionContinue={sendContinue}
+                <JobCard
+                  key={job.id} job={job} resume={resume}
+                  savedPortals={savedPortalIds}
+                  onNeedsCredentials={handleNeedsCreds}
                   onApplied={handleApplied}
                   onSkip={handleSkip}
                 />
