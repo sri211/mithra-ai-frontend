@@ -1,11 +1,11 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, MapPin, Briefcase, Target, ChevronRight, ChevronDown,
   ExternalLink, Check, BarChart2, RefreshCw, Trash2,
   AlertCircle, ArrowLeft, Loader2, TrendingUp, Bot,
-  Building2, IndianRupee, X, Camera, WifiOff,
+  Building2, IndianRupee, X, Camera, Play, Terminal,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { useResumeStore } from "@/lib/stores/resumeStore";
@@ -24,7 +24,10 @@ interface Job {
   job_type: string; seniority: string; match_score: number;
 }
 
-type CardStatus = "idle" | "preparing" | "ready" | "autosubmitting" | "autoresult" | "confirming" | "done" | "skipped";
+type CardStatus =
+  | "idle" | "preparing" | "ready"
+  | "autosubmitting" | "waiting_user" | "autoresult"
+  | "confirming" | "done" | "skipped";
 
 interface JobWithState extends Job {
   uiStatus: CardStatus;
@@ -50,6 +53,13 @@ interface Campaign {
   ctc_max: number; experience_level: string;
 }
 
+interface CompanionCallbacks {
+  onStatus: (msg: string) => void;
+  onScreenshot: (b64: string) => void;
+  onWaiting: (reason: string, msg: string, screenshot?: string) => void;
+  onDone: (result: AutoSubmitResult) => void;
+}
+
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const AMBER = "#f59e0b";
@@ -57,6 +67,7 @@ const VIOLET = "#7c3aed";
 const GREEN = "#10b981";
 const LS_APPS_KEY = "mithra-applied-apps";
 const LS_CAMP_KEY = "mithra-campaign";
+const COMPANION_WS = "ws://localhost:7777";
 
 const LOCATIONS = [
   "Bangalore", "Mumbai", "Delhi NCR", "Hyderabad", "Chennai",
@@ -64,8 +75,8 @@ const LOCATIONS = [
 ];
 
 const EXP_LEVELS = [
-  { value: "entry", label: "0–2 yrs", sub: "Fresher / Entry" },
-  { value: "mid",   label: "2–5 yrs", sub: "Mid Level" },
+  { value: "entry", label: "0–2 yrs",  sub: "Fresher / Entry" },
+  { value: "mid",   label: "2–5 yrs",  sub: "Mid Level" },
   { value: "senior",label: "5–10 yrs", sub: "Senior" },
   { value: "lead",  label: "10+ yrs",  sub: "Lead / Director" },
 ];
@@ -79,47 +90,29 @@ const STATUS_META: Record<string, { label: string; color: string; bg: string }> 
   rejected:    { label: "Rejected",     color: "#ef4444", bg: "rgba(239,68,68,0.12)" },
 };
 
-const AUTO_MESSAGES = [
-  "Opening job portal...",
-  "Loading application page...",
-  "Scanning form fields...",
-  "Pre-filling your details...",
-];
-
-// ── Local-storage helpers ──────────────────────────────────────────────────────
+// ── LocalStorage helpers ───────────────────────────────────────────────────────
 
 function saveAppsLocally(apps: Application[]) {
   try { localStorage.setItem(LS_APPS_KEY, JSON.stringify(apps)); } catch { /* ignore */ }
 }
-
 function loadAppsLocally(): Application[] {
-  try {
-    const raw = localStorage.getItem(LS_APPS_KEY);
-    return raw ? (JSON.parse(raw) as Application[]) : [];
-  } catch { return []; }
+  try { const r = localStorage.getItem(LS_APPS_KEY); return r ? JSON.parse(r) : []; } catch { return []; }
 }
-
 function mergeApps(backend: Application[], local: Application[]): Application[] {
-  const backendIds = new Set(backend.map((a) => a.job_id));
-  const localOnly = local.filter((a) => !backendIds.has(a.job_id));
-  return [...backend, ...localOnly.map((a) => ({ ...a, _local: true }))];
+  const ids = new Set(backend.map((a) => a.job_id));
+  return [...backend, ...local.filter((a) => !ids.has(a.job_id)).map((a) => ({ ...a, _local: true }))];
 }
-
 function saveCampaignLocally(c: Campaign) {
   try { localStorage.setItem(LS_CAMP_KEY, JSON.stringify(c)); } catch { /* ignore */ }
 }
-
 function loadCampaignLocally(): Campaign | null {
-  try {
-    const raw = localStorage.getItem(LS_CAMP_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
+  try { const r = localStorage.getItem(LS_CAMP_KEY); return r ? JSON.parse(r) : null; } catch { return null; }
 }
 
 // ── Small helpers ──────────────────────────────────────────────────────────────
 
 function scoreColor(s: number) {
-  if (s >= 80) return GREEN; if (s >= 60) return AMBER; return "#ef4444";
+  return s >= 80 ? GREEN : s >= 60 ? AMBER : "#ef4444";
 }
 function formatCtc(min: number, max: number) {
   const f = (n: number) => n >= 100_000 ? `${(n / 100_000).toFixed(0)}L` : `${(n / 1_000).toFixed(0)}K`;
@@ -153,29 +146,111 @@ function ScoreRing({ score, size = 46 }: { score: number; size?: number }) {
   );
 }
 
+// ── Companion Setup Modal ──────────────────────────────────────────────────────
+
+function CompanionSetupModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+      <div style={{ background: "#fff", borderRadius: "20px", padding: "28px", maxWidth: "500px", width: "100%", position: "relative" }}>
+        <button onClick={onClose} style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", cursor: "pointer", color: "#888" }}>
+          <X style={{ width: "18px", height: "18px" }} />
+        </button>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+          <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "rgba(124,58,237,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Bot style={{ width: "22px", height: "22px", color: VIOLET }} />
+          </div>
+          <div>
+            <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#111", margin: 0 }}>Enable Live Browser Mode</h3>
+            <p style={{ fontSize: "12px", color: "#888", margin: "2px 0 0" }}>Opens a real Chrome window on your screen — bot fills forms, you handle login</p>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          {[
+            {
+              n: "1",
+              title: "Install (run once in terminal)",
+              code: ["pip install playwright websockets", "playwright install chromium"],
+            },
+            {
+              n: "2",
+              title: "Download & run the companion",
+              code: ["python mithra_companion.py"],
+              note: "Download mithra_companion.py from the Mithra AI settings page",
+            },
+            {
+              n: "3",
+              title: "Come back here — green dot appears on Auto Submit",
+              code: [],
+              note: "The companion reconnects automatically every time you run it.",
+            },
+          ].map((s) => (
+            <div key={s.n} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+              <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: VIOLET, color: "#fff", fontSize: "12px", fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "1px" }}>{s.n}</div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: "13px", fontWeight: 600, color: "#111", margin: "0 0 6px" }}>{s.title}</p>
+                {s.code.length > 0 && (
+                  <div style={{ background: "#1a1a2e", borderRadius: "8px", padding: "10px 14px" }}>
+                    {s.code.map((line, i) => (
+                      <p key={i} style={{ fontSize: "12px", color: "#a8e6cf", margin: 0, fontFamily: "monospace", lineHeight: "1.8" }}>{line}</p>
+                    ))}
+                  </div>
+                )}
+                {s.note && <p style={{ fontSize: "11px", color: "#888", margin: "5px 0 0" }}>{s.note}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ marginTop: "20px", padding: "12px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)" }}>
+          <p style={{ fontSize: "12px", color: "#555", margin: 0, lineHeight: "1.7" }}>
+            <strong>How it works:</strong> Chrome opens on your screen. The bot navigates and fills your details automatically.
+            When it hits a login or captcha, it <strong>pauses and tells you</strong>. You complete it in the browser,
+            then click <strong>"I'm done — Continue"</strong> and the bot takes over again.
+          </p>
+        </div>
+        <p style={{ fontSize: "11px", color: "#aaa", margin: "10px 0 0", textAlign: "center" }}>
+          Runs only on your machine. Your credentials never leave your browser.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ── Job Card ───────────────────────────────────────────────────────────────────
 
-function JobCard({ job, resume, onApplied, onSkip }: {
+interface JobCardProps {
   job: JobWithState;
   resume: ResumeData;
+  companionReady: boolean;
+  companionBusy: boolean;
+  onCompanionSubmit: (jobUrl: string, profile: object, cbs: CompanionCallbacks) => void;
+  onCompanionContinue: () => void;
   onApplied: (job: Job, opts: { coverLetter: string; autoSubmitted: boolean }) => void;
   onSkip: (id: string) => void;
-}) {
+}
+
+function JobCard({
+  job, resume, companionReady, companionBusy,
+  onCompanionSubmit, onCompanionContinue, onApplied, onSkip,
+}: JobCardProps) {
   const [st, setSt] = useState<JobWithState>(job);
   const [expanded, setExpanded] = useState(false);
-  const [autoMsg, setAutoMsg] = useState(AUTO_MESSAGES[0]);
-  const [saveError, setSaveError] = useState("");
+  const [autoMsg, setAutoMsg] = useState("");
+  const [liveScreenshot, setLiveScreenshot] = useState<string | undefined>();
+  const [waitingMsg, setWaitingMsg] = useState("");
+  const [waitingReason, setWaitingReason] = useState("");
 
-  // Adapt resume + get cover letter hook
+  const isActive = st.uiStatus === "autosubmitting" || st.uiStatus === "waiting_user";
+
   const prepare = async () => {
     setSt((p) => ({ ...p, uiStatus: "preparing" }));
     setExpanded(true);
     try {
       const { data } = await api.post("/resume/adapt", {
-        resume,
-        jd_text: st.description,
-        company_name: st.company,
-        role_name: st.title,
+        resume, jd_text: st.description,
+        company_name: st.company, role_name: st.title,
       });
       setSt((p) => ({ ...p, uiStatus: "ready", adaptedCoverLetter: data.cover_letter_hook || "" }));
     } catch {
@@ -183,30 +258,57 @@ function JobCard({ job, resume, onApplied, onSkip }: {
     }
   };
 
-  // Open job link manually
   const openLink = () => {
     window.open(st.url || st.portal_url, "_blank", "noopener");
     setSt((p) => ({ ...p, uiStatus: "confirming" }));
   };
 
-  // Backend Playwright auto-submit
-  const autoSubmit = async () => {
+  // Companion: real visible browser on user's machine
+  const autoSubmitCompanion = () => {
     setSt((p) => ({ ...p, uiStatus: "autosubmitting" }));
     setExpanded(true);
-    let msgIdx = 0;
-    setAutoMsg(AUTO_MESSAGES[0]);
-    const ticker = setInterval(() => {
-      msgIdx = Math.min(msgIdx + 1, AUTO_MESSAGES.length - 1);
-      setAutoMsg(AUTO_MESSAGES[msgIdx]);
-    }, 3000);
+    setLiveScreenshot(undefined);
+    setAutoMsg("Opening browser on your screen…");
 
+    onCompanionSubmit(
+      st.url || st.portal_url,
+      {
+        name: resume?.personal?.name || "",
+        email: resume?.personal?.email || "",
+        phone: resume?.personal?.phone || "",
+        location: resume?.personal?.location || "",
+        linkedin: resume?.personal?.linkedin || "",
+      },
+      {
+        onStatus: (msg) => setAutoMsg(msg),
+        onScreenshot: (b64) => setLiveScreenshot(b64),
+        onWaiting: (reason, msg, ss) => {
+          setWaitingReason(reason);
+          setWaitingMsg(msg);
+          if (ss) setLiveScreenshot(ss);
+          setSt((p) => ({ ...p, uiStatus: "waiting_user" }));
+        },
+        onDone: (result) => {
+          setSt((p) => ({ ...p, uiStatus: "autoresult", autoResult: result }));
+        },
+      }
+    );
+  };
+
+  // Server fallback: headless screenshot only
+  const autoSubmitServer = async () => {
+    setSt((p) => ({ ...p, uiStatus: "autosubmitting" }));
+    setExpanded(true);
+    setAutoMsg("Connecting to server browser…");
+    const msgs = [
+      "Opening job portal…", "Loading page…", "Scanning form fields…", "Pre-filling details…",
+    ];
+    let i = 0;
+    const ticker = setInterval(() => { i = Math.min(i + 1, msgs.length - 1); setAutoMsg(msgs[i]); }, 3000);
     try {
       const { data } = await api.post("/auto-apply/submit", {
-        job_url: st.url || st.portal_url,
-        job_id: st.id,
-        company: st.company,
-        role: st.title,
-        match_score: st.match_score,
+        job_url: st.url || st.portal_url, job_id: st.id,
+        company: st.company, role: st.title, match_score: st.match_score,
         profile: {
           name: resume?.personal?.name || "",
           email: resume?.personal?.email || "",
@@ -219,220 +321,250 @@ function JobCard({ job, resume, onApplied, onSkip }: {
       setSt((p) => ({ ...p, uiStatus: "autoresult", autoResult: data }));
     } catch {
       clearInterval(ticker);
-      setSt((p) => ({ ...p, uiStatus: "ready" }));
-      setAutoMsg("Auto-submit failed. Use 'Open Application' instead.");
+      setSt((p) => ({ ...p, uiStatus: "idle" }));
     }
   };
 
-  // Mark as applied → always saves immediately to parent (parent handles backend + localStorage)
-  const confirmApplied = async (autoSubmitted = false) => {
+  const autoSubmit = () => {
+    if (companionReady && !companionBusy) {
+      autoSubmitCompanion();
+    } else {
+      autoSubmitServer();
+    }
+  };
+
+  const handleContinue = () => {
+    setSt((p) => ({ ...p, uiStatus: "autosubmitting" }));
+    setAutoMsg("Resuming — bot is taking over…");
+    onCompanionContinue();
+  };
+
+  const confirmApplied = (autoSubmitted = false) => {
     setSt((p) => ({ ...p, uiStatus: "done" }));
-    setSaveError("");
     onApplied(st, { coverLetter: st.adaptedCoverLetter || "", autoSubmitted });
   };
 
-  const isDone = st.uiStatus === "done" || st.uiStatus === "skipped";
+  if (st.uiStatus === "done" || st.uiStatus === "skipped") return null;
 
   return (
-    <AnimatePresence>
-      {!isDone && (
-        <motion.div layout
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -30, height: 0 }}
-          style={{ background: "#fff", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.08)", overflow: "hidden" }}>
+    <motion.div layout
+      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -30 }}
+      style={{ background: "#fff", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.08)", overflow: "hidden" }}>
 
-          {/* Top row */}
-          <div style={{ padding: "14px 16px", display: "flex", gap: "12px", alignItems: "flex-start" }}>
-            {/* Logo */}
-            <div style={{ width: "42px", height: "42px", borderRadius: "10px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
-              {st.company_logo
-                ? <img src={st.company_logo} alt="" style={{ width: "30px", height: "30px", objectFit: "contain" }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                : <Building2 style={{ width: "18px", height: "18px", color: VIOLET, opacity: 0.5 }} />}
+      {/* Top row */}
+      <div style={{ padding: "14px 16px", display: "flex", gap: "12px", alignItems: "flex-start" }}>
+        <div style={{ width: "42px", height: "42px", borderRadius: "10px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+          {st.company_logo
+            ? <img src={st.company_logo} alt="" style={{ width: "30px", height: "30px", objectFit: "contain" }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+            : <Building2 style={{ width: "18px", height: "18px", color: VIOLET, opacity: 0.5 }} />}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: "14px", fontWeight: 700, color: "#111", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{st.title}</p>
+              <p style={{ fontSize: "12px", color: "#666", margin: "2px 0 0", display: "flex", alignItems: "center", gap: "5px" }}>
+                {st.company}<span style={{ color: "#ccc" }}>·</span>
+                <MapPin style={{ width: "11px", height: "11px" }} />{st.location}
+              </p>
             </div>
-            {/* Info */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ fontSize: "14px", fontWeight: 700, color: "#111", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{st.title}</p>
-                  <p style={{ fontSize: "12px", color: "#666", margin: "2px 0 0", display: "flex", alignItems: "center", gap: "5px" }}>
-                    {st.company}
-                    <span style={{ color: "#ccc" }}>·</span>
-                    <MapPin style={{ width: "11px", height: "11px" }} />{st.location}
+            <ScoreRing score={st.match_score} size={42} />
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginTop: "7px" }}>
+            <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: "rgba(16,185,129,0.1)", color: GREEN, fontWeight: 600 }}>{formatCtc(st.salary_min, st.salary_max)}</span>
+            <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: "rgba(0,0,0,0.05)", color: "#555" }}>{st.experience_required}</span>
+            <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: "rgba(0,0,0,0.05)", color: "#555" }}>{st.remote}</span>
+            <span style={{ fontSize: "11px", color: "#aaa", marginLeft: "auto" }}>{daysAgo(st.posted_date)}</span>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginTop: "7px" }}>
+            {(st.skills || []).slice(0, 5).map((sk) => (
+              <span key={sk} style={{ fontSize: "10px", padding: "2px 7px", borderRadius: "20px", background: "rgba(124,58,237,0.07)", color: VIOLET, border: "1px solid rgba(124,58,237,0.15)" }}>{sk}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Action bar */}
+      <div style={{ padding: "0 14px 14px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+
+        {st.uiStatus === "idle" && (
+          <>
+            <button onClick={prepare} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${AMBER},#e67e22)`, color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+              <Zap style={{ width: "13px", height: "13px" }} /> Quick Apply
+            </button>
+            <button onClick={autoSubmit}
+              title={companionReady ? "Opens real Chrome on your screen — bot fills forms, you handle login" : "Server mode: takes a screenshot of the job page"}
+              style={{ padding: "10px 12px", borderRadius: "10px", border: `1.5px solid ${VIOLET}`, background: "rgba(124,58,237,0.06)", color: VIOLET, fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px", position: "relative" }}>
+              <Bot style={{ width: "13px", height: "13px" }} /> Auto Submit
+              {companionReady && (
+                <span style={{ position: "absolute", top: "-5px", right: "-5px", width: "9px", height: "9px", borderRadius: "50%", background: GREEN, border: "2px solid #fff" }} />
+              )}
+            </button>
+            <button onClick={() => setExpanded((p) => !p)} style={{ padding: "10px 11px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", cursor: "pointer", color: "#666" }}>
+              <ChevronDown style={{ width: "15px", height: "15px", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+            </button>
+            <button onClick={() => onSkip(st.id)} style={{ padding: "10px 11px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", cursor: "pointer", color: "#bbb" }}>
+              <X style={{ width: "13px", height: "13px" }} />
+            </button>
+          </>
+        )}
+
+        {st.uiStatus === "preparing" && (
+          <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderRadius: "10px", background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.2)" }}>
+            <Loader2 style={{ width: "14px", height: "14px", color: AMBER, animation: "spin 1s linear infinite", flexShrink: 0 }} />
+            <span style={{ fontSize: "13px", color: AMBER, fontWeight: 600 }}>Adapting resume for {st.company}…</span>
+          </div>
+        )}
+
+        {st.uiStatus === "ready" && (
+          <>
+            <button onClick={openLink} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${GREEN},#059669)`, color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+              <ExternalLink style={{ width: "13px", height: "13px" }} /> Open Application
+            </button>
+            <button onClick={autoSubmit} style={{ padding: "10px 12px", borderRadius: "10px", border: `1.5px solid ${VIOLET}`, background: "rgba(124,58,237,0.06)", color: VIOLET, fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}>
+              <Bot style={{ width: "13px", height: "13px" }} /> Auto
+            </button>
+            <button onClick={() => setSt((p) => ({ ...p, uiStatus: "idle" }))} style={{ padding: "10px 11px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", cursor: "pointer", color: "#999", fontSize: "12px" }}>Back</button>
+          </>
+        )}
+
+        {/* LOADING */}
+        {st.uiStatus === "autosubmitting" && (
+          <div style={{ flex: 1, padding: "12px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.2)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <Loader2 style={{ width: "14px", height: "14px", color: VIOLET, animation: "spin 1s linear infinite", flexShrink: 0 }} />
+              <span style={{ fontSize: "13px", color: VIOLET, fontWeight: 600 }}>{autoMsg}</span>
+            </div>
+            {companionReady && (
+              <p style={{ fontSize: "11px", color: "#888", margin: "6px 0 0" }}>
+                Watch the Chrome window that just opened on your screen.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* WAITING FOR USER */}
+        {st.uiStatus === "waiting_user" && (
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div style={{ padding: "12px 14px", borderRadius: "10px", background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.3)" }}>
+              <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                <span style={{ fontSize: "22px", flexShrink: 0 }}>
+                  {waitingReason === "captcha" ? "🤖" : "🔐"}
+                </span>
+                <div>
+                  <p style={{ fontSize: "13px", fontWeight: 700, color: "#111", margin: "0 0 4px" }}>
+                    {waitingReason === "captcha" ? "Captcha detected" : "Login required in browser"}
+                  </p>
+                  <p style={{ fontSize: "12px", color: "#666", margin: 0, lineHeight: "1.7", whiteSpace: "pre-line" }}>
+                    {waitingMsg || "Please complete the step in the Chrome window on your screen, then click Continue."}
                   </p>
                 </div>
-                <ScoreRing score={st.match_score} size={42} />
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "5px", marginTop: "7px" }}>
-                <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: "rgba(16,185,129,0.1)", color: GREEN, fontWeight: 600 }}>{formatCtc(st.salary_min, st.salary_max)}</span>
-                <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: "rgba(0,0,0,0.05)", color: "#555" }}>{st.experience_required}</span>
-                <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: "rgba(0,0,0,0.05)", color: "#555" }}>{st.remote}</span>
-                <span style={{ fontSize: "11px", color: "#aaa", marginLeft: "auto" }}>{daysAgo(st.posted_date)}</span>
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "4px", marginTop: "7px" }}>
-                {(st.skills || []).slice(0, 5).map((sk) => (
-                  <span key={sk} style={{ fontSize: "10px", padding: "2px 7px", borderRadius: "20px", background: "rgba(124,58,237,0.07)", color: VIOLET, border: "1px solid rgba(124,58,237,0.15)" }}>{sk}</span>
-                ))}
               </div>
             </div>
+            <button onClick={handleContinue}
+              style={{ padding: "12px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${VIOLET},#5b21b6)`, color: "#fff", fontSize: "14px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+              <Play style={{ width: "14px", height: "14px" }} /> I'm done — Continue
+            </button>
           </div>
+        )}
 
-          {/* Action bar */}
-          <div style={{ padding: "0 14px 14px", display: "flex", gap: "8px", flexWrap: "wrap" as const }}>
-
-            {/* IDLE */}
-            {st.uiStatus === "idle" && (
-              <>
-                <button onClick={prepare} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${AMBER},#e67e22)`, color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                  <Zap style={{ width: "13px", height: "13px" }} /> Quick Apply
-                </button>
-                <button onClick={autoSubmit} title="Let AI handle the application automatically" style={{ padding: "10px 12px", borderRadius: "10px", border: `1.5px solid ${VIOLET}`, background: "rgba(124,58,237,0.06)", color: VIOLET, fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}>
-                  <Bot style={{ width: "13px", height: "13px" }} /> Auto Submit
-                </button>
-                <button onClick={() => setExpanded((p) => !p)} style={{ padding: "10px 11px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", cursor: "pointer", color: "#666" }}>
-                  <ChevronDown style={{ width: "15px", height: "15px", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
-                </button>
-                <button onClick={() => onSkip(st.id)} style={{ padding: "10px 11px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", cursor: "pointer", color: "#bbb" }}>
-                  <X style={{ width: "13px", height: "13px" }} />
-                </button>
-              </>
+        {/* AUTO RESULT */}
+        {st.uiStatus === "autoresult" && st.autoResult && (
+          <div style={{ flex: 1, display: "flex", gap: "8px" }}>
+            <button onClick={() => confirmApplied(true)} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${GREEN},#059669)`, color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+              <Check style={{ width: "13px", height: "13px" }} /> Confirm Applied ✓
+            </button>
+            {st.autoResult.apply_url && (
+              <a href={st.autoResult.apply_url} target="_blank" rel="noopener" style={{ padding: "10px 12px", borderRadius: "10px", border: `1px solid ${GREEN}`, background: "#fff", color: GREEN, display: "flex", alignItems: "center", textDecoration: "none" }}>
+                <ExternalLink style={{ width: "13px", height: "13px" }} />
+              </a>
             )}
-
-            {/* PREPARING */}
-            {st.uiStatus === "preparing" && (
-              <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", borderRadius: "10px", background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.2)" }}>
-                <Loader2 style={{ width: "14px", height: "14px", color: AMBER, animation: "spin 1s linear infinite", flexShrink: 0 }} />
-                <span style={{ fontSize: "13px", color: AMBER, fontWeight: 600 }}>Adapting resume for {st.company}…</span>
-              </div>
-            )}
-
-            {/* READY */}
-            {st.uiStatus === "ready" && (
-              <>
-                <button onClick={openLink} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${GREEN},#059669)`, color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                  <ExternalLink style={{ width: "13px", height: "13px" }} /> Open Application
-                </button>
-                <button onClick={autoSubmit} title="AI opens and fills the form automatically" style={{ padding: "10px 12px", borderRadius: "10px", border: `1.5px solid ${VIOLET}`, background: "rgba(124,58,237,0.06)", color: VIOLET, fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}>
-                  <Bot style={{ width: "13px", height: "13px" }} /> Auto
-                </button>
-                <button onClick={() => setSt((p) => ({ ...p, uiStatus: "idle" }))} style={{ padding: "10px 11px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", cursor: "pointer", color: "#999", fontSize: "12px" }}>Back</button>
-              </>
-            )}
-
-            {/* AUTO-SUBMITTING */}
-            {st.uiStatus === "autosubmitting" && (
-              <div style={{ flex: 1, padding: "12px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.2)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Loader2 style={{ width: "14px", height: "14px", color: VIOLET, animation: "spin 1s linear infinite", flexShrink: 0 }} />
-                  <span style={{ fontSize: "13px", color: VIOLET, fontWeight: 600 }}>{autoMsg}</span>
-                </div>
-                <div style={{ marginTop: "8px", height: "3px", borderRadius: "3px", background: "rgba(124,58,237,0.1)", overflow: "hidden" }}>
-                  <div style={{ height: "100%", background: VIOLET, borderRadius: "3px", animation: "progress-slide 3s ease-in-out infinite" }} />
-                </div>
-              </div>
-            )}
-
-            {/* AUTO-RESULT */}
-            {st.uiStatus === "autoresult" && st.autoResult && (
-              <div style={{ flex: 1, display: "flex", gap: "8px" }}>
-                <button onClick={() => confirmApplied(true)} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${GREEN},#059669)`, color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                  <Check style={{ width: "13px", height: "13px" }} /> Confirm Applied ✓
-                </button>
-                {st.autoResult.apply_url && (
-                  <a href={st.autoResult.apply_url} target="_blank" rel="noopener" style={{ padding: "10px 12px", borderRadius: "10px", border: `1px solid ${GREEN}`, background: "#fff", color: GREEN, display: "flex", alignItems: "center", textDecoration: "none" }}>
-                    <ExternalLink style={{ width: "13px", height: "13px" }} />
-                  </a>
-                )}
-                <button onClick={() => setSt((p) => ({ ...p, uiStatus: "idle", autoResult: undefined }))} style={{ padding: "10px 11px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", cursor: "pointer", color: "#999", fontSize: "12px" }}>Back</button>
-              </div>
-            )}
-
-            {/* CONFIRMING (manual) */}
-            {st.uiStatus === "confirming" && (
-              <div style={{ flex: 1, display: "flex", gap: "8px" }}>
-                <button onClick={() => confirmApplied(false)} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${GREEN},#059669)`, color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                  <Check style={{ width: "13px", height: "13px" }} /> Yes, I Applied!
-                </button>
-                <button onClick={openLink} style={{ padding: "10px 12px", borderRadius: "10px", border: `1px solid ${GREEN}`, background: "#fff", cursor: "pointer", color: GREEN, fontSize: "12px", fontWeight: 600 }}>Re-open</button>
-                <button onClick={() => setSt((p) => ({ ...p, uiStatus: "idle" }))} style={{ padding: "10px 11px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", cursor: "pointer", color: "#999", fontSize: "12px" }}>Back</button>
-              </div>
-            )}
+            <button onClick={() => setSt((p) => ({ ...p, uiStatus: "idle", autoResult: undefined }))} style={{ padding: "10px 11px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", cursor: "pointer", color: "#999", fontSize: "12px" }}>Back</button>
           </div>
+        )}
 
-          {saveError && (
-            <div style={{ margin: "0 14px 10px", padding: "8px 12px", borderRadius: "8px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", fontSize: "12px", color: "#ef4444", display: "flex", alignItems: "center", gap: "6px" }}>
-              <WifiOff style={{ width: "12px", height: "12px", flexShrink: 0 }} /> {saveError}
-            </div>
-          )}
+        {/* CONFIRMING manual */}
+        {st.uiStatus === "confirming" && (
+          <div style={{ flex: 1, display: "flex", gap: "8px" }}>
+            <button onClick={() => confirmApplied(false)} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${GREEN},#059669)`, color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+              <Check style={{ width: "13px", height: "13px" }} /> Yes, I Applied!
+            </button>
+            <button onClick={openLink} style={{ padding: "10px 12px", borderRadius: "10px", border: `1px solid ${GREEN}`, background: "#fff", cursor: "pointer", color: GREEN, fontSize: "12px", fontWeight: 600 }}>Re-open</button>
+            <button onClick={() => setSt((p) => ({ ...p, uiStatus: "idle" }))} style={{ padding: "10px 11px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", cursor: "pointer", color: "#999", fontSize: "12px" }}>Back</button>
+          </div>
+        )}
+      </div>
 
-          {/* Expanded: JD + cover letter + auto-result screenshot */}
-          <AnimatePresence>
-            {expanded && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: "hidden", borderTop: "1px solid rgba(0,0,0,0.05)" }}>
-                <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+      {/* Expanded panel */}
+      <AnimatePresence>
+        {(expanded || isActive || st.uiStatus === "autoresult") && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+            style={{ overflow: "hidden", borderTop: "1px solid rgba(0,0,0,0.05)" }}>
+            <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: "12px" }}>
 
-                  {/* Auto-result screenshot */}
-                  {st.uiStatus === "autoresult" && st.autoResult && (
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-                        <Camera style={{ width: "13px", height: "13px", color: VIOLET }} />
-                        <span style={{ fontSize: "11px", fontWeight: 700, color: VIOLET, textTransform: "uppercase", letterSpacing: "0.5px" }}>Live Screenshot — {st.autoResult.portal}</span>
-                        {st.autoResult.fields_filled > 0 && (
-                          <span style={{ marginLeft: "auto", fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: "rgba(16,185,129,0.1)", color: GREEN, fontWeight: 600 }}>
-                            {st.autoResult.fields_filled} fields filled ✓
-                          </span>
-                        )}
+              {/* Live screenshot */}
+              {(liveScreenshot || st.autoResult?.screenshot) && (
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+                    <Camera style={{ width: "13px", height: "13px", color: VIOLET }} />
+                    <span style={{ fontSize: "11px", fontWeight: 700, color: VIOLET, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                      {st.uiStatus === "waiting_user" ? "Browser — waiting for you" : "Live Screenshot"}
+                    </span>
+                    {st.autoResult?.fields_filled ? (
+                      <span style={{ marginLeft: "auto", fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: "rgba(16,185,129,0.1)", color: GREEN, fontWeight: 600 }}>
+                        {st.autoResult.fields_filled} fields filled ✓
+                      </span>
+                    ) : null}
+                  </div>
+                  <div style={{ borderRadius: "10px", overflow: "hidden", border: st.uiStatus === "waiting_user" ? "2px solid rgba(245,158,11,0.5)" : "1px solid rgba(0,0,0,0.1)", position: "relative" }}>
+                    <img
+                      src={`data:image/jpeg;base64,${liveScreenshot || st.autoResult?.screenshot}`}
+                      alt="Browser view"
+                      style={{ width: "100%", display: "block", maxHeight: "260px", objectFit: "cover", objectPosition: "top" }}
+                    />
+                    {st.uiStatus === "waiting_user" && (
+                      <div style={{ position: "absolute", bottom: "8px", left: "8px", padding: "4px 10px", borderRadius: "20px", background: "rgba(245,158,11,0.9)", fontSize: "10px", color: "#fff", fontWeight: 700 }}>
+                        ⏸ Bot paused — complete the step above
                       </div>
-                      {st.autoResult.screenshot ? (
-                        <div style={{ borderRadius: "10px", overflow: "hidden", border: "1px solid rgba(0,0,0,0.1)", position: "relative" }}>
-                          <img src={`data:image/jpeg;base64,${st.autoResult.screenshot}`} alt="Application page" style={{ width: "100%", display: "block", maxHeight: "260px", objectFit: "cover", objectPosition: "top" }} />
-                          <div style={{ position: "absolute", bottom: "8px", left: "8px", padding: "4px 10px", borderRadius: "20px", background: "rgba(0,0,0,0.7)", fontSize: "10px", color: "#fff" }}>
-                            {st.autoResult.title?.slice(0, 50)}
-                          </div>
-                        </div>
-                      ) : (
-                        <div style={{ padding: "16px", borderRadius: "10px", background: "rgba(0,0,0,0.03)", textAlign: "center", fontSize: "12px", color: "#888" }}>Screenshot unavailable for this portal</div>
-                      )}
-                      <p style={{ fontSize: "12px", color: "#555", marginTop: "8px", lineHeight: "1.5" }}>{st.autoResult.message}</p>
-                    </div>
-                  )}
-
-                  {/* Cover letter */}
-                  {st.adaptedCoverLetter && (
-                    <div style={{ padding: "12px", borderRadius: "10px", background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.14)" }}>
-                      <p style={{ fontSize: "11px", fontWeight: 700, color: VIOLET, textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 6px" }}>✨ AI Cover Letter Hook</p>
-                      <p style={{ fontSize: "12px", color: "#444", lineHeight: "1.6", fontStyle: "italic", margin: 0 }}>"{st.adaptedCoverLetter}"</p>
-                      <button onClick={() => navigator.clipboard.writeText(st.adaptedCoverLetter || "")} style={{ marginTop: "8px", fontSize: "11px", color: VIOLET, background: "none", border: "none", cursor: "pointer", padding: 0, fontWeight: 600 }}>Copy →</button>
-                    </div>
-                  )}
-
-                  {/* JD snippet */}
-                  {!st.autoResult && (
-                    <div>
-                      <p style={{ fontSize: "11px", fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 5px" }}>Job Description</p>
-                      <p style={{ fontSize: "12px", color: "#555", lineHeight: "1.6", margin: 0 }}>
-                        {st.description?.slice(0, 260)}{(st.description?.length || 0) > 260 ? "…" : ""}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Status hints */}
-                  {st.uiStatus === "ready" && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: GREEN }}>
-                      <Check style={{ width: "13px", height: "13px" }} />
-                      Resume adapted for {st.company} — ready!
-                    </div>
-                  )}
-                  {st.uiStatus === "confirming" && (
-                    <div style={{ padding: "9px 13px", borderRadius: "9px", background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.18)", fontSize: "12px", color: "#555" }}>
-                      Applied on the portal? Click <strong>"Yes, I Applied!"</strong> above to track it in your dashboard.
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      )}
-    </AnimatePresence>
+              )}
+
+              {/* Result message */}
+              {st.autoResult?.message && (
+                <p style={{ fontSize: "12px", color: "#555", margin: 0, lineHeight: "1.6" }}>{st.autoResult.message}</p>
+              )}
+
+              {/* Cover letter */}
+              {st.adaptedCoverLetter && (
+                <div style={{ padding: "12px", borderRadius: "10px", background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.14)" }}>
+                  <p style={{ fontSize: "11px", fontWeight: 700, color: VIOLET, textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 6px" }}>✨ AI Cover Letter Hook</p>
+                  <p style={{ fontSize: "12px", color: "#444", lineHeight: "1.6", fontStyle: "italic", margin: 0 }}>"{st.adaptedCoverLetter}"</p>
+                  <button onClick={() => navigator.clipboard.writeText(st.adaptedCoverLetter || "")} style={{ marginTop: "8px", fontSize: "11px", color: VIOLET, background: "none", border: "none", cursor: "pointer", padding: 0, fontWeight: 600 }}>Copy →</button>
+                </div>
+              )}
+
+              {/* JD snippet when just expanded */}
+              {!st.autoResult && !st.adaptedCoverLetter && !isActive && (
+                <div>
+                  <p style={{ fontSize: "11px", fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 5px" }}>Job Description</p>
+                  <p style={{ fontSize: "12px", color: "#555", lineHeight: "1.6", margin: 0 }}>
+                    {st.description?.slice(0, 260)}{(st.description?.length || 0) > 260 ? "…" : ""}
+                  </p>
+                </div>
+              )}
+
+              {st.uiStatus === "confirming" && (
+                <div style={{ padding: "9px 13px", borderRadius: "9px", background: "rgba(16,185,129,0.06)", border: "1px solid rgba(16,185,129,0.18)", fontSize: "12px", color: "#555" }}>
+                  Applied on the portal? Click <strong>"Yes, I Applied!"</strong> above to track it.
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
@@ -444,27 +576,74 @@ export default function JobApplicationPage() {
   const { resume } = useResumeStore();
   const hasResume = Boolean(resume?.personal?.name || resume?.experience?.length);
 
-  if (!limits.autoApplyAccess) {
-    return (
-      <div style={{ height: "100%", overflowY: "auto", background: "#F7F7F5", padding: "24px" }}>
-        <div style={{ maxWidth: "560px", margin: "0 auto 24px", display: "flex", alignItems: "center", gap: "12px", padding: "14px 18px", borderRadius: "14px", background: `linear-gradient(135deg,rgba(245,158,11,0.08),rgba(124,58,237,0.08))`, border: "1px solid rgba(245,158,11,0.25)" }}>
-          <span style={{ fontSize: "20px" }}>⚡</span>
-          <div>
-            <div style={{ fontSize: "13px", fontWeight: 800, color: "#111", marginBottom: "2px" }}>
-              Auto-Apply <span style={{ fontSize: "10px", padding: "1px 7px", borderRadius: "20px", background: `rgba(245,158,11,0.2)`, color: AMBER, marginLeft: "4px" }}>BETA</span>
-            </div>
-            <p style={{ fontSize: "12px", color: "#888", margin: 0 }}>AI discovers jobs, adapts your resume per role, and tracks every application.</p>
-          </div>
-        </div>
-        <div style={{ maxWidth: "420px", margin: "0 auto" }}>
-          <UpgradeGate requiredPlan="elite" featureName="Auto-Apply"
-            description="AI finds matching jobs, tailors your resume per role, auto-submits applications, and tracks all of them in one dashboard. Available on Elite plan." />
-        </div>
-      </div>
-    );
-  }
+  // ── Companion WebSocket ──────────────────────────────────────────────────────
+  const wsRef = useRef<WebSocket | null>(null);
+  const companionCallbacksRef = useRef<CompanionCallbacks | null>(null);
+  const [companionReady, setCompanionReady] = useState(false);
+  const [companionBusy, setCompanionBusy] = useState(false);
+  const [showCompanionSetup, setShowCompanionSetup] = useState(false);
 
-  // ── State ──────────────────────────────────────────────────────────────────
+  const connectCompanion = useCallback(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const ws = new WebSocket(COMPANION_WS);
+      ws.onopen = () => {
+        wsRef.current = ws;
+        setCompanionReady(true);
+        ws.send(JSON.stringify({ type: "ping" }));
+      };
+      ws.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.type === "pong") return;
+          const cbs = companionCallbacksRef.current;
+          if (!cbs) return;
+          if (data.type === "status") cbs.onStatus(data.message);
+          else if (data.type === "screenshot") cbs.onScreenshot(data.data);
+          else if (data.type === "waiting") cbs.onWaiting(data.reason || "login", data.message, data.screenshot);
+          else if (data.type === "done") {
+            setCompanionBusy(false);
+            companionCallbacksRef.current = null;
+            cbs.onDone({
+              success: data.success ?? true,
+              portal: "Local Browser",
+              title: "",
+              fields_filled: data.fields_filled || 0,
+              message: data.message || "",
+              screenshot: data.screenshot,
+              apply_url: "",
+            });
+          }
+        } catch { /* ignore */ }
+      };
+      ws.onerror = () => {};
+      ws.onclose = () => {
+        setCompanionReady(false);
+        wsRef.current = null;
+        setTimeout(connectCompanion, 5000);
+      };
+    } catch { /* ignore in SSR */ }
+  }, []);
+
+  useEffect(() => {
+    connectCompanion();
+    return () => { wsRef.current?.close(); };
+  }, [connectCompanion]);
+
+  const startCompanionSubmit = useCallback((
+    jobUrl: string, profile: object, cbs: CompanionCallbacks
+  ) => {
+    if (!wsRef.current || companionBusy) return;
+    setCompanionBusy(true);
+    companionCallbacksRef.current = cbs;
+    wsRef.current.send(JSON.stringify({ type: "submit", job_url: jobUrl, profile }));
+  }, [companionBusy]);
+
+  const sendContinue = useCallback(() => {
+    wsRef.current?.send(JSON.stringify({ type: "continue" }));
+  }, []);
+
+  // ── App state ────────────────────────────────────────────────────────────────
 
   const [view, setView]             = useState<"setup" | "dashboard">("setup");
   const [setupStep, setSetupStep]   = useState(1);
@@ -481,60 +660,35 @@ export default function JobApplicationPage() {
   const [appliedList, setAppliedList] = useState<Application[]>([]);
   const [loadingApplied, setLoadingApplied] = useState(false);
 
-  // ── Lifecycle ──────────────────────────────────────────────────────────────
-
-  // On mount: restore from localStorage immediately, then sync with backend
   useEffect(() => {
-    // Instantly show localStorage data so tracker never looks empty
     const localApps = loadAppsLocally();
     if (localApps.length) setAppliedList(localApps);
-
-    // Restore campaign from localStorage
     const localCamp = loadCampaignLocally();
     if (localCamp) {
-      setCampaign(localCamp);
-      setRole(localCamp.role);
-      setLocation(localCamp.location);
-      setCtcMin(localCamp.ctc_min);
-      setCtcMax(localCamp.ctc_max);
-      setExpLevel(localCamp.experience_level);
-      setView("dashboard");
-      discoverJobs(localCamp.role, localCamp.location);
+      setCampaign(localCamp); setRole(localCamp.role); setLocation(localCamp.location);
+      setCtcMin(localCamp.ctc_min); setCtcMax(localCamp.ctc_max); setExpLevel(localCamp.experience_level);
+      setView("dashboard"); discoverJobs(localCamp.role, localCamp.location);
     }
-
-    // Sync with backend (fire-and-forget)
     syncFromBackend(localApps, localCamp);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const syncFromBackend = async (localApps: Application[], localCamp: Campaign | null) => {
     try {
-      // Sync applications
       setLoadingApplied(true);
       const { data } = await api.get("/auto-apply/applications");
-      const backendApps = data.applications || [];
-      const merged = mergeApps(backendApps, localApps);
-      setAppliedList(merged);
-      saveAppsLocally(merged);
-      setLoadingApplied(false);
-
-      // Sync campaign (if localStorage didn't have one, check backend)
+      const merged = mergeApps(data.applications || [], localApps);
+      setAppliedList(merged); saveAppsLocally(merged); setLoadingApplied(false);
       if (!localCamp) {
         const { data: cd } = await api.get("/auto-apply/campaign");
         if (cd.campaign) {
           const c = cd.campaign.criteria as Campaign;
-          setCampaign(c);
-          setRole(c.role); setLocation(c.location);
+          setCampaign(c); setRole(c.role); setLocation(c.location);
           setCtcMin(c.ctc_min); setCtcMax(c.ctc_max); setExpLevel(c.experience_level);
-          setView("dashboard");
-          discoverJobs(c.role, c.location);
-          saveCampaignLocally(c);
+          setView("dashboard"); discoverJobs(c.role, c.location); saveCampaignLocally(c);
         }
       }
-    } catch {
-      setLoadingApplied(false);
-      // localStorage data is already shown — no visible error needed
-    }
+    } catch { setLoadingApplied(false); }
   };
 
   const discoverJobs = async (r: string, l: string) => {
@@ -544,109 +698,72 @@ export default function JobApplicationPage() {
         query: r, location: l === "Any" ? "" : l,
         experience_years: 0, salary_min: 0, job_type: "fulltime", remote: "", portals: [],
       });
-      const raw: Job[] = data.jobs || [];
-      setJobs(raw.map((j) => ({ ...j, uiStatus: "idle" })));
-    } catch { setJobsError("Could not load jobs. Check your connection and try again."); }
+      setJobs((data.jobs || []).map((j: Job) => ({ ...j, uiStatus: "idle" as CardStatus })));
+    } catch { setJobsError("Could not load jobs. Check your connection."); }
     finally { setIsLoadingJobs(false); }
   };
 
   const saveCampaign = async () => {
     const c: Campaign = { role, location, ctc_min: ctcMin, ctc_max: ctcMax, experience_level: expLevel };
-    setCampaign(c);
-    saveCampaignLocally(c);
-    setView("dashboard");
-    discoverJobs(role, location);
-    try { await api.post("/auto-apply/campaign", { role, location, ctc_min: ctcMin, ctc_max: ctcMax, experience_level: expLevel }); } catch { /* best effort */ }
+    setCampaign(c); saveCampaignLocally(c); setView("dashboard"); discoverJobs(role, location);
+    try { await api.post("/auto-apply/campaign", c); } catch { /* best effort */ }
   };
 
   const resetCampaign = async () => {
     setCampaign(null); setView("setup"); setSetupStep(1); setJobs([]);
     try { localStorage.removeItem(LS_CAMP_KEY); } catch { /* ignore */ }
-    try { await api.delete("/auto-apply/campaign"); } catch { /* best effort */ }
+    try { await api.delete("/auto-apply/campaign"); } catch { /* ignore */ }
   };
 
-  // Called by JobCard when user confirms applied
   const handleApplied = async (job: Job, opts: { coverLetter: string; autoSubmitted: boolean }) => {
     const newApp: Application = {
-      id: `local-${Date.now()}`,
-      job_id: job.id,
-      company: job.company,
-      role: job.title,
-      job_url: job.url || job.portal_url,
-      platform: job.portal,
-      match_score: job.match_score,
-      status: "applied",
-      applied_at: new Date().toISOString(),
-      cover_letter: opts.coverLetter,
-      _local: true,
+      id: `local-${Date.now()}`, job_id: job.id, company: job.company, role: job.title,
+      job_url: job.url || job.portal_url, platform: job.portal,
+      match_score: job.match_score, status: "applied",
+      applied_at: new Date().toISOString(), cover_letter: opts.coverLetter, _local: true,
     };
-
-    // 1. Update state immediately — user sees it right away
-    setAppliedList((prev) => {
-      const next = [newApp, ...prev.filter((a) => a.job_id !== job.id)];
-      saveAppsLocally(next); // save to localStorage immediately
-      return next;
-    });
-
-    // 2. Remove from queue
+    setAppliedList((prev) => { const next = [newApp, ...prev.filter((a) => a.job_id !== job.id)]; saveAppsLocally(next); return next; });
     setJobs((prev) => prev.filter((j) => j.id !== job.id));
-
-    // 3. Switch to Applied tab so user sees confirmation
     setActiveTab("applied");
-
-    // 4. Sync to backend (non-blocking — localStorage already saved it)
     try {
       const { data } = await api.post("/auto-apply/mark-applied", {
-        job_id: job.id,
-        company: job.company,
-        role: job.title,
-        job_url: job.url || job.portal_url,
-        platform: job.portal,
-        match_score: job.match_score,
-        cover_letter: opts.coverLetter,
-        jd_snippet: job.description?.slice(0, 300),
-        auto_submitted: opts.autoSubmitted,
+        job_id: job.id, company: job.company, role: job.title,
+        job_url: job.url || job.portal_url, platform: job.portal,
+        match_score: job.match_score, cover_letter: opts.coverLetter,
+        jd_snippet: job.description?.slice(0, 300), auto_submitted: opts.autoSubmitted,
       });
-      // Replace local entry with real backend ID
       if (data.id) {
-        setAppliedList((prev) => {
-          const next = prev.map((a) =>
-            a.job_id === job.id ? { ...a, id: data.id, _local: false } : a
-          );
-          saveAppsLocally(next);
-          return next;
-        });
+        setAppliedList((prev) => { const next = prev.map((a) => a.job_id === job.id ? { ...a, id: data.id, _local: false } : a); saveAppsLocally(next); return next; });
       }
-    } catch {
-      // Application is already in localStorage — will retry on next visit
-    }
+    } catch { /* localStorage saved */ }
   };
 
   const handleSkip = (id: string) => setJobs((prev) => prev.filter((j) => j.id !== id));
 
   const updateAppStatus = async (appId: string, jobId: string, newStatus: string) => {
-    setAppliedList((prev) => {
-      const next = prev.map((a) => (a.id === appId || a.job_id === jobId) ? { ...a, status: newStatus } : a);
-      saveAppsLocally(next);
-      return next;
-    });
-    try { await api.patch(`/auto-apply/applications/${appId}/status`, { status: newStatus }); } catch { /* localStorage already updated */ }
+    setAppliedList((prev) => { const next = prev.map((a) => (a.id === appId || a.job_id === jobId) ? { ...a, status: newStatus } : a); saveAppsLocally(next); return next; });
+    try { await api.patch(`/auto-apply/applications/${appId}/status`, { status: newStatus }); } catch { /* ignore */ }
   };
 
   const deleteApp = async (appId: string, jobId: string) => {
-    setAppliedList((prev) => {
-      const next = prev.filter((a) => a.id !== appId && a.job_id !== jobId);
-      saveAppsLocally(next);
-      return next;
-    });
-    if (!appId.startsWith("local-")) {
-      try { await api.delete(`/auto-apply/applications/${appId}`); } catch { /* ignore */ }
-    }
+    setAppliedList((prev) => { const next = prev.filter((a) => a.id !== appId && a.job_id !== jobId); saveAppsLocally(next); return next; });
+    if (!appId.startsWith("local-")) { try { await api.delete(`/auto-apply/applications/${appId}`); } catch { /* ignore */ } }
   };
 
-  const queueCount    = jobs.length;
-  const appliedCount  = appliedList.length;
-  const avgScore      = jobs.length ? Math.round(jobs.reduce((s, j) => s + j.match_score, 0) / jobs.length) : 0;
+  const queueCount   = jobs.length;
+  const appliedCount = appliedList.length;
+  const avgScore     = jobs.length ? Math.round(jobs.reduce((s, j) => s + j.match_score, 0) / jobs.length) : 0;
+
+  if (!limits.autoApplyAccess) {
+    return (
+      <div style={{ height: "100%", overflowY: "auto", background: "#F7F7F5", padding: "24px" }}>
+        <div style={{ maxWidth: "420px", margin: "0 auto" }}>
+          <UpgradeGate requiredPlan="elite" featureName="Auto-Apply"
+            description="AI finds matching jobs, tailors your resume per role, auto-submits applications, and tracks all of them." />
+        </div>
+      </div>
+    );
+  }
 
   // ── Setup Wizard ───────────────────────────────────────────────────────────
 
@@ -659,7 +776,7 @@ export default function JobApplicationPage() {
               <Zap style={{ width: "28px", height: "28px", color: "#fff" }} />
             </div>
             <h1 style={{ fontSize: "22px", fontWeight: 800, color: "#111", margin: "0 0 8px" }}>Set up Auto-Apply</h1>
-            <p style={{ fontSize: "14px", color: "#888", margin: 0 }}>Mithra finds matching jobs, adapts your resume per role, auto-submits applications, and tracks everything.</p>
+            <p style={{ fontSize: "14px", color: "#888", margin: 0 }}>Mithra finds matching jobs, adapts your resume, and tracks every application.</p>
           </div>
 
           {!hasResume && (
@@ -672,7 +789,6 @@ export default function JobApplicationPage() {
             </div>
           )}
 
-          {/* Step dots */}
           <div style={{ display: "flex", alignItems: "center", marginBottom: "28px" }}>
             {[1, 2, 3].map((s, i) => (
               <div key={s} style={{ display: "flex", alignItems: "center", flex: i < 2 ? 1 : "none" }}>
@@ -695,10 +811,10 @@ export default function JobApplicationPage() {
                 </div>
                 <div>
                   <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "#111", marginBottom: "8px" }}>Preferred location</label>
-                  <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "8px" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                     {LOCATIONS.map((loc) => (
                       <button key={loc} onClick={() => setLocation(loc)}
-                        style={{ padding: "7px 14px", borderRadius: "20px", border: `1.5px solid ${location === loc ? AMBER : "rgba(0,0,0,0.12)"}`, background: location === loc ? "rgba(245,158,11,0.1)" : "#fff", color: location === loc ? AMBER : "#555", fontSize: "12px", fontWeight: location === loc ? 700 : 400, cursor: "pointer", transition: "all 0.15s" }}>
+                        style={{ padding: "7px 14px", borderRadius: "20px", border: `1.5px solid ${location === loc ? AMBER : "rgba(0,0,0,0.12)"}`, background: location === loc ? "rgba(245,158,11,0.1)" : "#fff", color: location === loc ? AMBER : "#555", fontSize: "12px", fontWeight: location === loc ? 700 : 400, cursor: "pointer" }}>
                         {loc}
                       </button>
                     ))}
@@ -707,7 +823,7 @@ export default function JobApplicationPage() {
               </div>
               <button onClick={() => role.trim() && setSetupStep(2)} disabled={!role.trim()}
                 style={{ width: "100%", marginTop: "16px", padding: "14px", borderRadius: "12px", border: "none", background: role.trim() ? `linear-gradient(135deg,${AMBER},#e67e22)` : "rgba(0,0,0,0.07)", color: role.trim() ? "#fff" : "#bbb", fontSize: "14px", fontWeight: 700, cursor: role.trim() ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                Next: Your Preferences <ChevronRight style={{ width: "16px", height: "16px" }} />
+                Next <ChevronRight style={{ width: "16px", height: "16px" }} />
               </button>
             </motion.div>
           )}
@@ -736,7 +852,7 @@ export default function JobApplicationPage() {
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                     {EXP_LEVELS.map((lv) => (
                       <button key={lv.value} onClick={() => setExpLevel(lv.value)}
-                        style={{ padding: "12px", borderRadius: "10px", border: `1.5px solid ${expLevel === lv.value ? AMBER : "rgba(0,0,0,0.1)"}`, background: expLevel === lv.value ? "rgba(245,158,11,0.07)" : "#fff", cursor: "pointer", textAlign: "left" as const, transition: "all 0.15s" }}>
+                        style={{ padding: "12px", borderRadius: "10px", border: `1.5px solid ${expLevel === lv.value ? AMBER : "rgba(0,0,0,0.1)"}`, background: expLevel === lv.value ? "rgba(245,158,11,0.07)" : "#fff", cursor: "pointer", textAlign: "left" }}>
                         <p style={{ fontSize: "13px", fontWeight: 700, color: expLevel === lv.value ? AMBER : "#111", margin: "0 0 2px" }}>{lv.label}</p>
                         <p style={{ fontSize: "11px", color: "#888", margin: 0 }}>{lv.sub}</p>
                       </button>
@@ -749,7 +865,7 @@ export default function JobApplicationPage() {
                   <ArrowLeft style={{ width: "15px", height: "15px" }} /> Back
                 </button>
                 <button onClick={() => setSetupStep(3)} style={{ flex: 1, padding: "14px", borderRadius: "12px", border: "none", background: `linear-gradient(135deg,${AMBER},#e67e22)`, color: "#fff", fontSize: "14px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                  Next: Review &amp; Launch <ChevronRight style={{ width: "16px", height: "16px" }} />
+                  Next <ChevronRight style={{ width: "16px", height: "16px" }} />
                 </button>
               </div>
             </motion.div>
@@ -771,14 +887,6 @@ export default function JobApplicationPage() {
                     <span style={{ fontSize: "13px", fontWeight: 600, color: "#111" }}>{row.value}</span>
                   </div>
                 ))}
-                <div style={{ marginTop: "16px", padding: "12px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)" }}>
-                  <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
-                    <Bot style={{ width: "14px", height: "14px", color: VIOLET, flexShrink: 0, marginTop: "1px" }} />
-                    <p style={{ fontSize: "12px", color: "#555", margin: 0, lineHeight: "1.6" }}>
-                      Mithra will find matching jobs, score them against your resume, adapt your CV per role, and auto-submit on supported portals.
-                    </p>
-                  </div>
-                </div>
               </div>
               <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
                 <button onClick={() => setSetupStep(2)} style={{ padding: "14px 20px", borderRadius: "12px", border: "1px solid rgba(0,0,0,0.12)", background: "#fff", color: "#555", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}>
@@ -799,14 +907,16 @@ export default function JobApplicationPage() {
 
   return (
     <div style={{ height: "100%", overflowY: "auto", background: "#F7F7F5" }}>
+      {showCompanionSetup && <CompanionSetupModal onClose={() => setShowCompanionSetup(false)} />}
+
       <div style={{ maxWidth: "780px", margin: "0 auto", padding: "20px 16px" }}>
 
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px", flexWrap: "wrap" as const, gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px", flexWrap: "wrap", gap: "10px" }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#111", margin: 0 }}>Auto-Apply</h2>
-              <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "20px", background: `rgba(245,158,11,0.15)`, color: AMBER }}>BETA</span>
+              <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "20px", background: "rgba(245,158,11,0.15)", color: AMBER }}>BETA</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
               <Zap style={{ width: "12px", height: "12px", color: AMBER }} />
@@ -814,10 +924,24 @@ export default function JobApplicationPage() {
               <button onClick={resetCampaign} style={{ fontSize: "11px", color: VIOLET, background: "none", border: "none", cursor: "pointer", padding: 0, marginLeft: "4px", fontWeight: 600 }}>Edit</button>
             </div>
           </div>
-          <button onClick={() => discoverJobs(campaign?.role || "", campaign?.location || "")} disabled={isLoadingJobs}
-            style={{ padding: "8px 14px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.12)", background: "#fff", color: "#555", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", opacity: isLoadingJobs ? 0.6 : 1 }}>
-            <RefreshCw style={{ width: "13px", height: "13px" }} /> Refresh
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            {companionReady ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 12px", borderRadius: "20px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
+                <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: GREEN }} />
+                <span style={{ fontSize: "11px", fontWeight: 700, color: GREEN }}>Companion Active</span>
+              </div>
+            ) : (
+              <button onClick={() => setShowCompanionSetup(true)}
+                style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 12px", borderRadius: "20px", background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.12)", cursor: "pointer" }}>
+                <Terminal style={{ width: "11px", height: "11px", color: "#888" }} />
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "#666" }}>Enable Live Browser</span>
+              </button>
+            )}
+            <button onClick={() => discoverJobs(campaign?.role || "", campaign?.location || "")} disabled={isLoadingJobs}
+              style={{ padding: "8px 14px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.12)", background: "#fff", color: "#555", fontSize: "12px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", opacity: isLoadingJobs ? 0.6 : 1 }}>
+              <RefreshCw style={{ width: "13px", height: "13px" }} /> Refresh
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -838,10 +962,10 @@ export default function JobApplicationPage() {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: "0", marginBottom: "16px", background: "rgba(0,0,0,0.04)", borderRadius: "12px", padding: "4px" }}>
+        <div style={{ display: "flex", marginBottom: "16px", background: "rgba(0,0,0,0.04)", borderRadius: "12px", padding: "4px" }}>
           {(["queue", "applied"] as const).map((tab) => (
             <button key={tab} onClick={() => setActiveTab(tab)}
-              style={{ flex: 1, padding: "9px", borderRadius: "9px", border: "none", background: activeTab === tab ? "#fff" : "transparent", color: activeTab === tab ? "#111" : "#888", fontSize: "13px", fontWeight: activeTab === tab ? 700 : 400, cursor: "pointer", transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+              style={{ flex: 1, padding: "9px", borderRadius: "9px", border: "none", background: activeTab === tab ? "#fff" : "transparent", color: activeTab === tab ? "#111" : "#888", fontSize: "13px", fontWeight: activeTab === tab ? 700 : 400, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
               {tab === "queue"
                 ? <><Target style={{ width: "13px", height: "13px" }} /> Job Queue {queueCount > 0 && <span style={{ fontSize: "10px", padding: "1px 6px", borderRadius: "20px", background: AMBER, color: "#fff", fontWeight: 700 }}>{queueCount}</span>}</>
                 : <><Check style={{ width: "13px", height: "13px" }} /> Applied {appliedCount > 0 && <span style={{ fontSize: "10px", padding: "1px 6px", borderRadius: "20px", background: GREEN, color: "#fff", fontWeight: 700 }}>{appliedCount}</span>}</>
@@ -856,7 +980,7 @@ export default function JobApplicationPage() {
             {isLoadingJobs && (
               <div style={{ textAlign: "center", padding: "48px 20px" }}>
                 <Loader2 style={{ width: "26px", height: "26px", color: AMBER, animation: "spin 1s linear infinite", margin: "0 auto 12px" }} />
-                <p style={{ fontSize: "14px", color: "#888", margin: 0 }}>Searching jobs for <strong>{campaign?.role}</strong> in <strong>{campaign?.location}</strong>…</p>
+                <p style={{ fontSize: "14px", color: "#888", margin: 0 }}>Searching <strong>{campaign?.role}</strong> in <strong>{campaign?.location}</strong>…</p>
               </div>
             )}
             {jobsError && !isLoadingJobs && (
@@ -873,12 +997,21 @@ export default function JobApplicationPage() {
                 <p style={{ fontSize: "15px", fontWeight: 700, color: "#111", margin: "0 0 6px" }}>No jobs in queue</p>
                 <p style={{ fontSize: "13px", color: "#888", margin: "0 0 16px" }}>All caught up! Refresh to find new listings.</p>
                 <button onClick={() => discoverJobs(campaign?.role || "", campaign?.location || "")}
-                  style={{ padding: "10px 20px", borderRadius: "10px", border: "none", background: AMBER, color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}>Discover More Jobs</button>
+                  style={{ padding: "10px 20px", borderRadius: "10px", border: "none", background: AMBER, color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}>Discover More</button>
               </div>
             )}
-            {!isLoadingJobs && jobs.map((job) => (
-              <JobCard key={job.id} job={job} resume={resume} onApplied={handleApplied} onSkip={handleSkip} />
-            ))}
+            <AnimatePresence>
+              {!isLoadingJobs && jobs.map((job) => (
+                <JobCard key={job.id} job={job} resume={resume}
+                  companionReady={companionReady}
+                  companionBusy={companionBusy}
+                  onCompanionSubmit={startCompanionSubmit}
+                  onCompanionContinue={sendContinue}
+                  onApplied={handleApplied}
+                  onSkip={handleSkip}
+                />
+              ))}
+            </AnimatePresence>
           </div>
         )}
 
@@ -907,14 +1040,12 @@ export default function JobApplicationPage() {
                     <ScoreRing score={app.match_score} size={38} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: "13px", fontWeight: 700, color: "#111", margin: "0 0 2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.role}</p>
-                      <p style={{ fontSize: "12px", color: "#888", margin: 0 }}>
-                        {app.company}{app.platform ? ` · ${app.platform}` : ""}
-                      </p>
+                      <p style={{ fontSize: "12px", color: "#888", margin: 0 }}>{app.company}{app.platform ? ` · ${app.platform}` : ""}</p>
                     </div>
-                    <div style={{ textAlign: "right" as const, flexShrink: 0 }}>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
                       <div style={{ padding: "3px 9px", borderRadius: "20px", background: sm.bg, color: sm.color, fontSize: "11px", fontWeight: 700, display: "inline-block" }}>{sm.label}</div>
-                      {app._local && <div style={{ fontSize: "10px", color: "#aaa", marginTop: "2px" }}>Syncing…</div>}
-                      {!app._local && app.applied_at && <div style={{ fontSize: "10px", color: "#aaa", marginTop: "2px" }}>{daysAgo(app.applied_at)}</div>}
+                      {app._local ? <div style={{ fontSize: "10px", color: "#aaa", marginTop: "2px" }}>Syncing…</div>
+                        : app.applied_at ? <div style={{ fontSize: "10px", color: "#aaa", marginTop: "2px" }}>{daysAgo(app.applied_at)}</div> : null}
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: "6px" }}>
@@ -942,10 +1073,7 @@ export default function JobApplicationPage() {
         <div style={{ height: "40px" }} />
       </div>
 
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes progress-slide { 0%{transform:translateX(-100%)} 50%{transform:translateX(0%)} 100%{transform:translateX(100%)} }
-      `}</style>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
