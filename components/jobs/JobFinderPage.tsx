@@ -4,12 +4,13 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, MapPin, DollarSign, Clock, ExternalLink, Bookmark,
-  Zap, Star, Briefcase, Globe, X,
+  Zap, Star, Briefcase, Globe, X, Sparkles,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import { Job } from "@/lib/types";
 import { useAgentStore } from "@/lib/stores/agentStore";
 import { useJobStore } from "@/lib/stores/jobStore";
+import { useResumeStore } from "@/lib/stores/resumeStore";
 import { useUser } from "@/lib/auth";
 import { getLimits } from "@/lib/planLimits";
 import { useUsageTracker } from "@/lib/useUsageTracker";
@@ -198,10 +199,10 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
       initial={{ x: 30, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.25 }}
-      style={{ height: "100%", display: "flex", flexDirection: "column", background: "rgba(10,6,20,0.98)" }}
+      style={{ height: "100%", display: "flex", flexDirection: "column", background: "#FFFFFF" }}
     >
       {/* Header */}
-      <div style={{ height: "56px", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", borderBottom: "1px solid rgba(124,58,237,0.1)", flexShrink: 0 }}>
+      <div style={{ height: "56px", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", borderBottom: "1px solid rgba(0,0,0,0.08)", flexShrink: 0 }}>
         <span style={{ fontWeight: 700, color: "#111111", fontSize: "14px" }}>Job Details</span>
         <button
           onClick={onClose}
@@ -227,8 +228,8 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
         {/* Info grid */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
           {infoGrid.map(({ Icon, label, value }) => (
-            <div key={label} style={{ borderRadius: "10px", padding: "12px", background: "rgba(0,0,0,0.03)" }}>
-              <div style={{ fontSize: "11px", color: "#475569", marginBottom: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
+            <div key={label} style={{ borderRadius: "10px", padding: "12px", background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.07)" }}>
+              <div style={{ fontSize: "11px", color: "#64748b", marginBottom: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
                 <Icon style={{ width: "11px", height: "11px" }} />{label}
               </div>
               <div style={{ fontSize: "13px", fontWeight: 600, color: "#111111" }}>{value}</div>
@@ -262,12 +263,12 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
         {/* Description */}
         <div>
           <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#111111", marginBottom: "8px" }}>About the Role</h4>
-          <p style={{ fontSize: "13px", color: "#888888", lineHeight: "1.6" }}>{job.description}</p>
+          <p style={{ fontSize: "13px", color: "#555555", lineHeight: "1.6" }}>{job.description}</p>
         </div>
       </div>
 
       {/* Action buttons */}
-      <div style={{ padding: "16px", borderTop: "1px solid rgba(124,58,237,0.1)", display: "flex", flexDirection: "column", gap: "10px", flexShrink: 0 }}>
+      <div style={{ padding: "16px", borderTop: "1px solid rgba(0,0,0,0.08)", display: "flex", flexDirection: "column", gap: "10px", flexShrink: 0 }}>
         {/* Primary CTA: always open the real job URL */}
         {(() => {
           const jobUrl = job.url || job.portal_url;
@@ -307,6 +308,7 @@ export default function JobFinderPage() {
   const [showSearchNudge, setShowSearchNudge] = useState(false);
   const { pendingAction, clearAction } = useAgentStore();
   const { setSelectedJob: storeSelectedJob } = useJobStore();
+  const { resume } = useResumeStore();
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
   const [remote, setRemote] = useState("");
@@ -317,6 +319,26 @@ export default function JobFinderPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [resumeSearched, setResumeSearched] = useState(false);
+
+  const hasResumeData = !!(
+    resume?.personal?.name ||
+    resume?.personal?.title ||
+    (resume?.experience?.length ?? 0) > 0
+  );
+
+  // Auto-populate search from resume on first load
+  useEffect(() => {
+    if (hasResumeData && !resumeSearched && !pendingAction) {
+      const resumeTitle = resume?.personal?.title || resume?.experience?.[0]?.role || "";
+      const resumeLocation = resume?.personal?.location || "";
+      if (resumeTitle) {
+        setQuery(resumeTitle);
+        if (resumeLocation) setLocation(resumeLocation);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!pendingAction) return;
@@ -333,6 +355,34 @@ export default function JobFinderPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingAction]);
+
+  const searchByResume = async () => {
+    if (!hasResumeData) return;
+    if (limits.jobSearchesPerDay !== -1) {
+      const newCount = usage.incrementSearches();
+      if (newCount > limits.jobSearchesPerDay) { setShowSearchNudge(true); return; }
+    }
+    setIsSearching(true);
+    setSelectedJob(null);
+    setResumeSearched(true);
+    try {
+      const salaryMap: Record<string, number> = { "₹10-20L": 1000000, "₹20-35L": 2000000, "₹35L+": 3500000 };
+      const expMap: Record<string, number> = { "0-2yr": 1, "2-5yr": 3, "5yr+": 6 };
+      const { data } = await api.post("/jobs/search", {
+        query: resume?.personal?.title || "",
+        location: location || resume?.personal?.location || "",
+        remote,
+        salary_min: salaryMap[salaryFilter] || 0,
+        experience_years: expMap[expFilter] || 0,
+        resume_profile: resume,
+      });
+      if (data.jobs?.length) setJobs(data.jobs);
+    } catch {
+      /* keep existing jobs */
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   const search = async () => {
     // Track and gate searches for free users
@@ -357,6 +407,7 @@ export default function JobFinderPage() {
         remote,
         salary_min: salaryMap[salaryFilter] || 0,
         experience_years: expMap[expFilter] || 0,
+        resume_profile: hasResumeData ? resume : undefined,
       });
       if (data.jobs?.length) setJobs(data.jobs);
     } catch {
@@ -413,6 +464,22 @@ export default function JobFinderPage() {
             {isSearching ? "Searching..." : "Search"}
           </button>
           </div>{/* end jf-search-inner */}
+          {/* Match My Resume button — shows when resume has data */}
+          {hasResumeData && (
+            <div style={{ marginTop: "10px", display: "flex", alignItems: "center", gap: "10px" }}>
+              <button
+                onClick={searchByResume}
+                disabled={isSearching}
+                style={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 18px", background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", borderRadius: "10px", color: "#0f0a1e", fontSize: "13px", fontWeight: 700, cursor: isSearching ? "not-allowed" : "pointer", boxShadow: "0 4px 14px rgba(245,158,11,0.3)" }}
+              >
+                <Sparkles style={{ width: "14px", height: "14px" }} />
+                Find Jobs For My Resume
+              </button>
+              <span style={{ fontSize: "12px", color: "#888" }}>
+                AI-matched jobs based on your {resume?.personal?.title || "resume"}
+              </span>
+            </div>
+          )}
         </div>{/* end card */}
 
         {/* Filter row */}
@@ -560,7 +627,7 @@ export default function JobFinderPage() {
               style={{
                 position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 56,
                 height: "88vh", borderRadius: "20px 20px 0 0", overflow: "hidden",
-                background: "rgba(10,6,20,0.99)", border: "1px solid rgba(0,0,0,0.12)", borderBottom: "none",
+                background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.12)", borderBottom: "none",
               }}>
               <JobDetailPanel
                 job={selectedJob}

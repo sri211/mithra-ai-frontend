@@ -183,6 +183,7 @@ interface AdaptedResumeCard {
   id: string;
   company: string | null;
   role: string | null;
+  template: string;
   ats_before: number;
   ats_after: number;
   adapted_json: ResumeData;
@@ -418,6 +419,7 @@ export default function ResumeAdaptorPage() {
           company: companyName || jobBanner?.company || null,
           role: roleName || jobBanner?.title || null,
           adapted_json: adaptedResume,
+          template: previewTemplate,
           ats_before: result?.ats_score_before || 0,
           ats_after: result?.ats_score_after || 0,
         },
@@ -965,13 +967,18 @@ export default function ResumeAdaptorPage() {
                           <p style={{ fontSize: "12px", color: "#888888" }}>No saved adaptations yet.</p>
                         ) : myAdaptedResumes.map((ar) => (
                           <div key={ar.id}
-                            onClick={() => { setAdaptedResume(ar.adapted_json); setRightTab("preview"); }}
+                            onClick={() => {
+                              setAdaptedResume(ar.adapted_json);
+                              if (ar.template) useResumeStore.getState().setTemplate(ar.template);
+                              setRightTab("preview");
+                            }}
                             style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "10px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.15)", cursor: "pointer" }}>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: "13px", fontWeight: 600, color: "#111111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 {ar.role || "Resume"}{ar.company ? ` @ ${ar.company}` : ""}
                               </div>
                               <div style={{ fontSize: "11px", color: "#888888" }}>
+                                {ar.template && <span style={{ textTransform: "capitalize" }}>{ar.template} · </span>}
                                 ATS {ar.ats_before}% → {ar.ats_after}% · {new Date(ar.created_at).toLocaleDateString()}
                               </div>
                             </div>
