@@ -82,7 +82,9 @@ function JobCard({ job, isSelected, onClick, onSave, onApply }: {
 }) {
   const matchColor = (job.match_score || 0) >= 80 ? "#10b981" : (job.match_score || 0) >= 65 ? "#f59e0b" : "#94a3b8";
   const portalColor = PORTAL_COLORS[job.portal] || "#6366f1";
-  const salary = `₹${(job.salary_min / 100000).toFixed(0)}L – ₹${(job.salary_max / 100000).toFixed(0)}L`;
+  const salary = (job.salary_min || job.salary_max)
+    ? `₹${Math.round((job.salary_min || 0) / 100000)}L – ₹${Math.round((job.salary_max || 0) / 100000)}L`
+    : "Not disclosed";
 
   return (
     <motion.div
@@ -181,7 +183,9 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
   job: Job; onClose: () => void; onAutoApply: () => void; onAdaptResume: () => void;
 }) {
   const portalColor = PORTAL_COLORS[job.portal] || "#6366f1";
-  const salary = `₹${(job.salary_min / 100000).toFixed(0)}L – ₹${(job.salary_max / 100000).toFixed(0)}L`;
+  const salary = (job.salary_min || job.salary_max)
+    ? `₹${Math.round((job.salary_min || 0) / 100000)}L – ₹${Math.round((job.salary_max || 0) / 100000)}L`
+    : "Not disclosed";
   const matchColor = (job.match_score || 0) >= 80 ? "#10b981" : (job.match_score || 0) >= 65 ? "#f59e0b" : "#94a3b8";
 
   const infoGrid = [
@@ -307,15 +311,15 @@ export default function JobFinderPage() {
   const usage = useUsageTracker(user?.id ?? "guest");
   const [showSearchNudge, setShowSearchNudge] = useState(false);
   const { pendingAction, clearAction } = useAgentStore();
-  const { setSelectedJob: storeSelectedJob } = useJobStore();
+  const { setSelectedJob: storeSelectedJob, lastJobs, lastQuery, lastLocation, setLastSearch } = useJobStore();
   const { resume } = useResumeStore();
-  const [query, setQuery] = useState("");
-  const [location, setLocation] = useState("");
+  const [query, setQuery] = useState(lastQuery);
+  const [location, setLocation] = useState(lastLocation);
   const [remote, setRemote] = useState("");
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
   const [salaryFilter, setSalaryFilter] = useState("");
   const [expFilter, setExpFilter] = useState("");
-  const [jobs, setJobs] = useState<Job[]>(MOCK_JOBS);
+  const [jobs, setJobs] = useState<Job[]>(lastJobs);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
@@ -327,14 +331,14 @@ export default function JobFinderPage() {
     (resume?.experience?.length ?? 0) > 0
   );
 
-  // Auto-populate search from resume on first load
+  // Auto-populate search from resume only when there's no stored query and no stored results
   useEffect(() => {
-    if (hasResumeData && !resumeSearched && !pendingAction) {
+    if (hasResumeData && !resumeSearched && !pendingAction && !lastQuery) {
       const resumeTitle = resume?.personal?.title || resume?.experience?.[0]?.role || "";
       const resumeLocation = resume?.personal?.location || "";
       if (resumeTitle) {
         setQuery(resumeTitle);
-        if (resumeLocation) setLocation(resumeLocation);
+        if (resumeLocation && !lastLocation) setLocation(resumeLocation);
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -369,14 +373,18 @@ export default function JobFinderPage() {
       const salaryMap: Record<string, number> = { "₹10-20L": 1000000, "₹20-35L": 2000000, "₹35L+": 3500000 };
       const expMap: Record<string, number> = { "0-2yr": 1, "2-5yr": 3, "5yr+": 6 };
       const { data } = await api.post("/jobs/search", {
-        query: resume?.personal?.title || "",
+        query: "",
         location: location || resume?.personal?.location || "",
         remote,
         salary_min: salaryMap[salaryFilter] || 0,
         experience_years: expMap[expFilter] || 0,
         resume_profile: resume,
       });
-      if (data.jobs?.length) setJobs(data.jobs);
+      if (data.jobs?.length) {
+        const sorted = [...data.jobs].sort((a, b) => (b.match_score || 0) - (a.match_score || 0));
+        setJobs(sorted);
+        setLastSearch(sorted, "", location || resume?.personal?.location || "");
+      }
     } catch {
       /* keep existing jobs */
     } finally {
@@ -409,9 +417,13 @@ export default function JobFinderPage() {
         experience_years: expMap[expFilter] || 0,
         resume_profile: hasResumeData ? resume : undefined,
       });
-      if (data.jobs?.length) setJobs(data.jobs);
+      if (data.jobs?.length) {
+        const sorted = [...data.jobs].sort((a, b) => (b.match_score || 0) - (a.match_score || 0));
+        setJobs(sorted);
+        setLastSearch(sorted, query, location);
+      }
     } catch {
-      /* keep mock data */
+      /* keep existing jobs */
     } finally {
       setIsSearching(false);
     }

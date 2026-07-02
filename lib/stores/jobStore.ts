@@ -16,8 +16,12 @@ interface SavedSearch {
 interface JobStore {
   selectedJob: Job | null;
   recentSearches: SavedSearch[];
+  lastJobs: Job[];
+  lastQuery: string;
+  lastLocation: string;
   setSelectedJob: (job: Job | null) => void;
   clearSelectedJob: () => void;
+  setLastSearch: (jobs: Job[], query: string, location: string) => void;
   saveSearch: (query: string, location: string, results: Job[], accessToken: string) => Promise<void>;
   loadRecentSearches: (accessToken: string) => Promise<void>;
 }
@@ -27,9 +31,13 @@ export const useJobStore = create<JobStore>()(
     (set, get) => ({
       selectedJob: null,
       recentSearches: [],
+      lastJobs: [],
+      lastQuery: "",
+      lastLocation: "",
 
       setSelectedJob: (job) => set({ selectedJob: job }),
       clearSelectedJob: () => set({ selectedJob: null }),
+      setLastSearch: (jobs, query, location) => set({ lastJobs: jobs, lastQuery: query, lastLocation: location }),
 
       saveSearch: async (query: string, location: string, results: Job[], accessToken: string) => {
         if (!accessToken) return;
@@ -71,6 +79,9 @@ export const useJobStore = create<JobStore>()(
       partialize: (state) => ({
         selectedJob: state.selectedJob,
         recentSearches: state.recentSearches,
+        lastJobs: state.lastJobs,
+        lastQuery: state.lastQuery,
+        lastLocation: state.lastLocation,
       }),
     }
   )
