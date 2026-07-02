@@ -43,6 +43,10 @@ export interface Job {
   seniority: string;
   match_score?: number;
   why_match?: string;
+  skills_matched?: string[];
+  skills_missing?: string[];
+  experience_match?: string;
+  domain_match?: string;
   red_flags?: string[];
   apply_priority?: "high" | "medium" | "low";
   requirements?: string;

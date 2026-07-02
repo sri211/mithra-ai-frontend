@@ -241,18 +241,63 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
           ))}
         </div>
 
-        {/* Match score bar */}
+        {/* Match score bar + breakdown */}
         {(job.match_score ?? 0) > 0 && (
           <div style={{ borderRadius: "10px", padding: "14px", border: `1px solid ${matchColor}30`, background: `${matchColor}0d` }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
               <span style={{ fontSize: "13px", fontWeight: 700, color: matchColor }}>AI Match Score</span>
               <span style={{ fontSize: "24px", fontWeight: 900, color: matchColor }}>{job.match_score}%</span>
             </div>
-            <div style={{ height: "6px", borderRadius: "3px", overflow: "hidden", background: "rgba(0,0,0,0.08)", marginBottom: (job as any).why_match ? "8px" : "0" }}>
+            <div style={{ height: "6px", borderRadius: "3px", overflow: "hidden", background: "rgba(0,0,0,0.08)", marginBottom: "12px" }}>
               <motion.div style={{ height: "100%", borderRadius: "3px", background: matchColor }} initial={{ width: 0 }} animate={{ width: `${job.match_score}%` }} transition={{ duration: 1 }} />
             </div>
-            {(job as any).why_match && (
-              <p style={{ fontSize: "12px", color: matchColor, margin: 0, fontStyle: "italic" }}>{(job as any).why_match}</p>
+
+            {/* Match breakdown — shown when resume-matched */}
+            {(job.skills_matched?.length || job.skills_missing?.length || job.experience_match || job.domain_match) ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {job.domain_match && (
+                  <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                    <span style={{ fontSize: "13px", flexShrink: 0 }}>🎯</span>
+                    <span style={{ fontSize: "12px", color: "#374151", lineHeight: "1.4" }}>{job.domain_match}</span>
+                  </div>
+                )}
+                {job.experience_match && (
+                  <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                    <span style={{ fontSize: "13px", flexShrink: 0 }}>📅</span>
+                    <span style={{ fontSize: "12px", color: "#374151", lineHeight: "1.4" }}>{job.experience_match}</span>
+                  </div>
+                )}
+                {(job.skills_matched?.length ?? 0) > 0 && (
+                  <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                    <span style={{ fontSize: "13px", flexShrink: 0 }}>✅</span>
+                    <div>
+                      <div style={{ fontSize: "11px", fontWeight: 600, color: "#10b981", marginBottom: "4px" }}>Skills you have</div>
+                      <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "4px" }}>
+                        {job.skills_matched!.map(s => (
+                          <span key={s} style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "6px", background: "rgba(16,185,129,0.12)", color: "#059669", border: "1px solid rgba(16,185,129,0.25)", fontWeight: 500 }}>{s}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {(job.skills_missing?.length ?? 0) > 0 && (
+                  <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                    <span style={{ fontSize: "13px", flexShrink: 0 }}>📌</span>
+                    <div>
+                      <div style={{ fontSize: "11px", fontWeight: 600, color: "#f59e0b", marginBottom: "4px" }}>Skills to develop</div>
+                      <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "4px" }}>
+                        {job.skills_missing!.map(s => (
+                          <span key={s} style={{ fontSize: "11px", padding: "2px 7px", borderRadius: "6px", background: "rgba(245,158,11,0.1)", color: "#d97706", border: "1px solid rgba(245,158,11,0.25)", fontWeight: 500 }}>{s}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p style={{ fontSize: "12px", color: "#64748b", margin: 0 }}>
+                Add your resume to see a personalised skill-by-skill match breakdown here.
+              </p>
             )}
           </div>
         )}

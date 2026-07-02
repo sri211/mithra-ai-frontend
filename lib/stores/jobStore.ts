@@ -74,7 +74,7 @@ export const useJobStore = create<JobStore>()(
       },
     }),
     {
-      name: "mithra-selected-job",
+      name: "mithra-selected-job-v2",  // bump version to clear stale 0-score cache
       storage: createJSONStorage(() => userStorage),
       partialize: (state) => ({
         selectedJob: state.selectedJob,
