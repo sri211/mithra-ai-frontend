@@ -117,7 +117,7 @@ function JobCard({ job, isSelected, onClick, onSave, onApply }: {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px", marginBottom: "2px" }}>
             <h3 style={{ fontWeight: 700, color: "#111111", fontSize: "14px", lineHeight: "1.3" }}>{job.title}</h3>
-            {job.match_score && (
+            {(job.match_score ?? 0) > 0 && (
               <span style={{
                 flexShrink: 0, fontSize: "12px", fontWeight: 700, padding: "2px 8px", borderRadius: "12px",
                 background: `${matchColor}18`, color: matchColor, border: `1px solid ${matchColor}30`,
@@ -242,15 +242,18 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
         </div>
 
         {/* Match score bar */}
-        {job.match_score && (
+        {(job.match_score ?? 0) > 0 && (
           <div style={{ borderRadius: "10px", padding: "14px", border: `1px solid ${matchColor}30`, background: `${matchColor}0d` }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
               <span style={{ fontSize: "13px", fontWeight: 700, color: matchColor }}>AI Match Score</span>
               <span style={{ fontSize: "24px", fontWeight: 900, color: matchColor }}>{job.match_score}%</span>
             </div>
-            <div style={{ height: "6px", borderRadius: "3px", overflow: "hidden", background: "rgba(0,0,0,0.08)" }}>
+            <div style={{ height: "6px", borderRadius: "3px", overflow: "hidden", background: "rgba(0,0,0,0.08)", marginBottom: (job as any).why_match ? "8px" : "0" }}>
               <motion.div style={{ height: "100%", borderRadius: "3px", background: matchColor }} initial={{ width: 0 }} animate={{ width: `${job.match_score}%` }} transition={{ duration: 1 }} />
             </div>
+            {(job as any).why_match && (
+              <p style={{ fontSize: "12px", color: matchColor, margin: 0, fontStyle: "italic" }}>{(job as any).why_match}</p>
+            )}
           </div>
         )}
 
