@@ -46,7 +46,7 @@ function getTokenExpiry(token: string): number | null {
   }
 }
 
-function isTokenExpiredOrExpiringSoon(token: string, thresholdMs = 2 * 24 * 60 * 60 * 1000): boolean {
+function isTokenExpiredOrExpiringSoon(token: string, thresholdMs = 7 * 24 * 60 * 60 * 1000): boolean {
   const exp = getTokenExpiry(token);
   if (!exp) return true;
   return Date.now() > exp - thresholdMs;
@@ -85,6 +85,9 @@ function clearAuthCookie() {
   if (typeof document === "undefined") return;
   document.cookie = "mithra-token=; path=/; max-age=0";
 }
+
+// Deduplicates simultaneous refresh calls (e.g. onRehydrateStorage + 401 interceptor firing at once)
+let _refreshPromise: Promise<string | null> | null = null;
 
 export const useAuthStore = create<AuthStore>()(
   persist(
@@ -220,34 +223,43 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       refreshAccessToken: async () => {
+        // Return existing in-flight refresh — prevents race between onRehydrateStorage and 401 interceptor
+        if (_refreshPromise) return _refreshPromise;
+
         const { refreshToken } = get();
         if (!refreshToken) {
           get().logout();
           return null;
         }
-        try {
-          const res = await fetch(`${API_BASE}/auth/refresh`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ refresh_token: refreshToken }),
-          });
-          if (!res.ok) {
-            // Refresh token expired or invalid — force logout
-            get().logout();
+
+        _refreshPromise = (async () => {
+          try {
+            const res = await fetch(`${API_BASE}/auth/refresh`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ refresh_token: refreshToken }),
+            });
+            if (!res.ok) {
+              get().logout();
+              return null;
+            }
+            const data = await res.json();
+            set({
+              accessToken: data.access_token,
+              refreshToken: data.refresh_token,
+              user: data.user,
+            });
+            setAuthCookie(90);
+            return data.access_token as string;
+          } catch {
+            // Network error — don't logout, 401 interceptor will retry on next API call
             return null;
+          } finally {
+            _refreshPromise = null;
           }
-          const data = await res.json();
-          set({
-            accessToken: data.access_token,
-            refreshToken: data.refresh_token,
-            user: data.user,
-          });
-          // Renew the cookie so browser doesn't expire it
-          setAuthCookie(90);
-          return data.access_token as string;
-        } catch {
-          return null;
-        }
+        })();
+
+        return _refreshPromise;
       },
 
       logout: () => {
@@ -271,10 +283,12 @@ export const useAuthStore = create<AuthStore>()(
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);
-        // Proactively refresh if access token is expired or expiring within 2 days
+        // Proactively refresh if access token is expired or expiring within 7 days
         if (state?.accessToken && state?.refreshToken) {
           if (isTokenExpiredOrExpiringSoon(state.accessToken)) {
-            state.refreshAccessToken();
+            state.refreshAccessToken().catch(() => {
+              // Network error on startup — 401 interceptor will handle on next API call
+            });
           }
         }
       },
