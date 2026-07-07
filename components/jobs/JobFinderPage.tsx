@@ -77,8 +77,8 @@ const chip = (active: boolean, activeColor?: string): React.CSSProperties => ({
   cursor: "pointer",
 });
 
-function JobCard({ job, isSelected, onClick, onSave, onApply }: {
-  job: Job; isSelected: boolean; onClick: () => void; onSave: () => void; onApply: () => void;
+function JobCard({ job, isSelected, onClick, onSave, onApply, onTrack }: {
+  job: Job; isSelected: boolean; onClick: () => void; onSave: () => void; onApply: () => void; onTrack?: () => void;
 }) {
   const matchColor = (job.match_score || 0) >= 80 ? "#10b981" : (job.match_score || 0) >= 65 ? "#f59e0b" : "#94a3b8";
   const portalColor = PORTAL_COLORS[job.portal] || "#6366f1";
@@ -162,6 +162,7 @@ function JobCard({ job, isSelected, onClick, onSave, onApply }: {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
+                  onTrack?.();
                   const jobUrl = job.url || job.portal_url;
                   const hasRealUrl = jobUrl && jobUrl !== "#" && !jobUrl.includes("linkedin.com/jobs");
                   if (hasRealUrl) window.open(jobUrl as string, "_blank");
@@ -477,10 +478,26 @@ export default function JobFinderPage() {
     }
   };
 
+  // Fire-and-forget: add job to the application tracker board
+  const trackJob = (job: Job, status: "bookmarked" | "applied") => {
+    api.post("/tracker/", {
+      company: job.company,
+      role: job.title,
+      job_url: job.url || job.portal_url || "",
+      portal: job.portal || "",
+      status,
+    }).catch(() => { /* guest or offline — ignore */ });
+  };
+
   const toggleSave = (id: string) => {
+    const job = jobs.find((j) => j.id === id);
     setSavedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else {
+        next.add(id);
+        if (job) trackJob(job, "bookmarked");
+      }
       return next;
     });
   };
@@ -609,6 +626,7 @@ export default function JobFinderPage() {
                     }}
                     onSave={() => toggleSave(job.id)}
                     onApply={() => router.push("/job-application")}
+                    onTrack={() => trackJob(job, "applied")}
                   />
                 ))}
 

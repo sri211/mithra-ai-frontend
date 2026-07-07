@@ -487,12 +487,40 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
         {/* OTP / input needed */}
         {st.uiStatus === "waiting_input" && (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "10px" }}>
-            <div style={{ padding: "12px 14px", borderRadius: "10px", background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.3)" }}>
+            <div style={{ padding: "12px 14px", borderRadius: "10px", background: waitingField === "confirm_submit" ? "rgba(16,185,129,0.07)" : "rgba(245,158,11,0.07)", border: waitingField === "confirm_submit" ? "1px solid rgba(16,185,129,0.3)" : "1px solid rgba(245,158,11,0.3)" }}>
               <p style={{ fontSize: "13px", fontWeight: 700, color: "#111", margin: "0 0 4px" }}>
-                {waitingField === "otp" ? "🔐 OTP required" : "⚠️ Login issue"}
+                {waitingField === "confirm_submit" ? "✅ Ready to submit" : waitingField === "otp" ? "🔐 OTP required" : "⚠️ Login issue"}
               </p>
               <p style={{ fontSize: "12px", color: "#666", margin: 0, lineHeight: "1.6" }}>{waitingMsg}</p>
             </div>
+            {waitingField === "confirm_submit" && (
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  onClick={async () => {
+                    if (!activeSessionId) return;
+                    try {
+                      await api.post(`/auto-apply/submit/input/${activeSessionId}`, { value: "submit" });
+                      setSt((p) => ({ ...p, uiStatus: "autosubmitting" }));
+                      setAutoMsg("Submitting application…");
+                    } catch { /* stream handles timeout */ }
+                  }}
+                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${GREEN},#059669)`, color: "#fff", fontSize: "13px", fontWeight: 800, cursor: "pointer" }}>
+                  ✓ Confirm & Submit
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!activeSessionId) return;
+                    try {
+                      await api.post(`/auto-apply/submit/input/${activeSessionId}`, { value: "cancel" });
+                      setSt((p) => ({ ...p, uiStatus: "autosubmitting" }));
+                      setAutoMsg("Finishing up…");
+                    } catch { /* ignore */ }
+                  }}
+                  style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.15)", background: "#fff", color: "#555", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
+                  I'll submit manually
+                </button>
+              </div>
+            )}
             {waitingField === "otp" && (
               <div style={{ display: "flex", gap: "8px" }}>
                 <input

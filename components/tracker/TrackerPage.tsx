@@ -182,9 +182,17 @@ export default function TrackerPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [newApp, setNewApp] = useState({ company: "", role: "", location: "", salary: "", portal: "", nextStep: "" });
 
-  // Load from backend on mount
+  // Load from backend on mount + auto-refresh whenever the tab regains focus
   useEffect(() => {
     loadApplications();
+    const onFocus = () => loadApplications();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadApplications = async () => {
