@@ -8,7 +8,7 @@ import {
 
 // ─── Annotation components ────────────────────────────────────────────────────
 
-function WavyLine({ color = "#7c3aed" }: { color?: string }) {
+function WavyLine({ color = "#0F6E55" }: { color?: string }) {
   return (
     <svg viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden
       style={{ position: "absolute", bottom: "-5px", left: 0, width: "100%", height: "10px", overflow: "visible" }}>
@@ -18,7 +18,7 @@ function WavyLine({ color = "#7c3aed" }: { color?: string }) {
   );
 }
 
-function Annotated({ children, color = "#7c3aed" }: { children: React.ReactNode; color?: string }) {
+function Annotated({ children, color = "#0F6E55" }: { children: React.ReactNode; color?: string }) {
   return (
     <span style={{ position: "relative", display: "inline" }}>
       <span className="lp-annotate" style={{ position: "relative" }}>
@@ -96,10 +96,10 @@ const C = {
   muted:   "#a8a8a8",
   border:  "rgba(0,0,0,0.08)",
   subtle:  "rgba(0,0,0,0.04)",
-  violet:  "#7c3aed",
-  violetD: "#6d28d9",
-  violetL: "rgba(124,58,237,0.08)",
-  violetM: "rgba(124,58,237,0.15)",
+  violet:  "#0F6E55",
+  violetD: "#0A523F",
+  violetL: "rgba(15,110,85,0.08)",
+  violetM: "rgba(15,110,85,0.15)",
   gold:    "#f59e0b",
   goldD:   "#d97706",
 };
@@ -278,7 +278,7 @@ export default function LandingPage() {
 
       {/* ════════════════ CAREER FACTS ════════════════ */}
       {/* ════════════════ RESUME-FORMAT SHOWCASE ════════════════ */}
-      <section id="features" style={{ background: "rgba(124,58,237,0.03)", borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "80px 32px" }}>
+      <section id="features" style={{ background: "rgba(15,110,85,0.03)", borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "80px 32px" }}>
         <div style={{ maxWidth: "680px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "40px" }}>
             <h2 style={{ fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 900, color: C.dark, letterSpacing: "-1.2px", lineHeight: 1.1, marginBottom: "12px" }}>
@@ -308,7 +308,7 @@ export default function LandingPage() {
             </div>
 
             {/* Summary section */}
-            <div style={{ padding: "16px 32px", borderBottom: `1px solid ${C.border}`, background: "rgba(124,58,237,0.03)" }}>
+            <div style={{ padding: "16px 32px", borderBottom: `1px solid ${C.border}`, background: "rgba(15,110,85,0.03)" }}>
               <div style={{ fontSize: "10px", fontWeight: 800, color: C.violet, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: "8px" }}>Summary</div>
               <p style={{ fontSize: "13px", color: C.mid, lineHeight: 1.7, margin: 0 }}>
                 Built for serious job seekers. Not a job board, not a resume template site — a full AI-powered career co-pilot. Eight agents handle every step from resume to offer letter, working together in one platform.
@@ -334,7 +334,7 @@ export default function LandingPage() {
                     <span style={{ fontSize: "12px", color: C.mid, marginLeft: "10px" }}>{item.detail}</span>
                   </div>
                   {item.badge && (
-                    <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "20px", fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, background: item.badge === "Always Free" ? "rgba(16,185,129,0.1)" : "rgba(124,58,237,0.1)", color: item.badge === "Always Free" ? "#10b981" : C.violet, border: `1px solid ${item.badge === "Always Free" ? "rgba(16,185,129,0.2)" : "rgba(124,58,237,0.2)"}` }}>
+                    <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "20px", fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0, background: item.badge === "Always Free" ? "rgba(16,185,129,0.1)" : "rgba(15,110,85,0.1)", color: item.badge === "Always Free" ? "#10b981" : C.violet, border: `1px solid ${item.badge === "Always Free" ? "rgba(16,185,129,0.2)" : "rgba(15,110,85,0.2)"}` }}>
                       {item.badge}
                     </span>
                   )}

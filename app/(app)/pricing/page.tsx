@@ -24,7 +24,7 @@ const PLANS = [
     name: "Pro",
     price: 198,
     tagline: "For serious job seekers",
-    accent: "#7c3aed",
+    accent: "#0F6E55",
     isPopular: true,
     features: [
       "Unlimited resume adaptations",
@@ -64,14 +64,14 @@ export default function PricingPage() {
         {/* Document-style top label */}
         <div style={{
           display: "inline-flex", alignItems: "center", gap: "8px",
-          background: "rgba(124,58,237,0.06)",
-          border: "1px solid rgba(124,58,237,0.18)",
+          background: "rgba(15,110,85,0.06)",
+          border: "1px solid rgba(15,110,85,0.18)",
           borderRadius: "100px",
           padding: "5px 14px",
           marginBottom: "20px",
         }}>
-          <FileText style={{ width: "13px", height: "13px", color: "#7c3aed" }} />
-          <span style={{ fontSize: "11px", fontWeight: 700, color: "#7c3aed", letterSpacing: "1.5px", textTransform: "uppercase" }}>
+          <FileText style={{ width: "13px", height: "13px", color: "#0F6E55" }} />
+          <span style={{ fontSize: "11px", fontWeight: 700, color: "#0F6E55", letterSpacing: "1.5px", textTransform: "uppercase" }}>
             Choose Your Plan
           </span>
         </div>
@@ -86,7 +86,7 @@ export default function PricingPage() {
           Invest in the story
           <br />
           <span style={{
-            background: "linear-gradient(135deg,#7c3aed,#f59e0b)",
+            background: "linear-gradient(135deg,#0F6E55,#f59e0b)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
           }}>

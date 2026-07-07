@@ -71,9 +71,9 @@ const chip = (active: boolean, activeColor?: string): React.CSSProperties => ({
   padding: "6px 14px",
   borderRadius: "20px",
   fontWeight: 500,
-  border: `1px solid ${active ? (activeColor || "rgba(124,58,237,0.4)") : "rgba(0,0,0,0.1)"}`,
-  background: active ? (activeColor ? `${activeColor}15` : "rgba(124,58,237,0.08)") : "rgba(0,0,0,0.03)",
-  color: active ? (activeColor || "#7c3aed") : "#888888",
+  border: `1px solid ${active ? (activeColor || "rgba(15,110,85,0.4)") : "rgba(0,0,0,0.1)"}`,
+  background: active ? (activeColor ? `${activeColor}15` : "rgba(15,110,85,0.08)") : "rgba(0,0,0,0.03)",
+  color: active ? (activeColor || "#0F6E55") : "#888888",
   cursor: "pointer",
 });
 
@@ -96,9 +96,9 @@ function JobCard({ job, isSelected, onClick, onSave, onApply, onTrack }: {
         cursor: "pointer",
         borderRadius: "16px",
         padding: "16px",
-        border: `1px solid ${isSelected ? "rgba(124,58,237,0.5)" : "rgba(124,58,237,0.15)"}`,
-        background: isSelected ? "rgba(124,58,237,0.07)" : "#FFFFFF",
-        boxShadow: isSelected ? "0 0 0 1px rgba(124,58,237,0.3), 0 8px 30px rgba(124,58,237,0.15)" : undefined,
+        border: `1px solid ${isSelected ? "rgba(15,110,85,0.5)" : "rgba(15,110,85,0.15)"}`,
+        background: isSelected ? "rgba(15,110,85,0.07)" : "#FFFFFF",
+        boxShadow: isSelected ? "0 0 0 1px rgba(15,110,85,0.3), 0 8px 30px rgba(15,110,85,0.15)" : undefined,
         marginBottom: "12px",
       }}
     >
@@ -138,7 +138,7 @@ function JobCard({ job, isSelected, onClick, onSave, onApply, onTrack }: {
 
           <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "4px", marginBottom: "10px" }}>
             {job.skills.slice(0, 4).map((s) => (
-              <span key={s} style={{ fontSize: "11px", padding: "3px 8px", borderRadius: "6px", background: "rgba(124,58,237,0.12)", color: "#7c3aed", border: "1px solid rgba(0,0,0,0.12)" }}>{s}</span>
+              <span key={s} style={{ fontSize: "11px", padding: "3px 8px", borderRadius: "6px", background: "rgba(15,110,85,0.12)", color: "#0F6E55", border: "1px solid rgba(0,0,0,0.12)" }}>{s}</span>
             ))}
             {job.skills.length > 4 && <span style={{ fontSize: "11px", padding: "3px 8px", color: "#475569" }}>+{job.skills.length - 4}</span>}
           </div>
@@ -168,7 +168,7 @@ function JobCard({ job, isSelected, onClick, onSave, onApply, onTrack }: {
                   if (hasRealUrl) window.open(jobUrl as string, "_blank");
                   else onApply();
                 }}
-                style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", padding: "6px 12px", borderRadius: "8px", fontWeight: 600, color: "white", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", border: "none", cursor: "pointer", boxShadow: "0 4px 12px rgba(124,58,237,0.3)" }}
+                style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", padding: "6px 12px", borderRadius: "8px", fontWeight: 600, color: "white", background: "linear-gradient(135deg,#0F6E55,#0A523F)", border: "none", cursor: "pointer", boxShadow: "0 4px 12px rgba(15,110,85,0.3)" }}
               >
                 <ExternalLink style={{ width: "12px", height: "12px" }} />Apply
               </button>
@@ -308,7 +308,7 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
           <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#111111", marginBottom: "8px" }}>Required Skills</h4>
           <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "6px" }}>
             {job.skills.map((s) => (
-              <span key={s} style={{ fontSize: "12px", padding: "4px 10px", borderRadius: "8px", fontWeight: 500, background: "rgba(124,58,237,0.15)", color: "#7c3aed", border: "1px solid rgba(124,58,237,0.25)" }}>{s}</span>
+              <span key={s} style={{ fontSize: "12px", padding: "4px 10px", borderRadius: "8px", fontWeight: 500, background: "rgba(15,110,85,0.15)", color: "#0F6E55", border: "1px solid rgba(15,110,85,0.25)" }}>{s}</span>
             ))}
           </div>
         </div>
@@ -340,7 +340,7 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
           );
         })()}
         <div style={{ display: "flex", gap: "10px" }}>
-          <button onClick={onAdaptResume} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "10px", background: "none", border: "1px solid rgba(124,58,237,0.4)", borderRadius: "10px", color: "#7c3aed", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
+          <button onClick={onAdaptResume} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "10px", background: "none", border: "1px solid rgba(15,110,85,0.4)", borderRadius: "10px", color: "#0F6E55", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
             Adapt Resume
           </button>
           <button onClick={onAutoApply} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", padding: "10px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: "10px", color: "#f59e0b", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
@@ -505,7 +505,7 @@ export default function JobFinderPage() {
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       {/* Search bar card */}
-      <div style={{ padding: "16px", borderBottom: "1px solid rgba(124,58,237,0.1)", flexShrink: 0 }}>
+      <div style={{ padding: "16px", borderBottom: "1px solid rgba(15,110,85,0.1)", flexShrink: 0 }}>
         <div style={{ ...card, padding: "12px 16px" }}>
           <div className="jf-search-inner" style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           <div style={{ flex: 1, display: "flex", alignItems: "center", gap: "8px", background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", padding: "8px 12px" }}>
@@ -531,7 +531,7 @@ export default function JobFinderPage() {
           <button
             onClick={search}
             disabled={isSearching}
-            style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 20px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", border: "none", borderRadius: "10px", color: "white", fontSize: "13px", fontWeight: 700, cursor: isSearching ? "not-allowed" : "pointer", flexShrink: 0, boxShadow: "0 4px 16px rgba(124,58,237,0.3)" }}
+            style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 20px", background: "linear-gradient(135deg,#0F6E55,#0A523F)", border: "none", borderRadius: "10px", color: "white", fontSize: "13px", fontWeight: 700, cursor: isSearching ? "not-allowed" : "pointer", flexShrink: 0, boxShadow: "0 4px 16px rgba(15,110,85,0.3)" }}
           >
             {isSearching ? (
               <motion.div style={{ width: "14px", height: "14px", borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />
@@ -563,7 +563,7 @@ export default function JobFinderPage() {
         <div className="jf-filter-row" style={{ display: "flex", flexWrap: "wrap" as const, gap: "8px", marginTop: "12px", alignItems: "center" }}>
           <span style={{ fontSize: "12px", color: "#475569", marginRight: "4px" }}>Remote:</span>
           {["All", "Remote", "Hybrid", "On-site"].map((r) => (
-            <button key={r} onClick={() => setRemote(remote === r ? "" : r)} style={chip(remote === r, "#7c3aed")}>{r}</button>
+            <button key={r} onClick={() => setRemote(remote === r ? "" : r)} style={chip(remote === r, "#0F6E55")}>{r}</button>
           ))}
           <div style={{ width: "1px", height: "20px", background: "rgba(0,0,0,0.08)", margin: "0 4px" }} />
           <span style={{ fontSize: "12px", color: "#475569", marginRight: "4px" }}>Salary:</span>
@@ -610,7 +610,7 @@ export default function JobFinderPage() {
                     {totalShown} of {jobs.length} jobs shown
                     {lockedJobs.length > 0 && <span style={{ color: "#f59e0b", marginLeft: "6px" }}>· {lockedJobs.length} locked</span>}
                   </span>
-                  <span>Sorted by: <span style={{ color: "#7c3aed" }}>AI Match Score</span></span>
+                  <span>Sorted by: <span style={{ color: "#0F6E55" }}>AI Match Score</span></span>
                 </div>
 
                 {/* Visible results */}
@@ -677,7 +677,7 @@ export default function JobFinderPage() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               className="jf-detail-desktop"
-              style={{ flex: 1, borderLeft: "1px solid rgba(124,58,237,0.1)", overflow: "hidden" }}
+              style={{ flex: 1, borderLeft: "1px solid rgba(15,110,85,0.1)", overflow: "hidden" }}
             >
               <JobDetailPanel
                 job={selectedJob}

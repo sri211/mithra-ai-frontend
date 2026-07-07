@@ -12,7 +12,7 @@ const STAGES = [
   { id: "bookmarked", label: "Saved",     color: "#888888", emoji: "🔖" },
   { id: "applied",    label: "Applied",   color: "#6366f1", emoji: "📤" },
   { id: "screening",  label: "Screening", color: "#f59e0b", emoji: "📞" },
-  { id: "interview",  label: "Interview", color: "#8b5cf6", emoji: "💼" },
+  { id: "interview",  label: "Interview", color: "#2E8B6F", emoji: "💼" },
   { id: "offer",      label: "Offer",     color: "#10b981", emoji: "🎉" },
   { id: "rejected",   label: "Rejected",  color: "#ef4444", emoji: "❌" },
 ];
@@ -45,7 +45,7 @@ function getCompanyColor(company: string): string {
   for (const [k, v] of Object.entries(COMPANY_COLORS)) {
     if (key.includes(k)) return v;
   }
-  const colors = ["#7c3aed", "#06b6d4", "#10b981", "#f59e0b", "#ec4899", "#6366f1"];
+  const colors = ["#0F6E55", "#06b6d4", "#10b981", "#f59e0b", "#ec4899", "#6366f1"];
   let hash = 0;
   for (const ch of company) hash = ((hash << 5) - hash) + ch.charCodeAt(0);
   return colors[Math.abs(hash) % colors.length];
@@ -143,7 +143,7 @@ export default function TrackerPage() {
 
   if (!limits.trackerAccess) {
     return (
-      <div style={{ height: "100%", overflowY: "auto", background: "#F7F7F5", padding: "24px 16px" }}>
+      <div style={{ height: "100%", overflowY: "auto", background: "#FAF7F1", padding: "24px 16px" }}>
         <div style={{ maxWidth: "480px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "16px" }}>
           <UpgradeGate
             requiredPlan="pro"
@@ -157,7 +157,7 @@ export default function TrackerPage() {
               {[
                 { label: "Saved", color: "#888888", emoji: "🔖", n: 4 },
                 { label: "Applied", color: "#6366f1", emoji: "📤", n: 3 },
-                { label: "Interview", color: "#8b5cf6", emoji: "💼", n: 1 },
+                { label: "Interview", color: "#2E8B6F", emoji: "💼", n: 1 },
                 { label: "Offer", color: "#10b981", emoji: "🎉", n: 0 },
               ].map((s) => (
                 <div key={s.label} style={{ flexShrink: 0, width: "100px", borderRadius: "12px", padding: "10px 8px", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.08)" }}>
@@ -309,13 +309,13 @@ export default function TrackerPage() {
   };
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#F7F7F5" }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "#FAF7F1" }}>
       {/* Stats bar */}
-      <div className="tr-stats-bar" style={{ padding: "16px 24px", borderBottom: "1px solid rgba(124,58,237,0.1)", flexShrink: 0, display: "flex", alignItems: "center", gap: "32px" }}>
+      <div className="tr-stats-bar" style={{ padding: "16px 24px", borderBottom: "1px solid rgba(15,110,85,0.1)", flexShrink: 0, display: "flex", alignItems: "center", gap: "32px" }}>
         {[
-          { label: "Total Tracked",        value: stats.total,                    color: "#7c3aed" },
+          { label: "Total Tracked",        value: stats.total,                    color: "#0F6E55" },
           { label: "Active Applications",  value: stats.applied,                  color: "#6366f1" },
-          { label: "In Interview",          value: stats.interviews,               color: "#8b5cf6" },
+          { label: "In Interview",          value: stats.interviews,               color: "#2E8B6F" },
           { label: "Offers",               value: stats.offers,                   color: "#10b981" },
           { label: "Response Rate",        value: `${stats.responseRate}%`,        color: "#f59e0b" },
         ].map((s) => (
@@ -330,7 +330,7 @@ export default function TrackerPage() {
             <RefreshCw style={{ width: "13px", height: "13px" }} />Refresh
           </button>
           <button onClick={() => setShowAdd(true)}
-            style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 18px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", border: "none", borderRadius: "10px", color: "white", fontSize: "13px", fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(124,58,237,0.3)" }}>
+            style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 18px", background: "linear-gradient(135deg,#0F6E55,#0A523F)", border: "none", borderRadius: "10px", color: "white", fontSize: "13px", fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(15,110,85,0.3)" }}>
             <Plus style={{ width: "15px", height: "15px" }} />Add Application
           </button>
         </div>
@@ -342,7 +342,7 @@ export default function TrackerPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", background: "rgba(0,0,0,0.7)" }}>
             <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
-              style={{ background: "#FFFFFF", border: "1px solid rgba(124,58,237,0.3)", borderRadius: "20px", padding: "24px", width: "100%", maxWidth: "420px", boxShadow: "0 20px 80px rgba(0,0,0,0.6)" }}>
+              style={{ background: "#FFFFFF", border: "1px solid rgba(15,110,85,0.3)", borderRadius: "20px", padding: "24px", width: "100%", maxWidth: "420px", boxShadow: "0 20px 80px rgba(0,0,0,0.6)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
                 <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#111111" }}>Add Application</h3>
                 <button onClick={() => setShowAdd(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#888888" }}>
@@ -371,11 +371,11 @@ export default function TrackerPage() {
                 ))}
                 <div style={{ display: "flex", gap: "12px", paddingTop: "8px" }}>
                   <button onClick={addApp}
-                    style={{ flex: 1, padding: "12px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", border: "none", borderRadius: "12px", color: "white", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
+                    style={{ flex: 1, padding: "12px", background: "linear-gradient(135deg,#0F6E55,#0A523F)", border: "none", borderRadius: "12px", color: "white", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
                     Add
                   </button>
                   <button onClick={() => setShowAdd(false)}
-                    style={{ flex: 1, padding: "12px", background: "none", border: "1px solid rgba(124,58,237,0.3)", borderRadius: "12px", color: "#7c3aed", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
+                    style={{ flex: 1, padding: "12px", background: "none", border: "1px solid rgba(15,110,85,0.3)", borderRadius: "12px", color: "#0F6E55", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>
                     Cancel
                   </button>
                 </div>
@@ -389,7 +389,7 @@ export default function TrackerPage() {
       {isLoading ? (
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div>
-            <motion.div style={{ width: "40px", height: "40px", borderRadius: "50%", border: "3px solid rgba(124,58,237,0.2)", borderTopColor: "#7c3aed", margin: "0 auto 12px" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />
+            <motion.div style={{ width: "40px", height: "40px", borderRadius: "50%", border: "3px solid rgba(15,110,85,0.2)", borderTopColor: "#0F6E55", margin: "0 auto 12px" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />
             <p style={{ fontSize: "13px", color: "#888888", textAlign: "center" }}>Loading applications...</p>
           </div>
         </div>
@@ -402,7 +402,7 @@ export default function TrackerPage() {
               <p style={{ fontSize: "16px", fontWeight: 600, color: "#111111" }}>No applications tracked yet</p>
               <p style={{ fontSize: "13px", color: "#888888" }}>Add your first job application to start tracking</p>
               <button onClick={() => setShowAdd(true)}
-                style={{ display: "flex", alignItems: "center", gap: "8px", padding: "12px 24px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", border: "none", borderRadius: "12px", color: "white", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
+                style={{ display: "flex", alignItems: "center", gap: "8px", padding: "12px 24px", background: "linear-gradient(135deg,#0F6E55,#0A523F)", border: "none", borderRadius: "12px", color: "white", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>
                 <Plus style={{ width: "16px", height: "16px" }} />Add First Application
               </button>
             </div>
@@ -419,7 +419,7 @@ export default function TrackerPage() {
                         {stageApps.length}
                       </span>
                     </div>
-                    <div style={{ flex: 1, borderRadius: "16px", padding: "8px", overflowY: "auto", background: "#FFFFFF", border: "1px solid rgba(124,58,237,0.1)", minHeight: "400px" }}>
+                    <div style={{ flex: 1, borderRadius: "16px", padding: "8px", overflowY: "auto", background: "#FFFFFF", border: "1px solid rgba(15,110,85,0.1)", minHeight: "400px" }}>
                       <AnimatePresence>
                         {stageApps.map((app) => (
                           <KanbanCard key={app.id} app={app} onMove={moveApp} onDelete={deleteApp} />

@@ -29,7 +29,7 @@ function FormatMsg({ text }: { text: string }) {
         if (line.match(/^[-•*]\s/)) {
           return (
             <div key={i} style={{ display: "flex", gap: "6px", marginBottom: "2px", alignItems: "flex-start" }}>
-              <span style={{ color: "#7c3aed", flexShrink: 0, marginTop: "2px", fontSize: "11px" }}>▸</span>
+              <span style={{ color: "#0F6E55", flexShrink: 0, marginTop: "2px", fontSize: "11px" }}>▸</span>
               <span>{boldParts.map((p, j) => p.startsWith("**") && p.endsWith("**") ? <strong key={j} style={{ color: "#f1f5f9" }}>{p.slice(2,-2)}</strong> : <span key={j}>{p}</span>)}</span>
             </div>
           );
@@ -46,7 +46,7 @@ function FormatMsg({ text }: { text: string }) {
 
 // ─── Templates ──────────────────────────────────────────────────────────────
 const TEMPLATES = [
-  { id: "modern",    name: "Modern",    accent: "#7c3aed", bg: "white",    text: "#111827" },
+  { id: "modern",    name: "Modern",    accent: "#0F6E55", bg: "white",    text: "#111827" },
   { id: "minimal",   name: "Minimal",   accent: "#334155", bg: "white",    text: "#1e293b" },
   { id: "tech",      name: "Tech",      accent: "#06b6d4", bg: "white",    text: "#0f172a" },
   { id: "executive", name: "Executive", accent: "#b45309", bg: "white",    text: "#111827" },
@@ -56,12 +56,12 @@ const TEMPLATES = [
 
 // ─── Design tokens ──────────────────────────────────────────────────────────
 const C = {
-  bg: "#F7F7F5",
+  bg: "#FAF7F1",
   panel: "#FFFFFF",
   card: "#FFFFFF",
   border: "rgba(0,0,0,0.09)",
   inputBg: "#FFFFFF",
-  violet: "#7c3aed",
+  violet: "#0F6E55",
   gold: "#f59e0b",
   text: "#111111",
   muted: "#888888",
@@ -76,10 +76,10 @@ const inputStyle: React.CSSProperties = {
 
 const btnPrimary: React.CSSProperties = {
   display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-  background: "#7c3aed", color: "white",
+  background: "#0F6E55", color: "white",
   border: "none", borderRadius: "10px", padding: "11px 20px",
   fontSize: "13px", fontWeight: 700, cursor: "pointer",
-  boxShadow: "0 2px 8px rgba(124,58,237,0.25)", width: "100%",
+  boxShadow: "0 2px 8px rgba(15,110,85,0.25)", width: "100%",
 };
 
 const btnGold: React.CSSProperties = {
@@ -574,7 +574,7 @@ function Spinner() {
 
 function TabPill({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button onClick={onClick} style={{ flex: 1, padding: "8px 10px", borderRadius: "8px", border: "none", fontSize: "12px", fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: active ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "transparent", color: active ? "white" : C.muted, boxShadow: active ? "0 2px 12px rgba(124,58,237,0.35)" : "none" }}>
+    <button onClick={onClick} style={{ flex: 1, padding: "8px 10px", borderRadius: "8px", border: "none", fontSize: "12px", fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: active ? "linear-gradient(135deg,#0F6E55,#0A523F)" : "transparent", color: active ? "white" : C.muted, boxShadow: active ? "0 2px 12px rgba(15,110,85,0.35)" : "none" }}>
       {children}
     </button>
   );
@@ -939,7 +939,7 @@ export default function ResumeBuilderPage() {
             <button
               onClick={() => setPreviewOpen(true)}
               className="md:hidden"
-              style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: "5px", padding: "7px 12px", borderRadius: "10px", background: "rgba(124,58,237,0.07)", border: `1px solid rgba(124,58,237,0.2)`, color: "#7c3aed", fontSize: "12px", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+              style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: "5px", padding: "7px 12px", borderRadius: "10px", background: "rgba(15,110,85,0.07)", border: `1px solid rgba(15,110,85,0.2)`, color: "#0F6E55", fontSize: "12px", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
               📄 Preview
             </button>
           </div>
@@ -960,12 +960,12 @@ export default function ResumeBuilderPage() {
                   {chatMessages.map((msg, i) => (
                     <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", gap: "8px", alignItems: "flex-end" }}>
                       {msg.role === "assistant" && (
-                        <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "linear-gradient(135deg,#7c3aed,#f59e0b)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "12px", marginBottom: "2px" }}>✨</div>
+                        <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "linear-gradient(135deg,#0F6E55,#f59e0b)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "12px", marginBottom: "2px" }}>✨</div>
                       )}
                       <div style={{
                         maxWidth: "82%", padding: "10px 14px",
                         fontSize: "13px", lineHeight: 1.65,
-                        background: msg.role === "user" ? "#7c3aed" : "#F0F0EC",
+                        background: msg.role === "user" ? "#0F6E55" : "#F1EDE4",
                         color: msg.role === "user" ? "white" : "#333333",
                         borderRadius: msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
                         border: msg.role === "assistant" ? `1px solid ${C.border}` : "none",
@@ -992,7 +992,7 @@ export default function ResumeBuilderPage() {
                       placeholder="Type your answer…"
                     />
                     <button onClick={sendChat} disabled={!chatInput.trim() || isStreaming}
-                      style={{ width: "40px", height: "40px", borderRadius: "50%", background: chatInput.trim() ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "rgba(124,58,237,0.2)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: chatInput.trim() ? "pointer" : "not-allowed", flexShrink: 0, fontSize: "16px", color: "white" }}>
+                      style={{ width: "40px", height: "40px", borderRadius: "50%", background: chatInput.trim() ? "linear-gradient(135deg,#0F6E55,#0A523F)" : "rgba(15,110,85,0.2)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: chatInput.trim() ? "pointer" : "not-allowed", flexShrink: 0, fontSize: "16px", color: "white" }}>
                       {isStreaming ? "⏳" : "→"}
                     </button>
                   </div>
@@ -1076,7 +1076,7 @@ export default function ResumeBuilderPage() {
 
                     {/* Upload button */}
                     {pdfUploadStatus ? (
-                      <div style={{ padding: "12px 16px", borderRadius: "12px", background: pdfUploadStatus.startsWith("✅") ? "rgba(16,185,129,0.08)" : "rgba(124,58,237,0.08)", border: `1px solid ${pdfUploadStatus.startsWith("✅") ? "rgba(16,185,129,0.2)" : "rgba(124,58,237,0.2)"}`, fontSize: "12px", color: pdfUploadStatus.startsWith("✅") ? "#34d399" : "#a78bfa", display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div style={{ padding: "12px 16px", borderRadius: "12px", background: pdfUploadStatus.startsWith("✅") ? "rgba(16,185,129,0.08)" : "rgba(15,110,85,0.08)", border: `1px solid ${pdfUploadStatus.startsWith("✅") ? "rgba(16,185,129,0.2)" : "rgba(15,110,85,0.2)"}`, fontSize: "12px", color: pdfUploadStatus.startsWith("✅") ? "#34d399" : "#5FAE93", display: "flex", alignItems: "center", gap: "10px" }}>
                         {isUploadingPDF && <Spinner />}
                         {pdfUploadStatus}
                       </div>
@@ -1151,8 +1151,8 @@ The more text you paste, the more complete your resume will be.`}
                       </button>
                     </div>
                     {fetchStatus && (
-                      <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.2)", fontSize: "12px", color: "#a78bfa", lineHeight: 1.5 }}>
-                        {isFetchingLinkedIn && <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: "#a78bfa", marginRight: "8px", animation: "pulse 1s infinite" }} />}
+                      <div style={{ padding: "10px 12px", borderRadius: "10px", background: "rgba(15,110,85,0.08)", border: "1px solid rgba(15,110,85,0.2)", fontSize: "12px", color: "#5FAE93", lineHeight: 1.5 }}>
+                        {isFetchingLinkedIn && <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: "#5FAE93", marginRight: "8px", animation: "pulse 1s infinite" }} />}
                         {fetchStatus}
                       </div>
                     )}
@@ -1165,8 +1165,8 @@ The more text you paste, the more complete your resume will be.`}
             {/* ── AI EDITOR MODE ── */}
             {mode === "editor" && (
               <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-                <div style={{ padding: "12px 16px", background: "rgba(124,58,237,0.06)", borderBottom: `1px solid ${C.border}`, fontSize: "12px", color: C.secondary, lineHeight: 1.5 }}>
-                  <strong style={{ color: "#a78bfa" }}>🤖 AI Resume Editor</strong><br />
+                <div style={{ padding: "12px 16px", background: "rgba(15,110,85,0.06)", borderBottom: `1px solid ${C.border}`, fontSize: "12px", color: C.secondary, lineHeight: 1.5 }}>
+                  <strong style={{ color: "#5FAE93" }}>🤖 AI Resume Editor</strong><br />
                   Tell Mithra what to change — it edits your resume live.
                 </div>
 
@@ -1180,7 +1180,7 @@ The more text you paste, the more complete your resume will be.`}
                     "Rewrite summary for a senior role",
                     "Add stronger action verbs",
                   ].map((q) => (
-                    <button key={q} onClick={() => setEditorInput(q)} style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "16px", border: "1px solid rgba(124,58,237,0.2)", background: "rgba(124,58,237,0.06)", color: "#a78bfa", cursor: "pointer" }}>
+                    <button key={q} onClick={() => setEditorInput(q)} style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "16px", border: "1px solid rgba(15,110,85,0.2)", background: "rgba(15,110,85,0.06)", color: "#5FAE93", cursor: "pointer" }}>
                       {q}
                     </button>
                   ))}
@@ -1197,8 +1197,8 @@ The more text you paste, the more complete your resume will be.`}
                   )}
                   {editorMessages.map((msg, i) => (
                     <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", gap: "8px" }}>
-                      {msg.role === "assistant" && <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "linear-gradient(135deg,#7c3aed,#f59e0b)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "11px" }}>✨</div>}
-                      <div style={{ maxWidth: "86%", padding: "8px 12px", fontSize: "13px", lineHeight: 1.5, background: msg.role === "user" ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "rgba(26,16,51,0.9)", color: msg.role === "user" ? "white" : C.secondary, borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", border: msg.role === "assistant" ? `1px solid ${C.border}` : "none" }}>
+                      {msg.role === "assistant" && <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "linear-gradient(135deg,#0F6E55,#f59e0b)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "11px" }}>✨</div>}
+                      <div style={{ maxWidth: "86%", padding: "8px 12px", fontSize: "13px", lineHeight: 1.5, background: msg.role === "user" ? "linear-gradient(135deg,#0F6E55,#0A523F)" : "rgba(26,16,51,0.9)", color: msg.role === "user" ? "white" : C.secondary, borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", border: msg.role === "assistant" ? `1px solid ${C.border}` : "none" }}>
                         {msg.content}
                       </div>
                     </div>
@@ -1320,11 +1320,11 @@ The more text you paste, the more complete your resume will be.`}
             {/* Desktop toolbar */}
             <div className="rb-toolbar-full" style={{ height: "52px", alignItems: "center", justifyContent: "space-between", padding: "0 20px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <button onClick={() => setShowTemplates(!showTemplates)} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 14px", borderRadius: "8px", border: `1px solid ${showTemplates ? "rgba(124,58,237,0.5)" : C.border}`, background: showTemplates ? "rgba(124,58,237,0.15)" : "rgba(255,255,255,0.04)", color: showTemplates ? "#a78bfa" : C.muted, fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
+                <button onClick={() => setShowTemplates(!showTemplates)} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 14px", borderRadius: "8px", border: `1px solid ${showTemplates ? "rgba(15,110,85,0.5)" : C.border}`, background: showTemplates ? "rgba(15,110,85,0.15)" : "rgba(255,255,255,0.04)", color: showTemplates ? "#5FAE93" : C.muted, fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
                   🎨 Templates
                 </button>
                 <span style={{ fontSize: "13px", color: C.muted }}>
-                  Current: <span style={{ color: "#a78bfa", textTransform: "capitalize" }}>{selectedTemplate}</span>
+                  Current: <span style={{ color: "#5FAE93", textTransform: "capitalize" }}>{selectedTemplate}</span>
                 </span>
               </div>
               <div style={{ display: "flex", gap: "8px" }}>
@@ -1341,7 +1341,7 @@ The more text you paste, the more complete your resume will be.`}
                       🔒 Export PDF — Upgrade to Pro
                     </button>
                   ) : (
-                    <button onClick={downloadPDF} disabled={isPdfLoading} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 16px", borderRadius: "8px", border: "none", fontSize: "13px", fontWeight: 700, background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white", cursor: isPdfLoading ? "not-allowed" : "pointer", opacity: isPdfLoading ? 0.7 : 1, boxShadow: "0 4px 12px rgba(124,58,237,0.3)" }}>
+                    <button onClick={downloadPDF} disabled={isPdfLoading} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 16px", borderRadius: "8px", border: "none", fontSize: "13px", fontWeight: 700, background: "linear-gradient(135deg,#0F6E55,#0A523F)", color: "white", cursor: isPdfLoading ? "not-allowed" : "pointer", opacity: isPdfLoading ? 0.7 : 1, boxShadow: "0 4px 12px rgba(15,110,85,0.3)" }}>
                       {isPdfLoading ? "⏳ Generating..." : <>⬇ Export PDF {pdfCap !== -1 && <span style={{ fontSize: "10px", opacity: 0.7 }}>({pdfCap - pdfUsed} left)</span>}</>}
                     </button>
                   );
@@ -1351,8 +1351,8 @@ The more text you paste, the more complete your resume will be.`}
 
             {/* Mobile compact toolbar — icon strip */}
             <div className="rb-toolbar-compact" style={{ height: "44px", alignItems: "center", gap: "8px", padding: "0 12px", overflowX: "auto" }}>
-              <button onClick={() => setShowTemplates(!showTemplates)} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 10px", borderRadius: "8px", border: `1px solid ${showTemplates ? "rgba(124,58,237,0.5)" : C.border}`, background: showTemplates ? "rgba(124,58,237,0.15)" : "rgba(255,255,255,0.04)", color: showTemplates ? "#a78bfa" : C.muted, fontSize: "12px", fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>
-                🎨 <span style={{ color: "#a78bfa", textTransform: "capitalize", fontSize: "11px" }}>{selectedTemplate}</span>
+              <button onClick={() => setShowTemplates(!showTemplates)} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 10px", borderRadius: "8px", border: `1px solid ${showTemplates ? "rgba(15,110,85,0.5)" : C.border}`, background: showTemplates ? "rgba(15,110,85,0.15)" : "rgba(255,255,255,0.04)", color: showTemplates ? "#5FAE93" : C.muted, fontSize: "12px", fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>
+                🎨 <span style={{ color: "#5FAE93", textTransform: "capitalize", fontSize: "11px" }}>{selectedTemplate}</span>
               </button>
               <div style={{ width: "1px", height: "20px", background: "rgba(255,255,255,0.08)", flexShrink: 0 }} />
               <button onClick={resetResume} title="Reset" style={{ width: "32px", height: "32px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`, cursor: "pointer", fontSize: "14px", flexShrink: 0 }}>↺</button>
@@ -1365,7 +1365,7 @@ The more text you paste, the more complete your resume will be.`}
                     🔒 PDF
                   </button>
                 ) : (
-                  <button onClick={downloadPDF} disabled={isPdfLoading} title="Export PDF" style={{ display: "flex", alignItems: "center", gap: "4px", padding: "6px 12px", borderRadius: "8px", border: "none", fontSize: "12px", fontWeight: 700, background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white", cursor: isPdfLoading ? "not-allowed" : "pointer", opacity: isPdfLoading ? 0.7 : 1, flexShrink: 0 }}>
+                  <button onClick={downloadPDF} disabled={isPdfLoading} title="Export PDF" style={{ display: "flex", alignItems: "center", gap: "4px", padding: "6px 12px", borderRadius: "8px", border: "none", fontSize: "12px", fontWeight: 700, background: "linear-gradient(135deg,#0F6E55,#0A523F)", color: "white", cursor: isPdfLoading ? "not-allowed" : "pointer", opacity: isPdfLoading ? 0.7 : 1, flexShrink: 0 }}>
                     {isPdfLoading ? "⏳" : "⬇ PDF"}
                   </button>
                 );
@@ -1397,7 +1397,7 @@ The more text you paste, the more complete your resume will be.`}
                       )}
                     </div>
                     <span style={{ fontSize: "11px", fontWeight: 600, color: selectedTemplate === t.id ? t.accent : locked ? "#334155" : C.muted }}>
-                      {t.name}{locked && <span style={{ fontSize: "9px", color: "#a78bfa", marginLeft: "3px" }}>Pro</span>}
+                      {t.name}{locked && <span style={{ fontSize: "9px", color: "#5FAE93", marginLeft: "3px" }}>Pro</span>}
                     </span>
                   </button>
                 );

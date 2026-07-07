@@ -37,7 +37,7 @@ const QUICK = [
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const S = {
-  panel: { background: "rgba(10,6,22,0.98)", backdropFilter: "blur(30px)", border: "1px solid rgba(124,58,237,0.22)", boxShadow: "0 20px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(124,58,237,0.08)" } as React.CSSProperties,
+  panel: { background: "rgba(10,6,22,0.98)", backdropFilter: "blur(30px)", border: "1px solid rgba(15,110,85,0.22)", boxShadow: "0 20px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(15,110,85,0.08)" } as React.CSSProperties,
   input: { flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "13px", color: "#f1f5f9", fontFamily: "inherit", resize: "none" as const, lineHeight: 1.5 },
 };
 
@@ -224,13 +224,13 @@ export default function MithraChat() {
         <button className="mithra-fab" onClick={() => setOpen(true)} style={{
           position: "fixed", bottom: "24px", right: "24px", zIndex: 50,
           width: "52px", height: "52px", borderRadius: "18px", border: "none",
-          background: "linear-gradient(135deg,#7c3aed,#6d28d9)", color: "white",
+          background: "linear-gradient(135deg,#0F6E55,#0A523F)", color: "white",
           cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: "22px", boxShadow: "0 8px 32px rgba(124,58,237,0.55)",
+          fontSize: "22px", boxShadow: "0 8px 32px rgba(15,110,85,0.55)",
           transition: "transform 0.2s, box-shadow 0.2s",
         }}
-          onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.08)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(124,58,237,0.7)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(124,58,237,0.55)"; }}>
+          onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.08)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(15,110,85,0.7)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(15,110,85,0.55)"; }}>
           ✨
           {hasNew && (
             <div style={{ position: "absolute", top: "-4px", right: "-4px", width: "18px", height: "18px", borderRadius: "50%", background: "#f59e0b", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 700, color: "#0a0614", border: "2px solid #0a0614" }}>
@@ -251,9 +251,9 @@ export default function MithraChat() {
         }}>
 
           {/* Header */}
-          <div style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid rgba(124,58,237,0.12)", background: "rgba(20,12,40,0.8)", flexShrink: 0 }}>
+          <div style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid rgba(15,110,85,0.12)", background: "rgba(20,12,40,0.8)", flexShrink: 0 }}>
             {/* Avatar */}
-            <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "linear-gradient(135deg,#7c3aed,#f59e0b)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0, boxShadow: "0 0 14px rgba(124,58,237,0.5)", position: "relative" }}>
+            <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "linear-gradient(135deg,#0F6E55,#f59e0b)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0, boxShadow: "0 0 14px rgba(15,110,85,0.5)", position: "relative" }}>
               ✨
               <div style={{ position: "absolute", bottom: "-1px", right: "-1px", width: "10px", height: "10px", borderRadius: "50%", background: "#10b981", border: "2px solid rgba(10,6,22,0.98)" }} />
             </div>
@@ -261,7 +261,7 @@ export default function MithraChat() {
               <div style={{ fontSize: "14px", fontWeight: 800, color: "#f1f5f9" }}>
                 Mithra
                 {profile.name && (
-                  <span style={{ fontSize: "12px", fontWeight: 500, color: "#a78bfa", marginLeft: "8px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: 500, color: "#5FAE93", marginLeft: "8px" }}>
                     Hi {profile.name.split(" ")[0]} 👋
                   </span>
                 )}
@@ -294,21 +294,21 @@ export default function MithraChat() {
             {messages.map((msg, i) => (
               <div key={msg.id || i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", gap: "8px", alignItems: "flex-end" }}>
                 {msg.role === "assistant" && (
-                  <div style={{ width: "24px", height: "24px", borderRadius: "8px", background: "linear-gradient(135deg,#7c3aed,#f59e0b)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", flexShrink: 0, marginBottom: "2px" }}>
+                  <div style={{ width: "24px", height: "24px", borderRadius: "8px", background: "linear-gradient(135deg,#0F6E55,#f59e0b)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", flexShrink: 0, marginBottom: "2px" }}>
                     ✨
                   </div>
                 )}
                 <div style={{
                   maxWidth: "88%", padding: "10px 14px", fontSize: "13px", lineHeight: 1.65,
                   borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-                  background: msg.role === "user" ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "rgba(26,16,51,0.9)",
+                  background: msg.role === "user" ? "linear-gradient(135deg,#0F6E55,#0A523F)" : "rgba(26,16,51,0.9)",
                   color: msg.role === "user" ? "white" : "#cbd5e1",
-                  border: msg.role === "assistant" ? "1px solid rgba(124,58,237,0.18)" : "none",
+                  border: msg.role === "assistant" ? "1px solid rgba(15,110,85,0.18)" : "none",
                 }}>
                   {msg.content || (isLoading && i === messages.length - 1 ? (
                     <div style={{ display: "flex", gap: "4px", padding: "2px 0" }}>
                       {[0, 0.15, 0.3].map((d) => (
-                        <div key={d} style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#7c3aed", animation: `pulse 0.8s ${d}s ease-in-out infinite` }} />
+                        <div key={d} style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#0F6E55", animation: `pulse 0.8s ${d}s ease-in-out infinite` }} />
                       ))}
                     </div>
                   ) : "")}
@@ -318,26 +318,26 @@ export default function MithraChat() {
 
             {/* Profile setup prompt */}
             {showProfilePrompt && (
-              <div style={{ borderRadius: "14px", padding: "16px", background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.25)", marginBottom: "4px" }}>
-                <p style={{ fontSize: "13px", color: "#a78bfa", fontWeight: 700, marginBottom: "10px" }}>Who are you? Tell me a bit so I can personalize your experience.</p>
+              <div style={{ borderRadius: "14px", padding: "16px", background: "rgba(15,110,85,0.08)", border: "1px solid rgba(15,110,85,0.25)", marginBottom: "4px" }}>
+                <p style={{ fontSize: "13px", color: "#5FAE93", fontWeight: 700, marginBottom: "10px" }}>Who are you? Tell me a bit so I can personalize your experience.</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "12px" }}>
                   <input
                     value={profileName}
                     onChange={(e) => setProfileName(e.target.value)}
                     placeholder="Your name"
-                    style={{ background: "rgba(15,8,30,0.8)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: "8px", padding: "8px 10px", color: "#f1f5f9", fontSize: "12px", outline: "none", fontFamily: "inherit" }}
+                    style={{ background: "rgba(15,8,30,0.8)", border: "1px solid rgba(15,110,85,0.3)", borderRadius: "8px", padding: "8px 10px", color: "#f1f5f9", fontSize: "12px", outline: "none", fontFamily: "inherit" }}
                   />
                   <input
                     value={profileRole}
                     onChange={(e) => setProfileRole(e.target.value)}
                     placeholder="Current role (e.g. Software Engineer at Infosys)"
-                    style={{ background: "rgba(15,8,30,0.8)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: "8px", padding: "8px 10px", color: "#f1f5f9", fontSize: "12px", outline: "none", fontFamily: "inherit" }}
+                    style={{ background: "rgba(15,8,30,0.8)", border: "1px solid rgba(15,110,85,0.3)", borderRadius: "8px", padding: "8px 10px", color: "#f1f5f9", fontSize: "12px", outline: "none", fontFamily: "inherit" }}
                   />
                   <input
                     value={profileTarget}
                     onChange={(e) => setProfileTarget(e.target.value)}
                     placeholder="Target role (e.g. Senior PM at a Series B startup)"
-                    style={{ background: "rgba(15,8,30,0.8)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: "8px", padding: "8px 10px", color: "#f1f5f9", fontSize: "12px", outline: "none", fontFamily: "inherit" }}
+                    style={{ background: "rgba(15,8,30,0.8)", border: "1px solid rgba(15,110,85,0.3)", borderRadius: "8px", padding: "8px 10px", color: "#f1f5f9", fontSize: "12px", outline: "none", fontFamily: "inherit" }}
                   />
                 </div>
                 <div style={{ display: "flex", gap: "8px" }}>
@@ -350,7 +350,7 @@ export default function MithraChat() {
                         addMessage({ role: "assistant", content: `Nice to meet you, ${profileName.trim()}! I'm Mithra, your AI career companion. ${profileRole ? `I see you're currently a ${profileRole}` : ""}${profileTarget ? ` looking to move into ${profileTarget}` : ""}. I'll keep this in mind as we work together. How can I help you today?` });
                       }
                     }}
-                    style={{ flex: 1, padding: "8px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", border: "none", borderRadius: "8px", color: "white", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
+                    style={{ flex: 1, padding: "8px", background: "linear-gradient(135deg,#0F6E55,#0A523F)", border: "none", borderRadius: "8px", color: "white", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
                   >
                     Let&apos;s go!
                   </button>
@@ -373,11 +373,11 @@ export default function MithraChat() {
                     <button key={q.label} onClick={() => { router.push(q.route); send(q.label); }}
                       style={{
                         fontSize: "12px", padding: "6px 12px", borderRadius: "20px", cursor: "pointer",
-                        background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.25)",
-                        color: "#a78bfa", fontFamily: "inherit", transition: "all 0.15s",
+                        background: "rgba(15,110,85,0.1)", border: "1px solid rgba(15,110,85,0.25)",
+                        color: "#5FAE93", fontFamily: "inherit", transition: "all 0.15s",
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(124,58,237,0.2)"; e.currentTarget.style.borderColor = "rgba(124,58,237,0.5)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(124,58,237,0.1)"; e.currentTarget.style.borderColor = "rgba(124,58,237,0.25)"; }}>
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(15,110,85,0.2)"; e.currentTarget.style.borderColor = "rgba(15,110,85,0.5)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(15,110,85,0.1)"; e.currentTarget.style.borderColor = "rgba(15,110,85,0.25)"; }}>
                       {q.label}
                     </button>
                   ))}
@@ -386,8 +386,8 @@ export default function MithraChat() {
             )}
             {/* Workflow executing indicator */}
             {workflowExecuting && (
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "10px", background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.25)", fontSize: "12px", color: "#a78bfa" }}>
-                <div style={{ width: "10px", height: "10px", borderRadius: "50%", border: "2px solid rgba(167,139,250,0.3)", borderTopColor: "#a78bfa", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "10px", background: "rgba(15,110,85,0.08)", border: "1px solid rgba(15,110,85,0.25)", fontSize: "12px", color: "#5FAE93" }}>
+                <div style={{ width: "10px", height: "10px", borderRadius: "50%", border: "2px solid rgba(167,139,250,0.3)", borderTopColor: "#5FAE93", animation: "spin 0.7s linear infinite", flexShrink: 0 }} />
                 Executing workflow step...
               </div>
             )}
@@ -412,10 +412,10 @@ export default function MithraChat() {
           </div>
 
           {/* Input area */}
-          <div style={{ padding: "12px 14px", borderTop: "1px solid rgba(124,58,237,0.12)", flexShrink: 0 }}>
+          <div style={{ padding: "12px 14px", borderTop: "1px solid rgba(15,110,85,0.12)", flexShrink: 0 }}>
             <div style={{
               display: "flex", alignItems: "flex-end", gap: "8px", padding: "10px 14px",
-              borderRadius: "14px", border: "1px solid rgba(124,58,237,0.22)",
+              borderRadius: "14px", border: "1px solid rgba(15,110,85,0.22)",
               background: "rgba(20,12,40,0.8)",
             }}>
               <textarea
@@ -444,7 +444,7 @@ export default function MithraChat() {
                 {/* Send */}
                 <button onClick={() => send()} disabled={!input.trim() || isLoading} style={{
                   width: "30px", height: "30px", borderRadius: "8px", border: "none", cursor: !input.trim() || isLoading ? "not-allowed" : "pointer",
-                  background: input.trim() && !isLoading ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "rgba(255,255,255,0.06)",
+                  background: input.trim() && !isLoading ? "linear-gradient(135deg,#0F6E55,#0A523F)" : "rgba(255,255,255,0.06)",
                   color: input.trim() && !isLoading ? "white" : "#475569", fontSize: "14px",
                   display: "flex", alignItems: "center", justifyContent: "center",
                 }}>

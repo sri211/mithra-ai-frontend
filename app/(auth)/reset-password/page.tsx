@@ -50,7 +50,7 @@ function ResetPasswordForm() {
   const input: React.CSSProperties = {
     width: "100%",
     background: "rgba(15,8,30,0.8)",
-    border: "1px solid rgba(124,58,237,0.25)",
+    border: "1px solid rgba(15,110,85,0.25)",
     borderRadius: "10px",
     padding: "11px 44px 11px 40px",
     color: "#f1f5f9",
@@ -73,7 +73,7 @@ function ResetPasswordForm() {
             Your password has been reset. Redirecting you to sign in…
           </p>
         </div>
-        <Link href="/login" style={{ display: "block", textAlign: "center", padding: "12px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", borderRadius: "10px", color: "#fff", fontSize: "14px", fontWeight: 700, textDecoration: "none" }}>
+        <Link href="/login" style={{ display: "block", textAlign: "center", padding: "12px", background: "linear-gradient(135deg,#0F6E55,#0A523F)", borderRadius: "10px", color: "#fff", fontSize: "14px", fontWeight: 700, textDecoration: "none" }}>
           Sign in now
         </Link>
       </>
@@ -92,7 +92,7 @@ function ResetPasswordForm() {
             This reset link is missing or invalid. Please request a new one.
           </p>
         </div>
-        <Link href="/forgot-password" style={{ display: "block", textAlign: "center", padding: "12px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", borderRadius: "10px", color: "#fff", fontSize: "14px", fontWeight: 700, textDecoration: "none" }}>
+        <Link href="/forgot-password" style={{ display: "block", textAlign: "center", padding: "12px", background: "linear-gradient(135deg,#0F6E55,#0A523F)", borderRadius: "10px", color: "#fff", fontSize: "14px", fontWeight: 700, textDecoration: "none" }}>
           Request new link
         </Link>
       </>
@@ -121,8 +121,8 @@ function ResetPasswordForm() {
             required
             autoFocus
             style={input}
-            onFocus={e => (e.target.style.borderColor = "rgba(124,58,237,0.5)")}
-            onBlur={e => (e.target.style.borderColor = "rgba(124,58,237,0.25)")}
+            onFocus={e => (e.target.style.borderColor = "rgba(15,110,85,0.5)")}
+            onBlur={e => (e.target.style.borderColor = "rgba(15,110,85,0.25)")}
           />
           <button type="button" onClick={() => setShowPw(!showPw)} style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#64748b", display: "flex" }}>
             {showPw ? <EyeOff style={{ width: "15px", height: "15px" }} /> : <Eye style={{ width: "15px", height: "15px" }} />}
@@ -137,9 +137,9 @@ function ResetPasswordForm() {
             onChange={e => setConfirm(e.target.value)}
             placeholder="Confirm new password"
             required
-            style={{ ...input, borderColor: confirm && confirm !== password ? "rgba(239,68,68,0.5)" : "rgba(124,58,237,0.25)" }}
-            onFocus={e => (e.target.style.borderColor = confirm !== password ? "rgba(239,68,68,0.5)" : "rgba(124,58,237,0.5)")}
-            onBlur={e => (e.target.style.borderColor = confirm && confirm !== password ? "rgba(239,68,68,0.5)" : "rgba(124,58,237,0.25)")}
+            style={{ ...input, borderColor: confirm && confirm !== password ? "rgba(239,68,68,0.5)" : "rgba(15,110,85,0.25)" }}
+            onFocus={e => (e.target.style.borderColor = confirm !== password ? "rgba(239,68,68,0.5)" : "rgba(15,110,85,0.5)")}
+            onBlur={e => (e.target.style.borderColor = confirm && confirm !== password ? "rgba(239,68,68,0.5)" : "rgba(15,110,85,0.25)")}
           />
         </div>
 
@@ -165,13 +165,13 @@ function ResetPasswordForm() {
           disabled={isLoading}
           style={{
             width: "100%", padding: "12px",
-            background: isLoading ? "rgba(124,58,237,0.4)" : "linear-gradient(135deg,#7c3aed,#6d28d9)",
+            background: isLoading ? "rgba(15,110,85,0.4)" : "linear-gradient(135deg,#0F6E55,#0A523F)",
             border: "none", borderRadius: "10px", color: "white",
             fontSize: "14px", fontWeight: 700,
             cursor: isLoading ? "not-allowed" : "pointer",
             fontFamily: "inherit",
             display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-            boxShadow: isLoading ? "none" : "0 4px 16px rgba(124,58,237,0.3)",
+            boxShadow: isLoading ? "none" : "0 4px 16px rgba(15,110,85,0.3)",
           }}
         >
           {isLoading && <Loader2 style={{ width: "15px", height: "15px", animation: "spin 1s linear infinite" }} />}
@@ -188,7 +188,7 @@ export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
       <div style={{ textAlign: "center", padding: "40px 0" }}>
-        <div style={{ width: "32px", height: "32px", borderRadius: "50%", border: "3px solid rgba(124,58,237,0.1)", borderTopColor: "#7c3aed", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
+        <div style={{ width: "32px", height: "32px", borderRadius: "50%", border: "3px solid rgba(15,110,85,0.1)", borderTopColor: "#0F6E55", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     }>

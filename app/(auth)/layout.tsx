@@ -25,7 +25,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           width: "600px",
           height: "600px",
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(15,110,85,0.08) 0%, transparent 70%)",
           pointerEvents: "none",
         }}
       />
@@ -45,11 +45,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               width: "40px",
               height: "40px",
               borderRadius: "12px",
-              background: "linear-gradient(135deg,#7c3aed,#5b21b6)",
+              background: "linear-gradient(135deg,#0F6E55,#084434)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 0 20px rgba(124,58,237,0.5)",
+              boxShadow: "0 0 20px rgba(15,110,85,0.5)",
             }}
           >
             <Sparkles style={{ width: "20px", height: "20px", color: "white" }} />
@@ -58,7 +58,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             style={{
               fontSize: "24px",
               fontWeight: 800,
-              background: "linear-gradient(135deg,#a78bfa,#f59e0b)",
+              background: "linear-gradient(135deg,#5FAE93,#f59e0b)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}
@@ -75,7 +75,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           width: "100%",
           maxWidth: "420px",
           background: "rgba(20,13,40,0.9)",
-          border: "1px solid rgba(124,58,237,0.2)",
+          border: "1px solid rgba(15,110,85,0.2)",
           borderRadius: "20px",
           padding: "36px",
           boxShadow: "0 20px 60px rgba(0,0,0,0.5)",

@@ -58,7 +58,7 @@ function RegisterForm() {
   const input: React.CSSProperties = {
     width: "100%",
     background: "rgba(15,8,30,0.8)",
-    border: "1px solid rgba(124,58,237,0.25)",
+    border: "1px solid rgba(15,110,85,0.25)",
     borderRadius: "10px",
     padding: "11px 12px 11px 40px",
     color: "#f1f5f9",
@@ -85,16 +85,16 @@ function RegisterForm() {
         <div style={{ position: "relative" }}>
           <User style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", width: "16px", height: "16px", color: "#64748b" }} />
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" required style={input}
-            onFocus={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.5)")}
-            onBlur={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.25)")} />
+            onFocus={(e) => (e.target.style.borderColor = "rgba(15,110,85,0.5)")}
+            onBlur={(e) => (e.target.style.borderColor = "rgba(15,110,85,0.25)")} />
         </div>
 
         {/* Email */}
         <div style={{ position: "relative" }}>
           <Mail style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", width: "16px", height: "16px", color: "#64748b" }} />
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required style={input}
-            onFocus={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.5)")}
-            onBlur={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.25)")} />
+            onFocus={(e) => (e.target.style.borderColor = "rgba(15,110,85,0.5)")}
+            onBlur={(e) => (e.target.style.borderColor = "rgba(15,110,85,0.25)")} />
         </div>
 
         {/* Password */}
@@ -102,8 +102,8 @@ function RegisterForm() {
           <Lock style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", width: "16px", height: "16px", color: "#64748b" }} />
           <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)}
             placeholder="Choose a password (8+ chars)" required style={{ ...input, paddingRight: "44px" }}
-            onFocus={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.5)")}
-            onBlur={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.25)")} />
+            onFocus={(e) => (e.target.style.borderColor = "rgba(15,110,85,0.5)")}
+            onBlur={(e) => (e.target.style.borderColor = "rgba(15,110,85,0.25)")} />
           <button type="button" onClick={() => setShowPassword(!showPassword)}
             style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#64748b", padding: "2px", display: "flex" }}>
             {showPassword ? <EyeOff style={{ width: "15px", height: "15px" }} /> : <Eye style={{ width: "15px", height: "15px" }} />}
@@ -115,9 +115,9 @@ function RegisterForm() {
           <Gift style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", width: "16px", height: "16px", color: "#10b981" }} />
           <input type="text" value={referralCode} onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
             placeholder="Referral code (optional)"
-            style={{ ...input, borderColor: referralCode ? "rgba(16,185,129,0.4)" : "rgba(124,58,237,0.25)", letterSpacing: referralCode ? "1px" : "normal" }}
+            style={{ ...input, borderColor: referralCode ? "rgba(16,185,129,0.4)" : "rgba(15,110,85,0.25)", letterSpacing: referralCode ? "1px" : "normal" }}
             onFocus={(e) => (e.target.style.borderColor = "rgba(16,185,129,0.5)")}
-            onBlur={(e) => (e.target.style.borderColor = referralCode ? "rgba(16,185,129,0.4)" : "rgba(124,58,237,0.25)")} />
+            onBlur={(e) => (e.target.style.borderColor = referralCode ? "rgba(16,185,129,0.4)" : "rgba(15,110,85,0.25)")} />
           {referralCode && (
             <span style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", fontWeight: 700, color: "#10b981" }}>
               ✓ Applied
@@ -134,13 +134,13 @@ function RegisterForm() {
         <button type="submit" disabled={isLoading}
           style={{
             width: "100%", padding: "12px",
-            background: isLoading ? "rgba(124,58,237,0.4)" : "linear-gradient(135deg,#7c3aed,#6d28d9)",
+            background: isLoading ? "rgba(15,110,85,0.4)" : "linear-gradient(135deg,#0F6E55,#0A523F)",
             border: "none", borderRadius: "10px", color: "white",
             fontSize: "14px", fontWeight: 700,
             cursor: isLoading ? "not-allowed" : "pointer",
             fontFamily: "inherit",
             display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-            boxShadow: isLoading ? "none" : "0 4px 16px rgba(124,58,237,0.3)",
+            boxShadow: isLoading ? "none" : "0 4px 16px rgba(15,110,85,0.3)",
           }}>
           {isLoading && <Loader2 style={{ width: "15px", height: "15px", animation: "spin 1s linear infinite" }} />}
           {isLoading ? "Creating account..." : "Create free account"}
@@ -149,7 +149,7 @@ function RegisterForm() {
 
       <p style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", color: "#475569" }}>
         Already have an account?{" "}
-        <Link href="/login" style={{ color: "#a78bfa", textDecoration: "none", fontWeight: 600 }}
+        <Link href="/login" style={{ color: "#5FAE93", textDecoration: "none", fontWeight: 600 }}
           onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
           onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}>
           Sign in

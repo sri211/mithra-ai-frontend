@@ -58,7 +58,7 @@ interface PortalCred { portal: string; username: string; }
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const AMBER  = "#f59e0b";
-const VIOLET = "#7c3aed";
+const VIOLET = "#0F6E55";
 const GREEN  = "#10b981";
 const LS_APPS_KEY = "mithra-applied-apps";
 const LS_CAMP_KEY = "mithra-campaign";
@@ -86,7 +86,7 @@ const EXP_LEVELS = [
 const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
   applied:     { label: "Applied",      color: "#6366f1", bg: "rgba(99,102,241,0.12)"  },
   viewed:      { label: "Viewed",       color: "#f59e0b", bg: "rgba(245,158,11,0.12)"  },
-  shortlisted: { label: "Shortlisted",  color: "#8b5cf6", bg: "rgba(139,92,246,0.12)"  },
+  shortlisted: { label: "Shortlisted",  color: "#2E8B6F", bg: "rgba(139,92,246,0.12)"  },
   interview:   { label: "Interview",    color: "#10b981", bg: "rgba(16,185,129,0.12)"  },
   offer:       { label: "Offer 🎉",     color: "#10b981", bg: "rgba(16,185,129,0.18)"  },
   rejected:    { label: "Rejected",     color: "#ef4444", bg: "rgba(239,68,68,0.12)"   },
@@ -187,7 +187,7 @@ function PortalCredentialsModal({
         </button>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "22px" }}>
-          <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "rgba(124,58,237,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "rgba(15,110,85,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <Lock style={{ width: "20px", height: "20px", color: VIOLET }} />
           </div>
           <div>
@@ -200,7 +200,7 @@ function PortalCredentialsModal({
         <div style={{ display: "flex", gap: "8px", marginBottom: "18px", flexWrap: "wrap" }}>
           {PORTALS.map((p) => (
             <button key={p.id} onClick={() => setPortal(p.id)}
-              style={{ padding: "6px 14px", borderRadius: "20px", border: `1.5px solid ${portal === p.id ? VIOLET : "rgba(0,0,0,0.12)"}`, background: portal === p.id ? "rgba(124,58,237,0.08)" : "#fff", color: portal === p.id ? VIOLET : "#555", fontSize: "12px", fontWeight: portal === p.id ? 700 : 400, cursor: "pointer" }}>
+              style={{ padding: "6px 14px", borderRadius: "20px", border: `1.5px solid ${portal === p.id ? VIOLET : "rgba(0,0,0,0.12)"}`, background: portal === p.id ? "rgba(15,110,85,0.08)" : "#fff", color: portal === p.id ? VIOLET : "#555", fontSize: "12px", fontWeight: portal === p.id ? 700 : 400, cursor: "pointer" }}>
               {p.label}
             </button>
           ))}
@@ -237,7 +237,7 @@ function PortalCredentialsModal({
         {error && <p style={{ fontSize: "12px", color: "#ef4444", margin: "0 0 12px" }}>{error}</p>}
 
         <button onClick={save} disabled={saving || !username.trim() || !password.trim()}
-          style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "none", background: username.trim() && password.trim() ? `linear-gradient(135deg,${VIOLET},#5b21b6)` : "rgba(0,0,0,0.07)", color: username.trim() && password.trim() ? "#fff" : "#bbb", fontSize: "14px", fontWeight: 700, cursor: username.trim() && password.trim() ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+          style={{ width: "100%", padding: "13px", borderRadius: "12px", border: "none", background: username.trim() && password.trim() ? `linear-gradient(135deg,${VIOLET},#084434)` : "rgba(0,0,0,0.07)", color: username.trim() && password.trim() ? "#fff" : "#bbb", fontSize: "14px", fontWeight: 700, cursor: username.trim() && password.trim() ? "pointer" : "not-allowed", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
           {saving ? <Loader2 style={{ width: "14px", height: "14px", animation: "spin 1s linear infinite" }} /> : <Shield style={{ width: "14px", height: "14px" }} />}
           {saving ? "Saving…" : "Save Credentials"}
         </button>
@@ -404,7 +404,7 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
 
       {/* Top row */}
       <div style={{ padding: "14px 16px", display: "flex", gap: "12px", alignItems: "flex-start" }}>
-        <div style={{ width: "42px", height: "42px", borderRadius: "10px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
+        <div style={{ width: "42px", height: "42px", borderRadius: "10px", background: "rgba(15,110,85,0.06)", border: "1px solid rgba(15,110,85,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }}>
           {st.company_logo
             ? <img src={st.company_logo} alt="" style={{ width: "30px", height: "30px", objectFit: "contain" }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
             : <Building2 style={{ width: "18px", height: "18px", color: VIOLET, opacity: 0.5 }} />}
@@ -428,7 +428,7 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginTop: "7px" }}>
             {(st.skills || []).slice(0, 5).map((sk) => (
-              <span key={sk} style={{ fontSize: "10px", padding: "2px 7px", borderRadius: "20px", background: "rgba(124,58,237,0.07)", color: VIOLET, border: "1px solid rgba(124,58,237,0.15)" }}>{sk}</span>
+              <span key={sk} style={{ fontSize: "10px", padding: "2px 7px", borderRadius: "20px", background: "rgba(15,110,85,0.07)", color: VIOLET, border: "1px solid rgba(15,110,85,0.15)" }}>{sk}</span>
             ))}
           </div>
         </div>
@@ -444,7 +444,7 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
             </button>
             <button onClick={autoSubmit}
               title="Server opens the job page, logs in with your saved credentials, and auto-fills the form"
-              style={{ padding: "10px 12px", borderRadius: "10px", border: `1.5px solid ${VIOLET}`, background: "rgba(124,58,237,0.06)", color: VIOLET, fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}>
+              style={{ padding: "10px 12px", borderRadius: "10px", border: `1.5px solid ${VIOLET}`, background: "rgba(15,110,85,0.06)", color: VIOLET, fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}>
               <Bot style={{ width: "13px", height: "13px" }} /> Auto Submit
             </button>
             <button onClick={() => setExpanded((p) => !p)} style={{ padding: "10px 11px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", cursor: "pointer", color: "#666" }}>
@@ -468,7 +468,7 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
             <button onClick={openLink} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${GREEN},#059669)`, color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
               <ExternalLink style={{ width: "13px", height: "13px" }} /> Open Application
             </button>
-            <button onClick={autoSubmit} style={{ padding: "10px 12px", borderRadius: "10px", border: `1.5px solid ${VIOLET}`, background: "rgba(124,58,237,0.06)", color: VIOLET, fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}>
+            <button onClick={autoSubmit} style={{ padding: "10px 12px", borderRadius: "10px", border: `1.5px solid ${VIOLET}`, background: "rgba(15,110,85,0.06)", color: VIOLET, fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}>
               <Bot style={{ width: "13px", height: "13px" }} /> Auto
             </button>
             <button onClick={() => setSt((p) => ({ ...p, uiStatus: "idle" }))} style={{ padding: "10px 11px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", cursor: "pointer", color: "#999", fontSize: "12px" }}>Back</button>
@@ -476,7 +476,7 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
         )}
 
         {st.uiStatus === "autosubmitting" && (
-          <div style={{ flex: 1, padding: "12px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.2)" }}>
+          <div style={{ flex: 1, padding: "12px 14px", borderRadius: "10px", background: "rgba(15,110,85,0.06)", border: "1px solid rgba(15,110,85,0.2)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <Loader2 style={{ width: "14px", height: "14px", color: VIOLET, animation: "spin 1s linear infinite", flexShrink: 0 }} />
               <span style={{ fontSize: "13px", color: VIOLET, fontWeight: 600 }}>{autoMsg}</span>
@@ -527,10 +527,10 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
                   type="text" value={otpValue} onChange={(e) => setOtpValue(e.target.value)}
                   placeholder="Enter OTP…" maxLength={10}
                   onKeyDown={(e) => e.key === "Enter" && submitOtp()}
-                  style={{ flex: 1, padding: "10px 14px", borderRadius: "10px", border: "1.5px solid rgba(124,58,237,0.4)", fontSize: "16px", color: "#111", outline: "none", fontFamily: "inherit", letterSpacing: "0.15em", textAlign: "center" }}
+                  style={{ flex: 1, padding: "10px 14px", borderRadius: "10px", border: "1.5px solid rgba(15,110,85,0.4)", fontSize: "16px", color: "#111", outline: "none", fontFamily: "inherit", letterSpacing: "0.15em", textAlign: "center" }}
                 />
                 <button onClick={submitOtp} disabled={!otpValue.trim()}
-                  style={{ padding: "10px 16px", borderRadius: "10px", border: "none", background: otpValue.trim() ? `linear-gradient(135deg,${VIOLET},#5b21b6)` : "rgba(0,0,0,0.07)", color: otpValue.trim() ? "#fff" : "#bbb", fontSize: "13px", fontWeight: 700, cursor: otpValue.trim() ? "pointer" : "not-allowed" }}>
+                  style={{ padding: "10px 16px", borderRadius: "10px", border: "none", background: otpValue.trim() ? `linear-gradient(135deg,${VIOLET},#084434)` : "rgba(0,0,0,0.07)", color: otpValue.trim() ? "#fff" : "#bbb", fontSize: "13px", fontWeight: 700, cursor: otpValue.trim() ? "pointer" : "not-allowed" }}>
                   Submit
                 </button>
               </div>
@@ -541,7 +541,7 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
         {/* Needs credentials */}
         {st.uiStatus === "needs_credentials" && (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "10px" }}>
-            <div style={{ padding: "12px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.2)" }}>
+            <div style={{ padding: "12px 14px", borderRadius: "10px", background: "rgba(15,110,85,0.05)", border: "1px solid rgba(15,110,85,0.2)" }}>
               <p style={{ fontSize: "13px", fontWeight: 700, color: "#111", margin: "0 0 4px" }}>
                 🔑 {neededPortal ? `${neededPortal.charAt(0).toUpperCase() + neededPortal.slice(1)} login required` : "Login required"}
               </p>
@@ -551,7 +551,7 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
               <button onClick={() => { onNeedsCredentials(neededPortal); setSt((p) => ({ ...p, uiStatus: "idle" })); }}
-                style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${VIOLET},#5b21b6)`, color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: `linear-gradient(135deg,${VIOLET},#084434)`, color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                 <KeyRound style={{ width: "13px", height: "13px" }} /> Add Credentials
               </button>
               <a href={st.url || st.portal_url} target="_blank" rel="noopener"
@@ -627,7 +627,7 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
 
               {/* Cover letter */}
               {st.adaptedCoverLetter && (
-                <div style={{ padding: "12px", borderRadius: "10px", background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.14)" }}>
+                <div style={{ padding: "12px", borderRadius: "10px", background: "rgba(15,110,85,0.04)", border: "1px solid rgba(15,110,85,0.14)" }}>
                   <p style={{ fontSize: "11px", fontWeight: 700, color: VIOLET, textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 6px" }}>✨ AI Cover Letter Hook</p>
                   <p style={{ fontSize: "12px", color: "#444", lineHeight: "1.6", fontStyle: "italic", margin: 0 }}>"{st.adaptedCoverLetter}"</p>
                   <button onClick={() => navigator.clipboard.writeText(st.adaptedCoverLetter || "")} style={{ marginTop: "8px", fontSize: "11px", color: VIOLET, background: "none", border: "none", cursor: "pointer", padding: 0, fontWeight: 600 }}>Copy →</button>
@@ -799,7 +799,7 @@ export default function JobApplicationPage() {
 
   if (!limits.autoApplyAccess) {
     return (
-      <div style={{ height: "100%", overflowY: "auto", background: "#F7F7F5", padding: "24px" }}>
+      <div style={{ height: "100%", overflowY: "auto", background: "#FAF7F1", padding: "24px" }}>
         <div style={{ maxWidth: "420px", margin: "0 auto" }}>
           <UpgradeGate requiredPlan="elite" featureName="Auto-Apply"
             description="AI finds matching jobs, tailors your resume per role, auto-submits applications, and tracks all of them." />
@@ -812,7 +812,7 @@ export default function JobApplicationPage() {
 
   if (view === "setup") {
     return (
-      <div style={{ height: "100%", overflowY: "auto", background: "#F7F7F5" }}>
+      <div style={{ height: "100%", overflowY: "auto", background: "#FAF7F1" }}>
         <div style={{ maxWidth: "560px", margin: "0 auto", padding: "32px 20px" }}>
           <div style={{ textAlign: "center", marginBottom: "32px" }}>
             <div style={{ width: "56px", height: "56px", borderRadius: "16px", background: `linear-gradient(135deg,${AMBER},#e67e22)`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
@@ -950,7 +950,7 @@ export default function JobApplicationPage() {
   // ── Dashboard ─────────────────────────────────────────────────────────────────
 
   return (
-    <div style={{ height: "100%", overflowY: "auto", background: "#F7F7F5" }}>
+    <div style={{ height: "100%", overflowY: "auto", background: "#FAF7F1" }}>
       {showCredsModal && (
         <PortalCredentialsModal
           initialPortal={modalPortal}
@@ -989,7 +989,7 @@ export default function JobApplicationPage() {
               <span style={{ fontSize: "10px", color: "#888", fontWeight: 400 }}>Saved once, used automatically</span>
             </div>
             <button onClick={() => { setModalPortal("linkedin"); setShowCredsModal(true); }}
-              style={{ fontSize: "11px", padding: "4px 12px", borderRadius: "20px", border: `1px solid ${VIOLET}`, background: "rgba(124,58,237,0.06)", color: VIOLET, cursor: "pointer", fontWeight: 600 }}>
+              style={{ fontSize: "11px", padding: "4px 12px", borderRadius: "20px", border: `1px solid ${VIOLET}`, background: "rgba(15,110,85,0.06)", color: VIOLET, cursor: "pointer", fontWeight: 600 }}>
               + Add
             </button>
           </div>

@@ -176,7 +176,7 @@ export default function LoginPage() {
   const input: React.CSSProperties = {
     width: "100%",
     background: "rgba(15,8,30,0.8)",
-    border: "1px solid rgba(124,58,237,0.25)",
+    border: "1px solid rgba(15,110,85,0.25)",
     borderRadius: "10px",
     padding: "11px 12px 11px 40px",
     color: "#f1f5f9",
@@ -267,9 +267,9 @@ export default function LoginPage() {
 
       {/* Divider */}
       <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
-        <div style={{ flex: 1, height: "1px", background: "rgba(124,58,237,0.15)" }} />
+        <div style={{ flex: 1, height: "1px", background: "rgba(15,110,85,0.15)" }} />
         <span style={{ fontSize: "12px", color: "#475569" }}>or continue with email</span>
-        <div style={{ flex: 1, height: "1px", background: "rgba(124,58,237,0.15)" }} />
+        <div style={{ flex: 1, height: "1px", background: "rgba(15,110,85,0.15)" }} />
       </div>
 
       {/* Email/Password Form */}
@@ -283,8 +283,8 @@ export default function LoginPage() {
             placeholder="you@example.com"
             required
             style={input}
-            onFocus={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.5)")}
-            onBlur={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.25)")}
+            onFocus={(e) => (e.target.style.borderColor = "rgba(15,110,85,0.5)")}
+            onBlur={(e) => (e.target.style.borderColor = "rgba(15,110,85,0.25)")}
           />
         </div>
 
@@ -298,8 +298,8 @@ export default function LoginPage() {
               placeholder="Your password"
               required
               style={{ ...input, paddingRight: "44px" }}
-              onFocus={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.5)")}
-              onBlur={(e) => (e.target.style.borderColor = "rgba(124,58,237,0.25)")}
+              onFocus={(e) => (e.target.style.borderColor = "rgba(15,110,85,0.5)")}
+              onBlur={(e) => (e.target.style.borderColor = "rgba(15,110,85,0.25)")}
             />
             <button
               type="button"
@@ -312,7 +312,7 @@ export default function LoginPage() {
           <div style={{ textAlign: "right", marginTop: "6px" }}>
             <Link
               href="/forgot-password"
-              style={{ fontSize: "12px", color: "#a78bfa", textDecoration: "none" }}
+              style={{ fontSize: "12px", color: "#5FAE93", textDecoration: "none" }}
               onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
               onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
             >
@@ -333,7 +333,7 @@ export default function LoginPage() {
           style={{
             width: "100%",
             padding: "12px",
-            background: isLoading || isGoogleLoading ? "rgba(124,58,237,0.4)" : "linear-gradient(135deg,#7c3aed,#6d28d9)",
+            background: isLoading || isGoogleLoading ? "rgba(15,110,85,0.4)" : "linear-gradient(135deg,#0F6E55,#0A523F)",
             border: "none",
             borderRadius: "10px",
             color: "white",
@@ -345,7 +345,7 @@ export default function LoginPage() {
             alignItems: "center",
             justifyContent: "center",
             gap: "8px",
-            boxShadow: isLoading || isGoogleLoading ? "none" : "0 4px 16px rgba(124,58,237,0.3)",
+            boxShadow: isLoading || isGoogleLoading ? "none" : "0 4px 16px rgba(15,110,85,0.3)",
           }}
         >
           {isLoading && <Loader2 style={{ width: "15px", height: "15px", animation: "spin 1s linear infinite" }} />}
@@ -357,7 +357,7 @@ export default function LoginPage() {
         New to Mithra?{" "}
         <Link
           href="/register"
-          style={{ color: "#a78bfa", textDecoration: "none", fontWeight: 600 }}
+          style={{ color: "#5FAE93", textDecoration: "none", fontWeight: 600 }}
           onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
           onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
         >

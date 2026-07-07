@@ -20,7 +20,7 @@ import { UsagePill } from "@/components/ui/UpgradeNudge";
 import { trackPage } from "@/lib/analytics";
 
 const NAV_ITEMS = [
-  { href: "/resume-builder", icon: FileText, label: "Resume Builder", color: "#7c3aed", description: "Every line you write is a promise to your future self." },
+  { href: "/resume-builder", icon: FileText, label: "Resume Builder", color: "#0F6E55", description: "Every line you write is a promise to your future self." },
   { href: "/resume-score",   icon: Award,    label: "Resume Score",   color: "#10b981", description: "See exactly where your resume wins and where it loses.", badge: "Free" },
   { href: "/resume-adaptor", icon: Target,   label: "Resume Adaptor", color: "#06b6d4", description: "A single role, seen through a thousand lenses." },
   { href: "/job-finder",     icon: Search,   label: "Job Finder",     color: "#10b981", description: "Somewhere in the noise, one job was written for you." },
@@ -32,13 +32,13 @@ const NAV_ITEMS = [
 
 const BOTTOM_PRIMARY = [
   { href: "/resume-score",   icon: Award,    label: "Score",    color: "#10b981" },
-  { href: "/resume-builder", icon: FileText, label: "Builder",  color: "#7c3aed" },
+  { href: "/resume-builder", icon: FileText, label: "Builder",  color: "#0F6E55" },
   { href: "/resume-adaptor", icon: Target,   label: "Adaptor",  color: "#06b6d4" },
   { href: "/interview-prep", icon: Brain,    label: "Interview",color: "#f97316" },
 ];
 
 const MORE_ITEMS = [
-  { href: "/resume-builder", icon: FileText, label: "Resume Builder", color: "#7c3aed", emoji: "📄" },
+  { href: "/resume-builder", icon: FileText, label: "Resume Builder", color: "#0F6E55", emoji: "📄" },
   { href: "/job-finder",     icon: Search,   label: "Job Finder",     color: "#10b981", emoji: "🔍" },
   { href: "/tracker",        icon: BarChart3,label: "Tracker",        color: "#6366f1", emoji: "📊" },
   { href: "/referral",       icon: Gift,     label: "Refer & Earn",   color: "#10b981", emoji: "🎁" },
@@ -47,7 +47,7 @@ const MORE_ITEMS = [
 
 const PLAN_COLORS: Record<string, { bg: string; color: string; label: string }> = {
   free:  { bg: "rgba(100,116,139,0.1)",  color: "#64748b", label: "Free"  },
-  pro:   { bg: "rgba(124,58,237,0.1)",   color: "#7c3aed", label: "Pro"   },
+  pro:   { bg: "rgba(15,110,85,0.1)",   color: "#0F6E55", label: "Pro"   },
   elite: { bg: "rgba(245,158,11,0.1)",   color: "#d97706", label: "Elite" },
 };
 
@@ -62,17 +62,17 @@ function BottomTab({ href, icon: Icon, label, color: _color, active }: {
       {active && (
         <motion.div layoutId="mob-tab-indicator"
           className="absolute top-0 left-1/2 -translate-x-1/2 rounded-full"
-          style={{ width: "20px", height: "2px", background: "#7c3aed" }}
+          style={{ width: "20px", height: "2px", background: "#0F6E55" }}
           transition={{ type: "spring", stiffness: 500, damping: 35 }} />
       )}
       <motion.div whileTap={{ scale: 0.85 }} transition={{ type: "spring", stiffness: 500, damping: 30 }}
         style={{
           width: "40px", height: "34px", borderRadius: "10px",
           display: "flex", alignItems: "center", justifyContent: "center",
-          background: active ? "rgba(124,58,237,0.08)" : "transparent",
+          background: active ? "rgba(15,110,85,0.08)" : "transparent",
           transition: "background 0.15s",
         }}>
-        <Icon className="w-[19px] h-[19px]" style={{ color: active ? "#7c3aed" : "#999999" }} />
+        <Icon className="w-[19px] h-[19px]" style={{ color: active ? "#0F6E55" : "#999999" }} />
       </motion.div>
       <span style={{ fontSize: "10px", fontWeight: active ? 600 : 500, color: active ? "#111111" : "#999999", lineHeight: 1, letterSpacing: "-0.2px" }}>
         {label}
@@ -118,25 +118,30 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "#F7F7F5" }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: "#FAF7F1" }}>
 
-      {/* ═══ DESKTOP SIDEBAR ═══ */}
+      {/* ═══ DESKTOP SIDEBAR — forest ink panel ═══ */}
       <motion.aside
         animate={{ width: collapsed ? 72 : 260 }}
         transition={{ duration: 0.25, ease: "easeInOut" }}
-        className="relative hidden md:flex flex-col border-r shrink-0 overflow-hidden"
-        style={{ borderColor: "rgba(0,0,0,0.08)", background: "#FFFFFF" }}>
+        className="relative hidden md:flex flex-col shrink-0 overflow-hidden"
+        style={{
+          background: "linear-gradient(178deg, #0C221B 0%, #0A1D17 60%, #081812 100%)",
+          boxShadow: "inset -1px 0 0 rgba(255,255,255,0.06)",
+        }}>
 
-        <div className="h-16 flex items-center px-4 border-b shrink-0" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
-          <Link href="/" className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#7c3aed" }}>
-              <Sparkles className="w-4 h-4 text-white" />
+        <div className="h-16 flex items-center px-4 shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+          <Link href="/" className="flex items-center gap-3 min-w-0" style={{ textDecoration: "none" }}>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)" }}>
+              <Sparkles className="w-4 h-4" style={{ color: "#E9C46A" }} />
             </div>
             <AnimatePresence>
               {!collapsed && (
                 <motion.span initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
-                  className="text-base font-bold truncate" style={{ color: "#111111", letterSpacing: "-0.3px" }}>
-                  Mithra AI
+                  className="truncate"
+                  style={{ color: "#F5F1E6", fontFamily: "var(--font-display), Georgia, serif", fontSize: "19px", fontWeight: 600, letterSpacing: "0.01em" }}>
+                  Mithra
                 </motion.span>
               )}
             </AnimatePresence>
@@ -149,25 +154,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             return (
               <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined}
                 className={cn("flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-150 group relative")}
-                style={active ? { background: "rgba(124,58,237,0.07)" } : {}}
-                onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "rgba(0,0,0,0.03)"; }}
+                style={active ? { background: "rgba(233,196,106,0.1)" } : {}}
+                onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
                 onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "transparent"; }}>
-                {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full" style={{ background: "#7c3aed" }} />}
+                {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full" style={{ background: "#E9C46A" }} />}
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all">
-                  <item.icon className="w-4 h-4" style={{ color: active ? "#7c3aed" : "#888888" }} />
+                  <item.icon className="w-4 h-4" style={{ color: active ? "#E9C46A" : "rgba(245,241,230,0.55)" }} />
                 </div>
                 <AnimatePresence>
                   {!collapsed && (
                     <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} className="min-w-0">
-                      <div className="text-sm font-medium truncate flex items-center gap-2" style={{ color: active ? "#111111" : "#555555" }}>
+                      <div className="text-sm font-medium truncate flex items-center gap-2" style={{ color: active ? "#F5F1E6" : "rgba(245,241,230,0.78)" }}>
                         {item.label}
                         {(item as { badge?: string }).badge && (
-                          <span style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "4px", background: "rgba(16,185,129,0.1)", color: "#10b981", fontWeight: 700, letterSpacing: "0.3px" }}>
+                          <span style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "4px", background: "rgba(233,196,106,0.15)", color: "#E9C46A", fontWeight: 700, letterSpacing: "0.3px" }}>
                             {(item as { badge?: string }).badge}
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] truncate" style={{ color: "#aaaaaa" }}>{item.description}</div>
+                      <div className="text-[11px] truncate" style={{ color: "rgba(245,241,230,0.35)" }}>{item.description}</div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -177,66 +182,66 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
           <Link href="/pricing" title={collapsed ? "Upgrade" : undefined}
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-150 group relative"
-            style={isUpgradeActive ? { background: "rgba(245,158,11,0.07)" } : {}}
-            onMouseEnter={(e) => { if (!isUpgradeActive) e.currentTarget.style.background = "rgba(0,0,0,0.03)"; }}
+            style={isUpgradeActive ? { background: "rgba(233,196,106,0.12)" } : {}}
+            onMouseEnter={(e) => { if (!isUpgradeActive) e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
             onMouseLeave={(e) => { if (!isUpgradeActive) e.currentTarget.style.background = "transparent"; }}>
-            {isUpgradeActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full" style={{ background: "#f59e0b" }} />}
+            {isUpgradeActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full" style={{ background: "#E9C46A" }} />}
             <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
-              <Crown className="w-4 h-4" style={{ color: isUpgradeActive ? "#f59e0b" : "#888888" }} />
+              <Crown className="w-4 h-4" style={{ color: "#E9C46A" }} />
             </div>
             <AnimatePresence>
               {!collapsed && (
                 <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} className="min-w-0">
-                  <div className="text-sm font-medium truncate" style={{ color: isUpgradeActive ? "#111111" : "#555555" }}>Upgrade</div>
-                  <div className="text-[11px] truncate" style={{ color: "#aaaaaa" }}>Unlock all agents</div>
+                  <div className="text-sm font-medium truncate" style={{ color: "#E9C46A" }}>Upgrade</div>
+                  <div className="text-[11px] truncate" style={{ color: "rgba(245,241,230,0.35)" }}>Unlock all agents</div>
                 </motion.div>
               )}
             </AnimatePresence>
           </Link>
         </nav>
 
-        <div className="p-2 border-t space-y-0.5" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+        <div className="p-2 space-y-0.5" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
           {isAdmin && (
             <Link href="/admin" title={collapsed ? "Admin" : undefined}
               className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all"
-              style={pathname?.startsWith("/admin") ? { background: "rgba(124,58,237,0.07)" } : {}}
-              onMouseEnter={(e) => { if (!pathname?.startsWith("/admin")) e.currentTarget.style.background = "rgba(124,58,237,0.05)"; }}
+              style={pathname?.startsWith("/admin") ? { background: "rgba(255,255,255,0.07)" } : {}}
+              onMouseEnter={(e) => { if (!pathname?.startsWith("/admin")) e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
               onMouseLeave={(e) => { if (!pathname?.startsWith("/admin")) e.currentTarget.style.background = "transparent"; }}>
-              <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: pathname?.startsWith("/admin") ? "#7c3aed" : "#7c3aed88" }} />
-              {!collapsed && <span className="text-sm font-medium" style={{ color: pathname?.startsWith("/admin") ? "#7c3aed" : "#7c3aed" }}>Admin</span>}
+              <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: "rgba(245,241,230,0.6)" }} />
+              {!collapsed && <span className="text-sm font-medium" style={{ color: "rgba(245,241,230,0.75)" }}>Admin</span>}
             </Link>
           )}
           <Link href="/referral"
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all"
-            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.03)")}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-            <Gift className="w-4 h-4 shrink-0" style={{ color: "#888888" }} />
-            {!collapsed && <span className="text-sm" style={{ color: "#888888" }}>Refer &amp; Earn</span>}
+            <Gift className="w-4 h-4 shrink-0" style={{ color: "rgba(245,241,230,0.5)" }} />
+            {!collapsed && <span className="text-sm" style={{ color: "rgba(245,241,230,0.6)" }}>Refer &amp; Earn</span>}
           </Link>
           <Link href="/"
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all"
-            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.03)")}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-            <Home className="w-4 h-4 shrink-0" style={{ color: "#888888" }} />
-            {!collapsed && <span className="text-sm" style={{ color: "#888888" }}>Home</span>}
+            <Home className="w-4 h-4 shrink-0" style={{ color: "rgba(245,241,230,0.5)" }} />
+            {!collapsed && <span className="text-sm" style={{ color: "rgba(245,241,230,0.6)" }}>Home</span>}
           </Link>
           {user && (
             <button onClick={() => logout()}
               className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all"
-              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239,68,68,0.05)")}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239,68,68,0.12)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-              <LogOut className="w-4 h-4 shrink-0" style={{ color: "#888888" }} />
-              {!collapsed && <span className="text-xs" style={{ color: "#999999" }}>Logout</span>}
+              <LogOut className="w-4 h-4 shrink-0" style={{ color: "rgba(245,241,230,0.5)" }} />
+              {!collapsed && <span className="text-xs" style={{ color: "rgba(245,241,230,0.55)" }}>Logout</span>}
             </button>
           )}
           <button onClick={() => setCollapsed(!collapsed)}
             className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all"
-            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.03)")}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
             {collapsed
-              ? <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "#888888" }} />
-              : <ChevronLeft  className="w-4 h-4 shrink-0" style={{ color: "#888888" }} />}
-            {!collapsed && <span className="text-xs" style={{ color: "#999999" }}>Collapse</span>}
+              ? <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "rgba(245,241,230,0.5)" }} />
+              : <ChevronLeft  className="w-4 h-4 shrink-0" style={{ color: "rgba(245,241,230,0.5)" }} />}
+            {!collapsed && <span className="text-xs" style={{ color: "rgba(245,241,230,0.55)" }}>Collapse</span>}
           </button>
         </div>
       </motion.aside>
@@ -246,10 +251,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* Desktop top bar */}
         <header className="hidden md:flex h-16 items-center justify-between px-6 border-b shrink-0"
-          style={{ borderColor: "rgba(0,0,0,0.08)", background: "#FFFFFF" }}>
+          style={{ borderColor: "rgba(20,40,30,0.09)", background: "rgba(250,247,241,0.85)", backdropFilter: "blur(8px)" }}>
           <div>
-            <h1 className="text-sm font-semibold" style={{ color: "#111111" }}>{currentPage?.label || "Dashboard"}</h1>
-            <p className="text-xs" style={{ color: "#888888" }}>{currentPage?.description}</p>
+            <h1 style={{ color: "#14281E", fontSize: "17px", fontWeight: 600 }}>{currentPage?.label || "Dashboard"}</h1>
+            <p className="text-xs" style={{ color: "#8A8474", fontStyle: "italic" }}>{currentPage?.description}</p>
           </div>
           <div className="flex items-center gap-2">
             <Link href="/referral" title="Referrals & Rewards"
@@ -280,7 +285,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   border: "1px solid rgba(0,0,0,0.09)",
                   borderRadius: "24px", cursor: "pointer",
                 }}>
-                <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: "#7c3aed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, color: "white" }}>
+                <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: "#0F6E55", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, color: "white" }}>
                   {userInitials}
                 </div>
                 {user && (
@@ -319,8 +324,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     {[
                       { icon: Crown,       label: "Upgrade Plan",      href: "/pricing",      color: "#f59e0b" },
                       { icon: Gift,        label: "Refer & Earn",      href: "/referral",     color: "#10b981" },
-                      { icon: Award,       label: "Resume Score",      href: "/resume-score", color: "#7c3aed" },
-                      ...(isAdmin ? [{ icon: ShieldCheck, label: "Admin Dashboard", href: "/admin", color: "#7c3aed" }] : []),
+                      { icon: Award,       label: "Resume Score",      href: "/resume-score", color: "#0F6E55" },
+                      ...(isAdmin ? [{ icon: ShieldCheck, label: "Admin Dashboard", href: "/admin", color: "#0F6E55" }] : []),
                       { icon: Home,        label: "Back to Home",      href: "/",             color: "#888888" },
                     ].map(({ icon: Icon, label, href, color }) => (
                       <Link key={label} href={href} onClick={() => setAvatarOpen(false)}
@@ -353,7 +358,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           style={{ borderColor: "rgba(0,0,0,0.08)", background: "#FFFFFF", zIndex: 30 }}>
           <div className="flex items-center gap-2.5 min-w-0">
             <Link href="/" className="shrink-0">
-              <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#7c3aed", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: "26px", height: "26px", borderRadius: "7px", background: "#0F6E55", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Sparkles style={{ width: "12px", height: "12px", color: "white" }} />
               </div>
             </Link>
@@ -388,7 +393,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   border: "1px solid rgba(0,0,0,0.09)",
                   borderRadius: "24px", cursor: "pointer",
                 }}>
-                <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#7c3aed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "white" }}>
+                <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#0F6E55", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "white" }}>
                   {userInitials}
                 </div>
                 <motion.div animate={{ rotate: avatarOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
@@ -544,7 +549,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </div>
 
               <div style={{ padding: "0 16px 24px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
-                {[...MORE_ITEMS, ...(isAdmin ? [{ href: "/admin", icon: ShieldCheck, label: "Admin", color: "#7c3aed", emoji: "🛡️" }] : [])].map((item) => {
+                {[...MORE_ITEMS, ...(isAdmin ? [{ href: "/admin", icon: ShieldCheck, label: "Admin", color: "#0F6E55", emoji: "🛡️" }] : [])].map((item) => {
                   const active = pathname?.startsWith(item.href);
                   const typedItem = item as typeof item & { badge?: string };
                   return (
@@ -554,8 +559,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                           display: "flex", flexDirection: "column", alignItems: "center", gap: "8px",
                           padding: "16px 6px 14px",
                           borderRadius: "14px",
-                          background: active ? "rgba(124,58,237,0.06)" : "rgba(0,0,0,0.02)",
-                          border: `1px solid ${active ? "rgba(124,58,237,0.18)" : "rgba(0,0,0,0.07)"}`,
+                          background: active ? "rgba(15,110,85,0.06)" : "rgba(0,0,0,0.02)",
+                          border: `1px solid ${active ? "rgba(15,110,85,0.18)" : "rgba(0,0,0,0.07)"}`,
                           position: "relative",
                         }}>
                         {(item.beta || typedItem.badge) && (
@@ -564,7 +569,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                           </span>
                         )}
                         <div style={{ width: "42px", height: "42px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.07)" }}>
-                          <item.icon style={{ width: "19px", height: "19px", color: active ? "#7c3aed" : "#888888" }} />
+                          <item.icon style={{ width: "19px", height: "19px", color: active ? "#0F6E55" : "#888888" }} />
                         </div>
                         <span style={{ fontSize: "11px", fontWeight: 600, color: active ? "#111111" : "#666666", textAlign: "center", lineHeight: 1.2 }}>
                           {item.label}

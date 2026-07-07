@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Fraunces, Instrument_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-display",
+  axes: ["SOFT", "WONK", "opsz"],
+});
+const instrument = Instrument_Sans({ subsets: ["latin"], variable: "--font-body" });
 
 export const metadata: Metadata = {
   title: "Mithra AI — Your Elite Career Companion",
@@ -18,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} h-full`}>
+    <html lang="en" className={`${fraunces.variable} ${instrument.variable} h-full`}>
       <body className="h-full antialiased" suppressHydrationWarning>
         {children}
         <Analytics />

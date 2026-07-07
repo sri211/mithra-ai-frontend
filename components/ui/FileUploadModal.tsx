@@ -154,7 +154,7 @@ export function FileUploadModal({ isOpen, onClose, onResumeParsed }: FileUploadM
             style={{
               background: "rgba(15,10,30,0.98)",
               backdropFilter: "blur(30px)",
-              border: "1px solid rgba(124,58,237,0.25)",
+              border: "1px solid rgba(15,110,85,0.25)",
               boxShadow: "0 20px 80px rgba(0,0,0,0.6)",
             }}>
 
@@ -183,15 +183,15 @@ export function FileUploadModal({ isOpen, onClose, onResumeParsed }: FileUploadM
               )}
               style={{
                 background: isDragging
-                  ? "rgba(124,58,237,0.12)"
+                  ? "rgba(15,110,85,0.12)"
                   : file
                   ? "rgba(16,185,129,0.06)"
                   : "rgba(26,16,51,0.6)",
                 borderColor: isDragging
-                  ? "rgba(124,58,237,0.7)"
+                  ? "rgba(15,110,85,0.7)"
                   : file
                   ? "rgba(16,185,129,0.4)"
-                  : "rgba(124,58,237,0.2)",
+                  : "rgba(15,110,85,0.2)",
               }}>
               <input
                 ref={inputRef}
@@ -222,7 +222,7 @@ export function FileUploadModal({ isOpen, onClose, onResumeParsed }: FileUploadM
                   <motion.div
                     animate={{ y: isDragging ? -4 : 0 }}
                     className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                    style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.2)" }}>
+                    style={{ background: "rgba(15,110,85,0.12)", border: "1px solid rgba(15,110,85,0.2)" }}>
                     <Upload className="w-7 h-7 text-violet-400" />
                   </motion.div>
                   <div>
@@ -257,7 +257,7 @@ export function FileUploadModal({ isOpen, onClose, onResumeParsed }: FileUploadM
                   : "text-slate-600 cursor-not-allowed",
               )}
               style={file && !isParsing && !success
-                ? { background: "linear-gradient(135deg,#7c3aed,#6d28d9)", boxShadow: "0 4px 20px rgba(124,58,237,0.4)" }
+                ? { background: "linear-gradient(135deg,#0F6E55,#0A523F)", boxShadow: "0 4px 20px rgba(15,110,85,0.4)" }
                 : { background: "rgba(255,255,255,0.05)" }}>
               {success ? (
                 <><Check className="w-4 h-4 text-emerald-400" /> <span className="text-emerald-400">Parsed successfully!</span></>

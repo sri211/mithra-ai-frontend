@@ -21,7 +21,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!hasHydrated) {
     return (
       <div style={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center", background: "#0f0a1e" }}>
-        <div style={{ width: "36px", height: "36px", borderRadius: "50%", border: "3px solid rgba(124,58,237,0.2)", borderTopColor: "#7c3aed", animation: "spin 0.7s linear infinite" }} />
+        <div style={{ width: "36px", height: "36px", borderRadius: "50%", border: "3px solid rgba(15,110,85,0.2)", borderTopColor: "#0F6E55", animation: "spin 0.7s linear infinite" }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );

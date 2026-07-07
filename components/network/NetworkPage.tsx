@@ -21,7 +21,7 @@ interface Connection {
 }
 
 const MOCK_CONNECTIONS: Connection[] = [
-  { id: "c1", name: "Priya Sharma", role: "Engineering Manager", company: "Google", avatar: "PS", color: "#7c3aed", type: "hiring_manager", mutual: 12, why: "Direct hiring manager for the infrastructure team. Has posted about new headcount.", draft: "Hi Priya! I noticed your team recently shipped new Search infrastructure. I'm exploring senior engineering roles at Google and would love a 15-min chat!", linkedin_search: "https://www.linkedin.com/search/results/people/?keywords=Engineering+Manager+Google+India", email_pattern: "priya.sharma@google.com" },
+  { id: "c1", name: "Priya Sharma", role: "Engineering Manager", company: "Google", avatar: "PS", color: "#0F6E55", type: "hiring_manager", mutual: 12, why: "Direct hiring manager for the infrastructure team. Has posted about new headcount.", draft: "Hi Priya! I noticed your team recently shipped new Search infrastructure. I'm exploring senior engineering roles at Google and would love a 15-min chat!", linkedin_search: "https://www.linkedin.com/search/results/people/?keywords=Engineering+Manager+Google+India", email_pattern: "priya.sharma@google.com" },
   { id: "c2", name: "Arjun Nair", role: "Tech Recruiter", company: "Google", avatar: "AN", color: "#06b6d4", type: "recruiter", mutual: 5, why: "Active Google recruiter handling engineering hires in Bangalore.", draft: "Hi Arjun, I'm a senior engineer with 6 years in distributed systems. Actively exploring Google Bangalore roles. Would love to connect!", linkedin_search: "https://www.linkedin.com/search/results/people/?keywords=Technical+Recruiter+Google+Bangalore", email_pattern: "arjun.nair@google.com" },
   { id: "c3", name: "Kavya Reddy", role: "Staff Engineer", company: "Google", avatar: "KR", color: "#10b981", type: "team_member", mutual: 8, why: "Team member who can share inside view of culture and interview process.", draft: "Hi Kavya! Your talk on Kubernetes optimization was brilliant. I'm exploring roles in your space and would love a quick coffee chat!", linkedin_search: "https://www.linkedin.com/search/results/people/?keywords=Staff+Software+Engineer+Google+India", email_pattern: "kavya.reddy@google.com" },
   { id: "c4", name: "Vikram Patel", role: "Senior Engineer", company: "Razorpay", avatar: "VP", color: "#f59e0b", type: "alumnus", mutual: 15, why: "Former Googler who can give real interview insights and possibly provide a referral.", draft: "Hi Vikram! I see you made the Google to fintech move. Would love your perspective on Google's interview process!", linkedin_search: "https://www.linkedin.com/search/results/people/?keywords=Senior+Engineer+ex-Google+India", email_pattern: "vikram.patel@razorpay.com" },
@@ -44,7 +44,7 @@ function ConnectionCard({ conn, copiedId, onCopy }: { conn: Connection; copiedId
   if (conn.is_search_card) {
     return (
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-        style={{ background: "rgba(15,9,28,0.7)", border: "1px dashed rgba(124,58,237,0.2)", borderRadius: "16px", padding: "16px" }}>
+        style={{ background: "rgba(15,9,28,0.7)", border: "1px dashed rgba(15,110,85,0.2)", borderRadius: "16px", padding: "16px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
           <div style={{ width: "44px", height: "44px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", background: "rgba(100,116,139,0.1)", flexShrink: 0 }}>🔍</div>
           <div>
@@ -52,7 +52,7 @@ function ConnectionCard({ conn, copiedId, onCopy }: { conn: Connection; copiedId
             <div style={{ fontSize: "11px", color: "#888888" }}>{conn.role}</div>
           </div>
         </div>
-        <button onClick={() => window.open(linkedinUrl, "_blank")} style={{ width: "100%", padding: "10px", background: "rgba(124,58,237,0.1)", border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", color: "#7c3aed", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+        <button onClick={() => window.open(linkedinUrl, "_blank")} style={{ width: "100%", padding: "10px", background: "rgba(15,110,85,0.1)", border: "1px solid rgba(0,0,0,0.12)", borderRadius: "10px", color: "#0F6E55", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
           <LinkedInIcon style={{ width: "14px", height: "14px" }} />Search on LinkedIn
         </button>
       </motion.div>
@@ -61,7 +61,7 @@ function ConnectionCard({ conn, copiedId, onCopy }: { conn: Connection; copiedId
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-      style={{ background: "#FFFFFF", border: `1px solid ${conn.is_real ? "rgba(16,185,129,0.2)" : "rgba(124,58,237,0.15)"}`, borderRadius: "16px", overflow: "hidden" }}>
+      style={{ background: "#FFFFFF", border: `1px solid ${conn.is_real ? "rgba(16,185,129,0.2)" : "rgba(15,110,85,0.15)"}`, borderRadius: "16px", overflow: "hidden" }}>
 
       {/* Header — always visible */}
       <div style={{ padding: "16px", display: "flex", gap: "12px", alignItems: "flex-start" }}>
@@ -89,12 +89,12 @@ function ConnectionCard({ conn, copiedId, onCopy }: { conn: Connection; copiedId
 
       {/* Why connect — always visible */}
       <div style={{ margin: "0 16px", padding: "10px 12px", borderRadius: "10px", fontSize: "12px", color: "#333333", lineHeight: "1.6", background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.08)", marginBottom: "12px" }}>
-        <span style={{ color: "#7c3aed", fontWeight: 600 }}>Why connect: </span>{conn.why}
+        <span style={{ color: "#0F6E55", fontWeight: 600 }}>Why connect: </span>{conn.why}
       </div>
 
       {/* AI draft — expandable */}
       <div style={{ margin: "0 16px 12px" }}>
-        <button onClick={() => setExpanded(!expanded)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "10px", cursor: "pointer", fontSize: "12px", color: "#7c3aed", fontWeight: 600 }}>
+        <button onClick={() => setExpanded(!expanded)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", background: "rgba(15,110,85,0.06)", border: "1px solid rgba(15,110,85,0.2)", borderRadius: "10px", cursor: "pointer", fontSize: "12px", color: "#0F6E55", fontWeight: 600 }}>
           <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <Sparkles style={{ width: "11px", height: "11px" }} />AI-Drafted Message
           </span>
@@ -103,11 +103,11 @@ function ConnectionCard({ conn, copiedId, onCopy }: { conn: Connection; copiedId
         <AnimatePresence>
           {expanded && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: "hidden" }}>
-              <div style={{ padding: "12px", background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.12)", borderTop: "none", borderRadius: "0 0 10px 10px" }}>
+              <div style={{ padding: "12px", background: "rgba(15,110,85,0.04)", border: "1px solid rgba(15,110,85,0.12)", borderTop: "none", borderRadius: "0 0 10px 10px" }}>
                 <p style={{ fontSize: "13px", color: "#333333", lineHeight: "1.65", marginBottom: "10px" }}>{conn.draft}</p>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span style={{ fontSize: "10px", color: "#888888" }}>{conn.draft?.length || 0} / 280 chars</span>
-                  <button onClick={() => onCopy(conn.id, conn.draft)} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: 600, background: "none", border: "none", cursor: "pointer", color: copiedId === conn.id ? "#10b981" : "#a78bfa", padding: "4px 8px", borderRadius: "6px" }}>
+                  <button onClick={() => onCopy(conn.id, conn.draft)} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: 600, background: "none", border: "none", cursor: "pointer", color: copiedId === conn.id ? "#10b981" : "#5FAE93", padding: "4px 8px", borderRadius: "6px" }}>
                     {copiedId === conn.id ? <><Check style={{ width: "12px", height: "12px" }} />Copied!</> : <><Copy style={{ width: "12px", height: "12px" }} />Copy</>}
                   </button>
                 </div>
@@ -185,9 +185,9 @@ export default function NetworkPage() {
   };
 
   const S = {
-    page: { height: "100%", overflowY: "auto" as const, background: "#F7F7F5" },
+    page: { height: "100%", overflowY: "auto" as const, background: "#FAF7F1" },
     inner: { maxWidth: "860px", margin: "0 auto", padding: "20px 16px", display: "flex", flexDirection: "column" as const, gap: "20px" },
-    card: { background: "#FFFFFF", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "16px", padding: "20px" },
+    card: { background: "#FFFFFF", border: "1px solid rgba(15,110,85,0.2)", borderRadius: "16px", padding: "20px" },
     inputBox: { display: "flex", alignItems: "center", gap: "8px", background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.12)", borderRadius: "12px", padding: "12px 14px" },
     inputEl: { flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "14px", color: "#111111", fontFamily: "inherit" },
   };
@@ -228,7 +228,7 @@ export default function NetworkPage() {
                 <MapPin style={{ width: "16px", height: "16px", color: "#888888", flexShrink: 0 }} />
                 <input value={location} onChange={(e) => setLocation(e.target.value)} onKeyDown={(e) => e.key === "Enter" && findConnections()} style={S.inputEl} placeholder="Country / City (e.g. India, Bangalore)..." />
               </div>
-              <button onClick={findConnections} disabled={isSearching || !company.trim() || !role.trim()} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "12px 24px", background: isSearching || !company.trim() || !role.trim() ? "rgba(124,58,237,0.4)" : "linear-gradient(135deg,#7c3aed,#6d28d9)", border: "none", borderRadius: "12px", color: "white", fontSize: "14px", fontWeight: 700, cursor: isSearching || !company.trim() || !role.trim() ? "not-allowed" : "pointer", flexShrink: 0, boxShadow: "0 4px 16px rgba(124,58,237,0.3)", minWidth: "140px" }}>
+              <button onClick={findConnections} disabled={isSearching || !company.trim() || !role.trim()} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "12px 24px", background: isSearching || !company.trim() || !role.trim() ? "rgba(15,110,85,0.4)" : "linear-gradient(135deg,#0F6E55,#0A523F)", border: "none", borderRadius: "12px", color: "white", fontSize: "14px", fontWeight: 700, cursor: isSearching || !company.trim() || !role.trim() ? "not-allowed" : "pointer", flexShrink: 0, boxShadow: "0 4px 16px rgba(15,110,85,0.3)", minWidth: "140px" }}>
                 {isSearching ? <motion.div style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} /> : <UserCheck style={{ width: "16px", height: "16px" }} />}
                 {isSearching ? "Finding..." : "Find People"}
               </button>
@@ -290,7 +290,7 @@ export default function NetworkPage() {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
                 <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#111111" }}>
                   {connections.filter(c => !c.is_search_card).length} connections at{" "}
-                  <span style={{ color: "#7c3aed" }}>{company}</span>
+                  <span style={{ color: "#0F6E55" }}>{company}</span>
                   <span style={{ color: "#888888", fontWeight: 400 }}> · {role}</span>
                   {limits.networkContacts !== -1 && (
                     <span style={{ color: "#888888", fontWeight: 400, fontSize: "12px" }}> (showing {Math.min(visible.length, maxVisible)} of {connections.length})</span>
@@ -308,12 +308,12 @@ export default function NetworkPage() {
                 ))}
               </div>
               {hidden > 0 && (
-                <div style={{ marginTop: "16px", padding: "16px 20px", borderRadius: "14px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(0,0,0,0.12)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" as const }}>
+                <div style={{ marginTop: "16px", padding: "16px 20px", borderRadius: "14px", background: "rgba(15,110,85,0.06)", border: "1px solid rgba(0,0,0,0.12)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" as const }}>
                   <div>
                     <div style={{ fontSize: "13px", fontWeight: 700, color: "#111111", marginBottom: "3px" }}>+{hidden} more connections hidden</div>
                     <div style={{ fontSize: "12px", color: "#888888" }}>Upgrade to Pro to see all {connections.length} contacts with verified emails.</div>
                   </div>
-                  <a href="/pricing" style={{ display: "flex", alignItems: "center", gap: "6px", padding: "9px 18px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", borderRadius: "10px", color: "white", fontSize: "13px", fontWeight: 700, textDecoration: "none", flexShrink: 0 }}>
+                  <a href="/pricing" style={{ display: "flex", alignItems: "center", gap: "6px", padding: "9px 18px", background: "linear-gradient(135deg,#0F6E55,#0A523F)", borderRadius: "10px", color: "white", fontSize: "13px", fontWeight: 700, textDecoration: "none", flexShrink: 0 }}>
                     👑 Upgrade to Pro
                   </a>
                 </div>

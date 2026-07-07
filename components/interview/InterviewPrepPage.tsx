@@ -46,7 +46,7 @@ interface Feedback {
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const card: React.CSSProperties = {
   background: "#FFFFFF",
-  border: "1px solid rgba(124,58,237,0.2)",
+  border: "1px solid rgba(15,110,85,0.2)",
   borderRadius: "16px",
   padding: "20px",
 };
@@ -73,14 +73,14 @@ const btnPrimary: React.CSSProperties = {
   justifyContent: "center",
   gap: "8px",
   padding: "12px 24px",
-  background: "linear-gradient(135deg,#7c3aed,#6d28d9)",
+  background: "linear-gradient(135deg,#0F6E55,#0A523F)",
   border: "none",
   borderRadius: "12px",
   color: "white",
   fontSize: "14px",
   fontWeight: 700,
   cursor: "pointer",
-  boxShadow: "0 4px 20px rgba(124,58,237,0.3)",
+  boxShadow: "0 4px 20px rgba(15,110,85,0.3)",
 };
 const btnOutline: React.CSSProperties = {
   display: "flex",
@@ -89,9 +89,9 @@ const btnOutline: React.CSSProperties = {
   gap: "8px",
   padding: "10px 20px",
   background: "none",
-  border: "1px solid rgba(124,58,237,0.4)",
+  border: "1px solid rgba(15,110,85,0.4)",
   borderRadius: "12px",
-  color: "#7c3aed",
+  color: "#0F6E55",
   fontSize: "13px",
   fontWeight: 600,
   cursor: "pointer",
@@ -119,7 +119,7 @@ export default function InterviewPrepPage() {
 
   if (!limits.interviewPrepAccess) {
     return (
-      <div style={{ height: "100%", overflowY: "auto", background: "#F7F7F5", padding: "24px 16px" }}>
+      <div style={{ height: "100%", overflowY: "auto", background: "#FAF7F1", padding: "24px 16px" }}>
         <div style={{ maxWidth: "480px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "16px" }}>
           <UpgradeGate
             requiredPlan="pro"
@@ -283,7 +283,7 @@ export default function InterviewPrepPage() {
   };
 
   return (
-    <div style={{ height: "100%", overflowY: "auto", background: "#F7F7F5" }}>
+    <div style={{ height: "100%", overflowY: "auto", background: "#FAF7F1" }}>
       <div className="ip-page" style={{ maxWidth: "1100px", margin: "0 auto", padding: "24px", display: "flex", flexDirection: "column", gap: "24px" }}>
 
         {/* Page header */}
@@ -547,7 +547,7 @@ export default function InterviewPrepPage() {
                       </div>
                     )}
                     {coachMessages.map((m, i) => (
-                      <div key={i} style={{ fontSize: "12px", lineHeight: "1.6", padding: "8px 12px", borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: m.role === "user" ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "rgba(26,16,51,0.9)", border: m.role === "user" ? "none" : "1px solid rgba(0,0,0,0.12)", color: m.role === "user" ? "white" : "#cbd5e1" }}>
+                      <div key={i} style={{ fontSize: "12px", lineHeight: "1.6", padding: "8px 12px", borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: m.role === "user" ? "linear-gradient(135deg,#0F6E55,#0A523F)" : "rgba(26,16,51,0.9)", border: m.role === "user" ? "none" : "1px solid rgba(0,0,0,0.12)", color: m.role === "user" ? "white" : "#cbd5e1" }}>
                         {m.content || "..."}
                       </div>
                     ))}
@@ -561,7 +561,7 @@ export default function InterviewPrepPage() {
                       placeholder="Ask coach..."
                     />
                     <button onClick={sendCoach} disabled={isStreaming}
-                      style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "8px 12px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", border: "none", borderRadius: "10px", cursor: "pointer", flexShrink: 0 }}>
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "8px 12px", background: "linear-gradient(135deg,#0F6E55,#0A523F)", border: "none", borderRadius: "10px", cursor: "pointer", flexShrink: 0 }}>
                       <ChevronRight style={{ width: "14px", height: "14px", color: "white" }} />
                     </button>
                   </div>
@@ -633,8 +633,8 @@ export default function InterviewPrepPage() {
                     </div>
                   </div>
 
-                  <div style={{ ...card, borderColor: "rgba(124,58,237,0.25)", background: "rgba(124,58,237,0.05)" }}>
-                    <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#7c3aed", marginBottom: "8px" }}>Ideal Closing Line</h4>
+                  <div style={{ ...card, borderColor: "rgba(15,110,85,0.25)", background: "rgba(15,110,85,0.05)" }}>
+                    <h4 style={{ fontSize: "13px", fontWeight: 700, color: "#0F6E55", marginBottom: "8px" }}>Ideal Closing Line</h4>
                     <p style={{ fontSize: "13px", color: "#333333", fontStyle: "italic", lineHeight: "1.6" }}>&ldquo;{feedback.ideal_answer_snippet}&rdquo;</p>
                   </div>
 

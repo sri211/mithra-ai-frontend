@@ -5,7 +5,7 @@ import { Plan } from "@/lib/planLimits";
 
 const PLAN_LABELS: Record<Plan, { label: string; color: string }> = {
   free: { label: "Free", color: "#94a3b8" },
-  pro:  { label: "Pro",  color: "#a78bfa" },
+  pro:  { label: "Pro",  color: "#5FAE93" },
   elite:{ label: "Elite",color: "#f59e0b" },
 };
 

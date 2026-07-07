@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
   const input: React.CSSProperties = {
     width: "100%",
     background: "rgba(15,8,30,0.8)",
-    border: "1px solid rgba(124,58,237,0.25)",
+    border: "1px solid rgba(15,110,85,0.25)",
     borderRadius: "10px",
     padding: "11px 12px 11px 40px",
     color: "#f1f5f9",
@@ -58,22 +58,22 @@ export default function ForgotPasswordPage() {
             Check your inbox
           </h1>
           <p style={{ fontSize: "14px", color: "#64748b", lineHeight: 1.7 }}>
-            If <strong style={{ color: "#a78bfa" }}>{email}</strong> is registered, you&apos;ll receive a reset link shortly. Check your spam folder too.
+            If <strong style={{ color: "#5FAE93" }}>{email}</strong> is registered, you&apos;ll receive a reset link shortly. Check your spam folder too.
           </p>
         </div>
-        <div style={{ padding: "14px 16px", borderRadius: "10px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.18)", fontSize: "13px", color: "#94a3b8", lineHeight: 1.6, marginBottom: "20px" }}>
+        <div style={{ padding: "14px 16px", borderRadius: "10px", background: "rgba(15,110,85,0.06)", border: "1px solid rgba(15,110,85,0.18)", fontSize: "13px", color: "#94a3b8", lineHeight: 1.6, marginBottom: "20px" }}>
           The link expires in <strong style={{ color: "#f1f5f9" }}>1 hour</strong>. If you don&apos;t receive it, you can request another below.
         </div>
         <button
           onClick={() => { setSent(false); setEmail(""); }}
-          style={{ width: "100%", padding: "11px", background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.25)", borderRadius: "10px", color: "#a78bfa", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", marginBottom: "12px" }}
+          style={{ width: "100%", padding: "11px", background: "rgba(15,110,85,0.12)", border: "1px solid rgba(15,110,85,0.25)", borderRadius: "10px", color: "#5FAE93", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", marginBottom: "12px" }}
         >
           Send another link
         </button>
         <Link
           href="/login"
           style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontSize: "13px", color: "#64748b", textDecoration: "none", padding: "10px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.06)" }}
-          onMouseEnter={e => (e.currentTarget.style.color = "#a78bfa")}
+          onMouseEnter={e => (e.currentTarget.style.color = "#5FAE93")}
           onMouseLeave={e => (e.currentTarget.style.color = "#64748b")}
         >
           <ArrowLeft style={{ width: "14px", height: "14px" }} />
@@ -105,8 +105,8 @@ export default function ForgotPasswordPage() {
             required
             autoFocus
             style={input}
-            onFocus={e => (e.target.style.borderColor = "rgba(124,58,237,0.5)")}
-            onBlur={e => (e.target.style.borderColor = "rgba(124,58,237,0.25)")}
+            onFocus={e => (e.target.style.borderColor = "rgba(15,110,85,0.5)")}
+            onBlur={e => (e.target.style.borderColor = "rgba(15,110,85,0.25)")}
           />
         </div>
 
@@ -121,13 +121,13 @@ export default function ForgotPasswordPage() {
           disabled={isLoading}
           style={{
             width: "100%", padding: "12px",
-            background: isLoading ? "rgba(124,58,237,0.4)" : "linear-gradient(135deg,#7c3aed,#6d28d9)",
+            background: isLoading ? "rgba(15,110,85,0.4)" : "linear-gradient(135deg,#0F6E55,#0A523F)",
             border: "none", borderRadius: "10px", color: "white",
             fontSize: "14px", fontWeight: 700,
             cursor: isLoading ? "not-allowed" : "pointer",
             fontFamily: "inherit",
             display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-            boxShadow: isLoading ? "none" : "0 4px 16px rgba(124,58,237,0.3)",
+            boxShadow: isLoading ? "none" : "0 4px 16px rgba(15,110,85,0.3)",
           }}
         >
           {isLoading && <Loader2 style={{ width: "15px", height: "15px", animation: "spin 1s linear infinite" }} />}
@@ -138,7 +138,7 @@ export default function ForgotPasswordPage() {
       <Link
         href="/login"
         style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontSize: "13px", color: "#64748b", textDecoration: "none", padding: "10px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.06)", marginTop: "14px" }}
-        onMouseEnter={e => (e.currentTarget.style.color = "#a78bfa")}
+        onMouseEnter={e => (e.currentTarget.style.color = "#5FAE93")}
         onMouseLeave={e => (e.currentTarget.style.color = "#64748b")}
       >
         <ArrowLeft style={{ width: "14px", height: "14px" }} />

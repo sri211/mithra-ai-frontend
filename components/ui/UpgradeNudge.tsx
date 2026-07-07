@@ -16,7 +16,7 @@ interface ProgressNudgeProps {
 }
 
 export function UsageProgressNudge({
-  used, total, noun, period, upgradeLabel = "Upgrade to Pro", accentColor = "#7c3aed", onDismiss,
+  used, total, noun, period, upgradeLabel = "Upgrade to Pro", accentColor = "#0F6E55", onDismiss,
 }: ProgressNudgeProps) {
   const router = useRouter();
   const [dismissed, setDismissed] = useState(false);
@@ -76,9 +76,9 @@ export function UsageProgressNudge({
           style={{
             display: "flex", alignItems: "center", gap: "5px",
             padding: "7px 14px", borderRadius: "10px", border: "none", cursor: "pointer",
-            background: isAtLimit ? "linear-gradient(135deg,#ef4444,#dc2626)" : "linear-gradient(135deg,#7c3aed,#6d28d9)",
+            background: isAtLimit ? "linear-gradient(135deg,#ef4444,#dc2626)" : "linear-gradient(135deg,#0F6E55,#0A523F)",
             color: "white", fontSize: "12px", fontWeight: 700, flexShrink: 0,
-            boxShadow: `0 4px 12px ${isAtLimit ? "rgba(239,68,68,0.3)" : "rgba(124,58,237,0.3)"}`,
+            boxShadow: `0 4px 12px ${isAtLimit ? "rgba(239,68,68,0.3)" : "rgba(15,110,85,0.3)"}`,
           }}>
           <Crown style={{ width: "12px", height: "12px" }} />
           {isAtLimit ? "Upgrade now" : upgradeLabel}
@@ -107,7 +107,7 @@ interface CelebrationNudgeProps {
 }
 
 export function CelebrationNudge({
-  emoji, headline, subtext, ctaLabel, accentColor = "#7c3aed", onDismiss,
+  emoji, headline, subtext, ctaLabel, accentColor = "#0F6E55", onDismiss,
 }: CelebrationNudgeProps) {
   const router = useRouter();
   const [dismissed, setDismissed] = useState(false);
@@ -171,7 +171,7 @@ interface TeaserNudgeProps {
 }
 
 const PLAN_META = {
-  pro:   { label: "Pro",   color: "#7c3aed", price: "₹198/month" },
+  pro:   { label: "Pro",   color: "#0F6E55", price: "₹198/month" },
   elite: { label: "Elite", color: "#f59e0b", price: "₹498/month" },
 };
 
@@ -231,7 +231,7 @@ export function UsagePill({ adaptationsUsed, searchesToday }: UsagePillProps) {
   const highestPct = Math.max(adaptPct, searchPct);
   if (highestPct < 40) return null; // don't show until 40% used
 
-  const color = highestPct >= 80 ? "#ef4444" : highestPct >= 60 ? "#f59e0b" : "#7c3aed";
+  const color = highestPct >= 80 ? "#ef4444" : highestPct >= 60 ? "#f59e0b" : "#0F6E55";
   const label = highestPct >= 100 ? "Limit reached" : highestPct >= 80 ? `${Math.round(highestPct)}% used` : "Usage";
 
   return (

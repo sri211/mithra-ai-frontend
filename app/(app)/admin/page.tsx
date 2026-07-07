@@ -11,8 +11,8 @@ import { api } from "@/lib/api/client";
 import { useUser } from "@/lib/auth";
 
 const ADMIN_EMAILS = ["srinathreddy.ksr@gmail.com", "sri@mithraai.in"];
-const PLAN_COLORS: Record<string, string> = { free: "#10b981", pro: "#7c3aed", elite: "#f59e0b" };
-const FEAT_COLORS = ["#7c3aed","#06b6d4","#10b981","#f59e0b","#f97316","#8b5cf6","#3b82f6","#ec4899"];
+const PLAN_COLORS: Record<string, string> = { free: "#10b981", pro: "#0F6E55", elite: "#f59e0b" };
+const FEAT_COLORS = ["#0F6E55","#06b6d4","#10b981","#f59e0b","#f97316","#2E8B6F","#3b82f6","#ec4899"];
 
 // ─── Interfaces ────────────────────────────────────────────────────────────────
 
@@ -154,17 +154,17 @@ function LineChart({ data }: { data: { date: string; count: number }[] }) {
       <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "68px", display: "block" }} preserveAspectRatio="none">
         <defs>
           <linearGradient id="lg1" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.01" />
+            <stop offset="0%" stopColor="#0F6E55" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#0F6E55" stopOpacity="0.01" />
           </linearGradient>
         </defs>
         {[0.33, 0.66].map(r => (
           <line key={r} x1={pL} y1={pT + (1 - r) * (H - pT - pB)} x2={W - pR} y2={pT + (1 - r) * (H - pT - pB)} stroke="rgba(0,0,0,0.04)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
         ))}
         <path d={area} fill="url(#lg1)" />
-        <path d={line} fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        <path d={line} fill="none" stroke="#0F6E55" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
         {pts.filter(p => p.count > 0).map((p, i) => (
-          <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r="2.5" fill="#7c3aed" vectorEffect="non-scaling-stroke" />
+          <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r="2.5" fill="#0F6E55" vectorEffect="non-scaling-stroke" />
         ))}
       </svg>
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: "3px" }}>
@@ -180,7 +180,7 @@ function DonutChart({ plans, total }: { plans: { free: number; pro: number; elit
   const r = 32, cx = 50, cy = 50, circ = 2 * Math.PI * r;
   const items = [
     { key: "free", color: "#10b981", count: plans.free },
-    { key: "pro", color: "#7c3aed", count: plans.pro },
+    { key: "pro", color: "#0F6E55", count: plans.pro },
     { key: "elite", color: "#f59e0b", count: plans.elite },
   ];
   let off = 0;
@@ -241,13 +241,13 @@ function UserJourneyPanel({ userId, onClose }: { userId: string; onClose: () => 
     return () => { cancelled = true; };
   }, [userId]);
 
-  const EV_COLOR: Record<string, string> = { page_view: "#3b82f6", feature_use: "#7c3aed", auth_event: "#10b981", upgrade_click: "#f59e0b", resume_upload: "#06b6d4", resume_download: "#06b6d4" };
+  const EV_COLOR: Record<string, string> = { page_view: "#3b82f6", feature_use: "#0F6E55", auth_event: "#10b981", upgrade_click: "#f59e0b", resume_upload: "#06b6d4", resume_download: "#06b6d4" };
   const EV_ICON: Record<string, React.ReactNode> = { page_view: <Eye style={{ width: "11px", height: "11px" }} />, feature_use: <Zap style={{ width: "11px", height: "11px" }} />, auth_event: <LogIn style={{ width: "11px", height: "11px" }} />, upgrade_click: <ArrowUpRight style={{ width: "11px", height: "11px" }} />, resume_upload: <FileText style={{ width: "11px", height: "11px" }} />, resume_download: <FileText style={{ width: "11px", height: "11px" }} /> };
 
   return (
     <>
       <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.28)", zIndex: 40, backdropFilter: "blur(3px)" }} />
-      <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(520px, 93vw)", background: "#F7F7F5", zIndex: 50, display: "flex", flexDirection: "column", boxShadow: "-12px 0 48px rgba(0,0,0,0.18)", animation: "slideIn 0.28s cubic-bezier(0.16,1,0.3,1)" }}>
+      <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(520px, 93vw)", background: "#FAF7F1", zIndex: 50, display: "flex", flexDirection: "column", boxShadow: "-12px 0 48px rgba(0,0,0,0.18)", animation: "slideIn 0.28s cubic-bezier(0.16,1,0.3,1)" }}>
         <div style={{ padding: "18px 22px 14px", borderBottom: "1px solid rgba(0,0,0,0.07)", display: "flex", alignItems: "center", gap: "12px", background: "#fff" }}>
           <button onClick={onClose} style={{ width: "30px", height: "30px", borderRadius: "9px", background: "rgba(0,0,0,0.05)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <X style={{ width: "14px", height: "14px", color: "#555" }} />
@@ -258,7 +258,7 @@ function UserJourneyPanel({ userId, onClose }: { userId: string; onClose: () => 
           </div>
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: "18px 22px 32px" }}>
-          {loading && <div style={{ display: "flex", justifyContent: "center", padding: "48px 0" }}><div style={{ width: "32px", height: "32px", borderRadius: "50%", border: "3px solid rgba(124,58,237,0.1)", borderTopColor: "#7c3aed", animation: "spin 0.8s linear infinite" }} /></div>}
+          {loading && <div style={{ display: "flex", justifyContent: "center", padding: "48px 0" }}><div style={{ width: "32px", height: "32px", borderRadius: "50%", border: "3px solid rgba(15,110,85,0.1)", borderTopColor: "#0F6E55", animation: "spin 0.8s linear infinite" }} /></div>}
           {err && <div style={{ padding: "12px", borderRadius: "10px", background: "rgba(239,68,68,0.06)", color: "#dc2626", fontSize: "13px" }}>{err}</div>}
           {journey && (
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -281,7 +281,7 @@ function UserJourneyPanel({ userId, onClose }: { userId: string; onClose: () => 
                 </div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
-                {[{ label: "Resumes", value: journey.summary.total_resumes, color: "#06b6d4" }, { label: "Adapted", value: journey.summary.total_adaptations, color: "#7c3aed" }, { label: "Searches", value: journey.summary.total_searches, color: "#f59e0b" }, { label: "Events", value: journey.summary.total_events, color: "#10b981" }].map(s => (
+                {[{ label: "Resumes", value: journey.summary.total_resumes, color: "#06b6d4" }, { label: "Adapted", value: journey.summary.total_adaptations, color: "#0F6E55" }, { label: "Searches", value: journey.summary.total_searches, color: "#f59e0b" }, { label: "Events", value: journey.summary.total_events, color: "#10b981" }].map(s => (
                   <div key={s.label} style={{ background: "#fff", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.07)", padding: "11px 8px", textAlign: "center" }}>
                     <div style={{ fontSize: "20px", fontWeight: 900, color: s.color }}>{s.value}</div>
                     <div style={{ fontSize: "10px", color: "#888", marginTop: "1px" }}>{s.label}</div>
@@ -299,12 +299,12 @@ function UserJourneyPanel({ userId, onClose }: { userId: string; onClose: () => 
                 </JourneySection>
               )}
               {journey.feature_usage.length > 0 && (
-                <JourneySection title={`Feature Usage (${journey.summary.features_used} features)`} icon={<Zap style={{ width: "13px", height: "13px" }} />} color="#7c3aed">
+                <JourneySection title={`Feature Usage (${journey.summary.features_used} features)`} icon={<Zap style={{ width: "13px", height: "13px" }} />} color="#0F6E55">
                   {journey.feature_usage.map((f, i) => (
                     <div key={i} style={{ marginBottom: "9px" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}>
                         <span style={{ fontSize: "12px", color: "#444" }}>{f.feature}</span>
-                        <span style={{ fontSize: "11px", fontWeight: 700, color: "#7c3aed" }}>{f.count}×</span>
+                        <span style={{ fontSize: "11px", fontWeight: 700, color: "#0F6E55" }}>{f.count}×</span>
                       </div>
                       <div style={{ height: "5px", background: "rgba(0,0,0,0.05)", borderRadius: "3px" }}>
                         <div style={{ height: "100%", width: `${Math.round((f.count / (journey.feature_usage[0]?.count || 1)) * 100)}%`, background: FEAT_COLORS[i % FEAT_COLORS.length], borderRadius: "3px" }} />
@@ -370,7 +370,7 @@ function UserJourneyPanel({ userId, onClose }: { userId: string; onClose: () => 
                       const label = ev.feature || ev.page || ev.event.replace(/_/g, " ");
                       return (
                         <div key={i} style={{ display: "flex", gap: "12px", alignItems: "flex-start", marginBottom: "10px" }}>
-                          <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: "#F7F7F5", border: `1.5px solid ${color}35`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color, zIndex: 1 }}>{icon}</div>
+                          <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: "#FAF7F1", border: `1.5px solid ${color}35`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color, zIndex: 1 }}>{icon}</div>
                           <div style={{ flex: 1, paddingTop: "2px" }}>
                             <span style={{ fontSize: "12px", color: "#333" }}>{label}</span>
                             <div style={{ fontSize: "10px", color: "#bbb", marginTop: "1px" }}>{ev.date}</div>
@@ -400,10 +400,10 @@ function RevBarChart({ data }: { data: { month: string; revenue: number }[] }) {
       {data.map((d, i) => (
         <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", height: "100%" }}>
           <div style={{ flex: 1, width: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
-            <div style={{ width: "100%", height: `${Math.max((d.revenue / max) * 100, d.revenue > 0 ? 5 : 0)}%`, background: i === data.length - 1 ? "linear-gradient(180deg,#10b981,#059669)" : "linear-gradient(180deg,#7c3aed,#5b21b6)", borderRadius: "4px 4px 0 0", transition: "height 0.6s ease" }} />
+            <div style={{ width: "100%", height: `${Math.max((d.revenue / max) * 100, d.revenue > 0 ? 5 : 0)}%`, background: i === data.length - 1 ? "linear-gradient(180deg,#10b981,#059669)" : "linear-gradient(180deg,#0F6E55,#084434)", borderRadius: "4px 4px 0 0", transition: "height 0.6s ease" }} />
           </div>
           <span style={{ fontSize: "8px", color: "#aaa", textAlign: "center", lineHeight: 1.2 }}>{d.month.split(" ")[0]}</span>
-          <span style={{ fontSize: "9px", fontWeight: 700, color: d.revenue > 0 ? "#7c3aed" : "#ccc" }}>
+          <span style={{ fontSize: "9px", fontWeight: 700, color: d.revenue > 0 ? "#0F6E55" : "#ccc" }}>
             {d.revenue > 0 ? `₹${(d.revenue / 1000).toFixed(1)}k` : "–"}
           </span>
         </div>
@@ -495,7 +495,7 @@ export default function AdminPage() {
   };
 
   if (!isAdmin) return (
-    <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#F7F7F5" }}>
+    <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#FAF7F1" }}>
       <div style={{ textAlign: "center", padding: "40px" }}>
         <div style={{ width: "64px", height: "64px", borderRadius: "16px", background: "rgba(239,68,68,0.08)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
           <Shield style={{ width: "28px", height: "28px", color: "#ef4444" }} />
@@ -507,9 +507,9 @@ export default function AdminPage() {
   );
 
   if (ovLoading || engLoading) return (
-    <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#F7F7F5" }}>
+    <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#FAF7F1" }}>
       <div style={{ textAlign: "center" }}>
-        <div style={{ width: "40px", height: "40px", borderRadius: "50%", border: "3px solid rgba(124,58,237,0.1)", borderTopColor: "#7c3aed", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
+        <div style={{ width: "40px", height: "40px", borderRadius: "50%", border: "3px solid rgba(15,110,85,0.1)", borderTopColor: "#0F6E55", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
         <div style={{ fontSize: "13px", color: "#888" }}>Loading analytics...</div>
       </div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}`}</style>
@@ -525,14 +525,14 @@ export default function AdminPage() {
   const retLabel = (rate: number) => rate >= 50 ? "Healthy" : rate >= 25 ? "Moderate" : "At Risk";
 
   return (
-    <div style={{ minHeight: "100%", background: "#F7F7F5", overflowY: "auto" }}>
+    <div style={{ minHeight: "100%", background: "#FAF7F1", overflowY: "auto" }}>
       <div style={{ maxWidth: "1140px", margin: "0 auto", padding: "24px 20px 56px" }}>
 
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "3px" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "9px", background: "linear-gradient(135deg,#7c3aed,#5b21b6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: "32px", height: "32px", borderRadius: "9px", background: "linear-gradient(135deg,#0F6E55,#084434)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <BarChart3 style={{ width: "15px", height: "15px", color: "#fff" }} />
               </div>
               <h1 style={{ fontSize: "20px", fontWeight: 900, color: "#111" }}>Admin Dashboard</h1>
@@ -571,7 +571,7 @@ export default function AdminPage() {
           <>
             {/* ── KPI Row ──────────────────────────────────────────────────── */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(175px,1fr))", gap: "12px", marginBottom: "16px" }}>
-              <StatCard label="Total Users" value={overview.summary.total_users} sub={`Free: ${overview.summary.free_users} · Paid: ${overview.summary.paid_users}`} color="#7c3aed" icon={Users} onClick={() => setActiveTab("users")} />
+              <StatCard label="Total Users" value={overview.summary.total_users} sub={`Free: ${overview.summary.free_users} · Paid: ${overview.summary.paid_users}`} color="#0F6E55" icon={Users} onClick={() => setActiveTab("users")} />
               <StatCard label="Activated Users" value={engagement.activation.activated_count} sub={`${engagement.activation.activation_rate}% activation rate`} color="#10b981" icon={CheckCircle2} />
               <StatCard label="Active 30d" value={overview.summary.active_users_30d} sub="Users with tracked events" color="#06b6d4" icon={Activity} />
               <StatCard label="Paid Subscribers" value={overview.summary.paid_users} sub={`Conv: ${overview.summary.conversion_rate}`} color="#f59e0b" icon={Crown} onClick={() => { setPlanFilter("pro"); setActiveTab("users"); }} />
@@ -582,7 +582,7 @@ export default function AdminPage() {
             {/* ── Signup trend + Plan distribution ─────────────────────────── */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}>
               <Card style={{ padding: "20px 22px" }}>
-                <SectionHead icon={<TrendingUp style={{ width: "14px", height: "14px", color: "#7c3aed" }} />} title="Signup Trend — Last 30 Days" sub={`+${overview.summary.signups_this_week} this week`} />
+                <SectionHead icon={<TrendingUp style={{ width: "14px", height: "14px", color: "#0F6E55" }} />} title="Signup Trend — Last 30 Days" sub={`+${overview.summary.signups_this_week} this week`} />
                 <LineChart data={overview.daily_signups} />
               </Card>
               <Card style={{ padding: "20px 22px" }}>
@@ -676,7 +676,7 @@ export default function AdminPage() {
                 <SectionHead icon={<Activity style={{ width: "14px", height: "14px", color: "#06b6d4" }} />} title="Usage Depth" />
                 {[
                   { label: "Total Resumes Built",  value: engagement.usage_depth.total_resumes,     avg: engagement.usage_depth.avg_resumes_per_user,     color: "#06b6d4" },
-                  { label: "Total Adaptations",     value: engagement.usage_depth.total_adaptations, avg: engagement.usage_depth.avg_adaptations_per_user, color: "#7c3aed" },
+                  { label: "Total Adaptations",     value: engagement.usage_depth.total_adaptations, avg: engagement.usage_depth.avg_adaptations_per_user, color: "#0F6E55" },
                   { label: "Total Job Searches",    value: engagement.usage_depth.total_searches,    avg: engagement.usage_depth.avg_searches_per_user,    color: "#f59e0b" },
                   { label: "Total Saved Jobs",      value: engagement.usage_depth.total_saved_jobs,  avg: null,                                            color: "#10b981" },
                 ].map(item => (
@@ -692,12 +692,12 @@ export default function AdminPage() {
 
               {/* Template popularity */}
               <Card style={{ padding: "20px 22px" }}>
-                <SectionHead icon={<FileText style={{ width: "14px", height: "14px", color: "#8b5cf6" }} />} title="Template Popularity" />
+                <SectionHead icon={<FileText style={{ width: "14px", height: "14px", color: "#2E8B6F" }} />} title="Template Popularity" />
                 {Object.keys(engagement.templates).length === 0 ? (
                   <div style={{ textAlign: "center", padding: "20px 0", fontSize: "12px", color: "#aaa" }}>No data yet</div>
                 ) : (() => {
                   const tmplMax = Math.max(...Object.values(engagement.templates), 1);
-                  const colors = ["#8b5cf6","#7c3aed","#06b6d4","#10b981","#f59e0b","#f97316"];
+                  const colors = ["#2E8B6F","#0F6E55","#06b6d4","#10b981","#f59e0b","#f97316"];
                   return Object.entries(engagement.templates).map(([tmpl, cnt], i) => (
                     <Bar key={tmpl} label={tmpl.charAt(0).toUpperCase() + tmpl.slice(1)} value={cnt} max={tmplMax} color={colors[i % colors.length]} count={cnt} />
                   ));
@@ -711,7 +711,7 @@ export default function AdminPage() {
                   <div style={{ textAlign: "center", padding: "20px 0", fontSize: "12px", color: "#aaa" }}>No data yet</div>
                 ) : (() => {
                   const jobMax = Math.max(...Object.values(engagement.job_statuses), 1);
-                  const statusColors: Record<string, string> = { bookmarked: "#3b82f6", applied: "#7c3aed", interviewing: "#f59e0b", offer: "#10b981", rejected: "#ef4444" };
+                  const statusColors: Record<string, string> = { bookmarked: "#3b82f6", applied: "#0F6E55", interviewing: "#f59e0b", offer: "#10b981", rejected: "#ef4444" };
                   return Object.entries(engagement.job_statuses).map(([status, cnt]) => (
                     <Bar key={status} label={status.charAt(0).toUpperCase() + status.slice(1)} value={cnt} max={jobMax} color={statusColors[status] ?? "#888"} count={cnt} />
                   ));
@@ -721,7 +721,7 @@ export default function AdminPage() {
 
             {/* ── Feature Utilization (30d) ─────────────────────────────────── */}
             <Card style={{ padding: "20px 22px", marginBottom: "14px" }}>
-              <SectionHead icon={<Target style={{ width: "14px", height: "14px", color: "#7c3aed" }} />} title="Feature Utilization — Last 30 Days (absolute counts)" />
+              <SectionHead icon={<Target style={{ width: "14px", height: "14px", color: "#0F6E55" }} />} title="Feature Utilization — Last 30 Days (absolute counts)" />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 36px" }}>
                 {Object.entries(overview.feature_usage_30d).sort(([,a],[,b]) => b - a).map(([feat, count], i) => (
                   <Bar key={feat} label={feat} value={count} max={featureMax} color={FEAT_COLORS[i % FEAT_COLORS.length]} count={count} />
@@ -807,7 +807,7 @@ export default function AdminPage() {
                           </td>
                           <td style={{ padding: "9px 14px", fontWeight: 900, color: "#f97316", fontSize: "13px" }}>{u.total_events}</td>
                           <td style={{ padding: "9px 14px", color: "#06b6d4", fontWeight: 700 }}>{u.resumes}</td>
-                          <td style={{ padding: "9px 14px", color: "#7c3aed", fontWeight: 700 }}>{u.adaptations}</td>
+                          <td style={{ padding: "9px 14px", color: "#0F6E55", fontWeight: 700 }}>{u.adaptations}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -856,7 +856,7 @@ export default function AdminPage() {
                 </div>
                 <div style={{ padding: "8px 0" }}>
                   {engagement.recent_activity.map((ev, i) => {
-                    const evColors: Record<string, string> = { page_view: "#3b82f6", feature_use: "#7c3aed", auth_event: "#10b981", upgrade_click: "#f59e0b" };
+                    const evColors: Record<string, string> = { page_view: "#3b82f6", feature_use: "#0F6E55", auth_event: "#10b981", upgrade_click: "#f59e0b" };
                     const col = evColors[ev.event] ?? "#888";
                     const label = ev.feature || ev.page || ev.event.replace(/_/g, " ");
                     return (
@@ -878,10 +878,10 @@ export default function AdminPage() {
             {/* ── Recent Signups ────────────────────────────────────────────── */}
             <Card style={{ overflow: "hidden" }}>
               <div style={{ padding: "16px 22px", borderBottom: "1px solid rgba(0,0,0,0.06)", display: "flex", alignItems: "center", gap: "8px" }}>
-                <Users style={{ width: "14px", height: "14px", color: "#7c3aed" }} />
+                <Users style={{ width: "14px", height: "14px", color: "#0F6E55" }} />
                 <span style={{ fontSize: "12px", fontWeight: 800, color: "#111", textTransform: "uppercase", letterSpacing: "0.8px" }}>Recent Signups</span>
                 <span style={{ marginLeft: "auto", fontSize: "11px", color: "#aaa" }}>Click row for full journey</span>
-                <button onClick={() => setActiveTab("users")} style={{ fontSize: "11px", color: "#7c3aed", background: "none", border: "none", cursor: "pointer", fontWeight: 700, padding: "0 4px" }}>View all →</button>
+                <button onClick={() => setActiveTab("users")} style={{ fontSize: "11px", color: "#0F6E55", background: "none", border: "none", cursor: "pointer", fontWeight: 700, padding: "0 4px" }}>View all →</button>
               </div>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
@@ -895,7 +895,7 @@ export default function AdminPage() {
                   <tbody>
                     {overview.recent_signups.map((u, i) => (
                       <tr key={i} onClick={() => setSelectedUserId(u.id)} style={{ borderTop: "1px solid rgba(0,0,0,0.04)", cursor: "pointer" }}
-                        onMouseEnter={e => (e.currentTarget.style.background = "rgba(124,58,237,0.03)")}
+                        onMouseEnter={e => (e.currentTarget.style.background = "rgba(15,110,85,0.03)")}
                         onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
                         <td style={{ padding: "10px 18px", fontWeight: 600, color: "#111" }}>{u.name || "–"}</td>
                         <td style={{ padding: "10px 18px", color: "#555" }}>{u.email}</td>
@@ -942,7 +942,7 @@ export default function AdminPage() {
               </div>
             </div>
             {usrLoading ? (
-              <div style={{ display: "flex", justifyContent: "center", padding: "48px 0" }}><div style={{ width: "32px", height: "32px", borderRadius: "50%", border: "3px solid rgba(124,58,237,0.1)", borderTopColor: "#7c3aed", animation: "spin 0.8s linear infinite" }} /></div>
+              <div style={{ display: "flex", justifyContent: "center", padding: "48px 0" }}><div style={{ width: "32px", height: "32px", borderRadius: "50%", border: "3px solid rgba(15,110,85,0.1)", borderTopColor: "#0F6E55", animation: "spin 0.8s linear infinite" }} /></div>
             ) : userList ? (
               <>
                 <div style={{ marginBottom: "10px", fontSize: "12px", color: "#888" }}>{userList.total} user{userList.total !== 1 ? "s" : ""} · click any row for journey</div>
@@ -959,7 +959,7 @@ export default function AdminPage() {
                       <tbody>
                         {userList.users.map((u, i) => (
                           <tr key={u.id} onClick={() => setSelectedUserId(u.id)} style={{ borderTop: "1px solid rgba(0,0,0,0.04)", cursor: "pointer" }}
-                            onMouseEnter={e => (e.currentTarget.style.background = "rgba(124,58,237,0.03)")}
+                            onMouseEnter={e => (e.currentTarget.style.background = "rgba(15,110,85,0.03)")}
                             onMouseLeave={e => (e.currentTarget.style.background = i % 2 === 0 ? "transparent" : "rgba(0,0,0,0.01)")}>
                             <td style={{ padding: "10px 14px", fontWeight: 600, color: "#111", whiteSpace: "nowrap" }}>{u.name || "–"}</td>
                             <td style={{ padding: "10px 14px", color: "#555", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</td>
@@ -968,7 +968,7 @@ export default function AdminPage() {
                             <td style={{ padding: "10px 14px", color: "#888", whiteSpace: "nowrap" }}>{u.joined}</td>
                             <td style={{ padding: "10px 14px", color: "#888", whiteSpace: "nowrap" }}>{u.last_active}</td>
                             <td style={{ padding: "10px 14px", textAlign: "center", color: u.resumes_built > 0 ? "#06b6d4" : "#ccc", fontWeight: u.resumes_built > 0 ? 700 : 400 }}>{u.resumes_built}</td>
-                            <td style={{ padding: "10px 14px", textAlign: "center", color: u.resumes_adapted > 0 ? "#7c3aed" : "#ccc", fontWeight: u.resumes_adapted > 0 ? 700 : 400 }}>{u.resumes_adapted}</td>
+                            <td style={{ padding: "10px 14px", textAlign: "center", color: u.resumes_adapted > 0 ? "#0F6E55" : "#ccc", fontWeight: u.resumes_adapted > 0 ? 700 : 400 }}>{u.resumes_adapted}</td>
                             <td style={{ padding: "10px 14px", textAlign: "center", color: u.job_searches > 0 ? "#f59e0b" : "#ccc", fontWeight: u.job_searches > 0 ? 700 : 400 }}>{u.job_searches}</td>
                             <td style={{ padding: "10px 14px", textAlign: "center", color: u.total_events > 0 ? "#10b981" : "#ccc", fontWeight: u.total_events > 0 ? 700 : 400 }}>{u.total_events}</td>
                           </tr>
@@ -985,7 +985,7 @@ export default function AdminPage() {
                     {Array.from({ length: Math.min(7, totalUsrPages) }, (_, i) => {
                       const p = usrPage <= 4 ? i + 1 : usrPage >= totalUsrPages - 3 ? totalUsrPages - 6 + i : usrPage - 3 + i;
                       if (p < 1 || p > totalUsrPages) return null;
-                      return <button key={p} onClick={() => setUsrPage(p)} style={{ width: "32px", height: "32px", borderRadius: "8px", border: "1px solid", fontSize: "12px", fontWeight: 700, cursor: "pointer", background: usrPage === p ? "#7c3aed" : "#fff", color: usrPage === p ? "#fff" : "#555", borderColor: usrPage === p ? "#7c3aed" : "rgba(0,0,0,0.1)" }}>{p}</button>;
+                      return <button key={p} onClick={() => setUsrPage(p)} style={{ width: "32px", height: "32px", borderRadius: "8px", border: "1px solid", fontSize: "12px", fontWeight: 700, cursor: "pointer", background: usrPage === p ? "#0F6E55" : "#fff", color: usrPage === p ? "#fff" : "#555", borderColor: usrPage === p ? "#0F6E55" : "rgba(0,0,0,0.1)" }}>{p}</button>;
                     })}
                     <button onClick={() => setUsrPage(p => Math.min(totalUsrPages, p + 1))} disabled={usrPage === totalUsrPages} style={{ width: "32px", height: "32px", borderRadius: "8px", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", cursor: usrPage === totalUsrPages ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: usrPage === totalUsrPages ? 0.4 : 1 }}>
                       <ChevronRight style={{ width: "14px", height: "14px" }} />
@@ -1058,7 +1058,7 @@ export default function AdminPage() {
               {/* ── MRR / ARR top row ─────────────────────────────────────── */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(175px,1fr))", gap: "12px", marginBottom: "16px" }}>
                 <StatCard label="Monthly Recurring Revenue" value={`₹${revenue.snapshot.mrr.toLocaleString("en-IN")}`} sub={`ARR: ₹${revenue.snapshot.arr.toLocaleString("en-IN")}`} color="#10b981" icon={TrendingUp} />
-                <StatCard label="Annualized Revenue (ARR)" value={`₹${revenue.snapshot.arr.toLocaleString("en-IN")}`} sub="MRR × 12 projection" color="#7c3aed" icon={BarChart3} />
+                <StatCard label="Annualized Revenue (ARR)" value={`₹${revenue.snapshot.arr.toLocaleString("en-IN")}`} sub="MRR × 12 projection" color="#0F6E55" icon={BarChart3} />
                 <StatCard label="Paid Subscribers" value={revenue.snapshot.paid_users} sub={`of ${revenue.snapshot.total_users} total users`} color="#f59e0b" icon={Crown} />
                 <StatCard label="ARPU (Paid)" value={`₹${revenue.snapshot.arpu_paid.toLocaleString("en-IN")}`} sub="Avg revenue per paying user" color="#06b6d4" icon={DollarSign} />
                 <StatCard label="Estimated Total Cost" value={`₹${revenue.cost_estimates.total_estimated.toLocaleString("en-IN")}`} sub="All-time cumulative (estimated)" color="#f97316" icon={TrendingDown} />
@@ -1071,7 +1071,7 @@ export default function AdminPage() {
                   <SectionHead icon={<TrendingUp style={{ width: "14px", height: "14px", color: "#10b981" }} />} title="Monthly Revenue Trend — Last 6 Months" />
                   <RevBarChart data={revenue.monthly_trend} />
                   <div style={{ marginTop: "14px", display: "flex", gap: "8px", justifyContent: "center" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "5px" }}><div style={{ width: "10px", height: "10px", borderRadius: "2px", background: "#7c3aed" }} /><span style={{ fontSize: "11px", color: "#666" }}>Previous months</span></div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "5px" }}><div style={{ width: "10px", height: "10px", borderRadius: "2px", background: "#0F6E55" }} /><span style={{ fontSize: "11px", color: "#666" }}>Previous months</span></div>
                     <div style={{ display: "flex", alignItems: "center", gap: "5px" }}><div style={{ width: "10px", height: "10px", borderRadius: "2px", background: "#10b981" }} /><span style={{ fontSize: "11px", color: "#666" }}>Current month</span></div>
                   </div>
                 </Card>
@@ -1118,7 +1118,7 @@ export default function AdminPage() {
                         <div style={{ fontSize: "10px", color: "#888" }}>revenue added</div>
                         {c && c.new_paid > 0 && (
                           <div style={{ marginTop: "6px", display: "flex", gap: "4px", justifyContent: "center" }}>
-                            {c.new_pro > 0 && <span style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "4px", background: "rgba(124,58,237,0.1)", color: "#7c3aed", fontWeight: 700 }}>{c.new_pro} Pro</span>}
+                            {c.new_pro > 0 && <span style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "4px", background: "rgba(15,110,85,0.1)", color: "#0F6E55", fontWeight: 700 }}>{c.new_pro} Pro</span>}
                             {c.new_elite > 0 && <span style={{ fontSize: "9px", padding: "2px 6px", borderRadius: "4px", background: "rgba(245,158,11,0.1)", color: "#f59e0b", fontWeight: 700 }}>{c.new_elite} Elite</span>}
                           </div>
                         )}
@@ -1137,7 +1137,7 @@ export default function AdminPage() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "16px" }}>
                   {[
                     { label: "Resume Builds", data: revenue.cost_estimates.resume_builds, color: "#06b6d4" },
-                    { label: "Adaptations", data: revenue.cost_estimates.adaptations, color: "#7c3aed" },
+                    { label: "Adaptations", data: revenue.cost_estimates.adaptations, color: "#0F6E55" },
                     { label: "Job Searches", data: revenue.cost_estimates.job_searches, color: "#f59e0b" },
                   ].map(item => (
                     <div key={item.label} style={{ background: `${item.color}06`, border: `1px solid ${item.color}18`, borderRadius: "12px", padding: "14px 16px" }}>

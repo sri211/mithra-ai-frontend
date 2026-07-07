@@ -165,7 +165,7 @@ export default function ResumeScorePage() {
   const gc      = gradeColor(grade);
 
   return (
-    <div style={{ height: "100%", overflowY: "auto", background: "#F7F7F5" }}>
+    <div style={{ height: "100%", overflowY: "auto", background: "#FAF7F1" }}>
       <FileUploadModal
         isOpen={showUpload}
         onClose={() => setShowUpload(false)}
@@ -178,7 +178,7 @@ export default function ResumeScorePage() {
         <div style={{ marginBottom: "24px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", marginBottom: "8px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{ width: "44px", height: "44px", borderRadius: "14px", background: "linear-gradient(135deg,#7c3aed,#f59e0b)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: "44px", height: "44px", borderRadius: "14px", background: "linear-gradient(135deg,#0F6E55,#f59e0b)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Award style={{ width: "22px", height: "22px", color: "white" }} />
               </div>
               <div>
@@ -207,7 +207,7 @@ export default function ResumeScorePage() {
             </div>
             <button
               onClick={() => setShowUpload(true)}
-              style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 14px", borderRadius: "10px", background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.2)", color: "#7c3aed", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}>
+              style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 14px", borderRadius: "10px", background: "rgba(15,110,85,0.07)", border: "1px solid rgba(15,110,85,0.2)", color: "#0F6E55", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}>
               <Upload style={{ width: "13px", height: "13px" }} />{hasResume ? "Change" : "Import"}
             </button>
           </div>
@@ -238,9 +238,9 @@ export default function ResumeScorePage() {
             style={{
               width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
               padding: "14px", borderRadius: "14px", border: "none", cursor: isScoring || !hasResume ? "not-allowed" : "pointer",
-              background: isScoring || !hasResume ? "rgba(124,58,237,0.2)" : "#7c3aed",
+              background: isScoring || !hasResume ? "rgba(15,110,85,0.2)" : "#0F6E55",
               color: "white", fontSize: "15px", fontWeight: 800,
-              boxShadow: isScoring || !hasResume ? "none" : "0 6px 24px rgba(124,58,237,0.35)",
+              boxShadow: isScoring || !hasResume ? "none" : "0 6px 24px rgba(15,110,85,0.35)",
             }}>
             {isScoring ? (
               <motion.div style={{ width: "18px", height: "18px", borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />
@@ -269,7 +269,7 @@ export default function ResumeScorePage() {
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
 
             {/* Overall score hero */}
-            <div style={{ background: `linear-gradient(135deg, ${gc}12, rgba(124,58,237,0.08))`, border: `1px solid ${gc}30`, borderRadius: "20px", padding: "28px 24px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "24px", flexWrap: "wrap" }}>
+            <div style={{ background: `linear-gradient(135deg, ${gc}12, rgba(15,110,85,0.08))`, border: `1px solid ${gc}30`, borderRadius: "20px", padding: "28px 24px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "24px", flexWrap: "wrap" }}>
 
               {/* Grade ring */}
               <div style={{ position: "relative", width: "100px", height: "100px", flexShrink: 0 }}>
@@ -315,7 +315,7 @@ export default function ResumeScorePage() {
                 </h3>
                 {(result.top_improvements as Array<{ title: string; detail: string }>).map((imp, i) => (
                   <div key={i} style={{ display: "flex", gap: "12px", marginBottom: "14px", alignItems: "flex-start" }}>
-                    <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "12px", fontWeight: 900, color: "white" }}>
+                    <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "linear-gradient(135deg,#0F6E55,#0A523F)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "12px", fontWeight: 900, color: "white" }}>
                       {i + 1}
                     </div>
                     <div>
@@ -338,7 +338,7 @@ export default function ResumeScorePage() {
             </div>
 
             {/* CTA for non-Pro */}
-            <div style={{ marginTop: "24px", padding: "20px", borderRadius: "16px", background: "linear-gradient(135deg, rgba(124,58,237,0.1), rgba(245,158,11,0.06))", border: "1px solid rgba(124,58,237,0.2)", textAlign: "center" }}>
+            <div style={{ marginTop: "24px", padding: "20px", borderRadius: "16px", background: "linear-gradient(135deg, rgba(15,110,85,0.1), rgba(245,158,11,0.06))", border: "1px solid rgba(15,110,85,0.2)", textAlign: "center" }}>
               <p style={{ fontSize: "14px", fontWeight: 700, color: "#111111", marginBottom: "4px" }}>
                 Ready to fix these issues?
               </p>
@@ -346,7 +346,7 @@ export default function ResumeScorePage() {
                 Use Resume Adaptor to auto-fix gaps for a specific job description.
               </p>
               <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
-                <a href="/resume-adaptor" style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 20px", background: "linear-gradient(135deg,#7c3aed,#6d28d9)", borderRadius: "12px", color: "white", textDecoration: "none", fontSize: "13px", fontWeight: 700 }}>
+                <a href="/resume-adaptor" style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 20px", background: "linear-gradient(135deg,#0F6E55,#0A523F)", borderRadius: "12px", color: "white", textDecoration: "none", fontSize: "13px", fontWeight: 700 }}>
                   <Target style={{ width: "14px", height: "14px" }} />Adapt Resume
                 </a>
                 <a href="/resume-builder" style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 20px", background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.1)", borderRadius: "12px", color: "#555555", textDecoration: "none", fontSize: "13px", fontWeight: 600 }}>

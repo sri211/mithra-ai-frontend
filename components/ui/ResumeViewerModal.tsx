@@ -58,16 +58,16 @@ export default function ResumeViewerModal({ isOpen, onClose, title = "Resume", c
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "10px 16px", flexShrink: 0,
               background: "rgba(10,6,22,0.98)",
-              borderBottom: "1px solid rgba(124,58,237,0.2)",
+              borderBottom: "1px solid rgba(15,110,85,0.2)",
             }}>
               <span style={{ fontSize: "14px", fontWeight: 700, color: "#f1f5f9", display: "flex", alignItems: "center", gap: "8px" }}>
-                <Maximize2 style={{ width: "14px", height: "14px", color: "#7c3aed" }} />{title}
+                <Maximize2 style={{ width: "14px", height: "14px", color: "#0F6E55" }} />{title}
               </span>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <button onClick={zoomOut} style={{ width: "34px", height: "34px", borderRadius: "9px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer" }}>
                   <ZoomOut style={{ width: "15px", height: "15px", color: "#94a3b8" }} />
                 </button>
-                <button onClick={resetZoom} style={{ height: "34px", padding: "0 10px", borderRadius: "9px", background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.2)", cursor: "pointer", fontSize: "12px", fontWeight: 700, color: "#a78bfa" }}>
+                <button onClick={resetZoom} style={{ height: "34px", padding: "0 10px", borderRadius: "9px", background: "rgba(15,110,85,0.1)", border: "1px solid rgba(15,110,85,0.2)", cursor: "pointer", fontSize: "12px", fontWeight: 700, color: "#5FAE93" }}>
                   {Math.round(zoom * 100)}%
                 </button>
                 <button onClick={zoomIn} style={{ width: "34px", height: "34px", borderRadius: "9px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer" }}>

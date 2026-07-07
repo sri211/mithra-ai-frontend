@@ -6,12 +6,12 @@
   --color-violet-50: #f5f3ff;
   --color-violet-100: #ede9fe;
   --color-violet-200: #ddd6fe;
-  --color-violet-300: #c4b5fd;
-  --color-violet-400: #a78bfa;
-  --color-violet-500: #8b5cf6;
-  --color-violet-600: #7c3aed;
-  --color-violet-700: #6d28d9;
-  --color-violet-800: #5b21b6;
+  --color-violet-300: #A8D4C4;
+  --color-violet-400: #5FAE93;
+  --color-violet-500: #2E8B6F;
+  --color-violet-600: #0F6E55;
+  --color-violet-700: #0A523F;
+  --color-violet-800: #084434;
   --color-violet-900: #4c1d95;
   --color-violet-950: #2e1065;
 
@@ -66,30 +66,30 @@
 
 :root {
   /* App shell — light cream theme */
-  --bg-base: #F7F7F5;
+  --bg-base: #FAF7F1;
   --bg-surface: #FFFFFF;
-  --bg-raised: #F0F0EC;
-  --violet: #7c3aed;
-  --violet-dim: rgba(124,58,237,0.07);
+  --bg-raised: #F1EDE4;
+  --violet: #0F6E55;
+  --violet-dim: rgba(15,110,85,0.07);
   --gold: #f59e0b;
   --text-primary: #111111;
   --text-secondary: #444444;
   --text-muted: #888888;
   --border: rgba(0,0,0,0.07);
-  --border-active: rgba(124,58,237,0.3);
+  --border-active: rgba(15,110,85,0.3);
 
   /* App page design tokens — used by agent pages */
-  --ap-bg: #F7F7F5;
+  --ap-bg: #FAF7F1;
   --ap-surface: #FFFFFF;
-  --ap-surface2: #F0F0EC;
+  --ap-surface2: #F1EDE4;
   --ap-dark: #111111;
   --ap-body: #444444;
   --ap-muted: #888888;
   --ap-border: rgba(0,0,0,0.07);
   --ap-border-med: rgba(0,0,0,0.12);
-  --ap-violet: #7c3aed;
-  --ap-violet-bg: rgba(124,58,237,0.06);
-  --ap-violet-border: rgba(124,58,237,0.18);
+  --ap-violet: #0F6E55;
+  --ap-violet-bg: rgba(15,110,85,0.06);
+  --ap-violet-border: rgba(15,110,85,0.18);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -97,10 +97,21 @@ html { scroll-behavior: smooth; }
 
 body {
   background-color: var(--bg-base);
+  /* Warm paper: faint fibre texture + soft top-light vignette */
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(15,110,85,0.045), transparent),
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.0035) 2px, rgba(0,0,0,0.0035) 4px);
   color: var(--text-primary);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: var(--font-body), "Instrument Sans", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+}
+
+/* Editorial display serif for headings app-wide */
+h1, h2, h3 {
+  font-family: var(--font-display), "Fraunces", Georgia, serif;
+  letter-spacing: -0.01em;
+  font-variation-settings: "SOFT" 60, "WONK" 0;
 }
 
 /* Scrollbar — neutral, not violet */
@@ -122,13 +133,13 @@ body {
 
   /* Gradient text — use only for hero moments, max once per page */
   .gradient-text {
-    background: linear-gradient(135deg, #a78bfa 0%, #f59e0b 100%);
+    background: linear-gradient(135deg, #5FAE93 0%, #f59e0b 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
   .gradient-text-violet {
-    background: linear-gradient(135deg, #c4b5fd 0%, #7c3aed 100%);
+    background: linear-gradient(135deg, #A8D4C4 0%, #0F6E55 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -152,13 +163,13 @@ body {
   }
 
   /* Glow — kept for any component that still references them, but toned down */
-  .glow-violet { box-shadow: 0 0 0 1px rgba(124,58,237,0.25); }
+  .glow-violet { box-shadow: 0 0 0 1px rgba(15,110,85,0.25); }
   .glow-gold   { box-shadow: 0 0 0 1px rgba(245,158,11,0.25); }
-  .glow-sm     { box-shadow: 0 0 0 1px rgba(124,58,237,0.15); }
+  .glow-sm     { box-shadow: 0 0 0 1px rgba(15,110,85,0.15); }
 
   /* Chat bubbles */
   .bubble-user {
-    background: #7c3aed;
+    background: #0F6E55;
     border-radius: 18px 18px 4px 18px;
   }
   .bubble-ai {
@@ -196,7 +207,7 @@ body {
 @layer components {
   /* Primary — solid violet, no gradient */
   .btn-primary {
-    background: #7c3aed;
+    background: #0F6E55;
     color: white;
     border: none;
     border-radius: 8px;
@@ -210,8 +221,8 @@ body {
     gap: 8px;
   }
   .btn-primary:hover {
-    background: #6d28d9;
-    box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+    background: #0A523F;
+    box-shadow: 0 0 0 3px rgba(15,110,85,0.15);
   }
 
   /* Gold CTA — for upgrade/paid moments only */
@@ -267,8 +278,8 @@ body {
     outline: none;
   }
   .input-dark:focus {
-    border-color: rgba(124,58,237,0.5);
-    box-shadow: 0 0 0 3px rgba(124,58,237,0.08);
+    border-color: rgba(15,110,85,0.5);
+    box-shadow: 0 0 0 3px rgba(15,110,85,0.08);
   }
   .input-dark::placeholder { color: var(--text-muted); }
 
