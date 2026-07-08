@@ -13,6 +13,8 @@ import {
 const ADMIN_EMAILS = ["srinathreddy.ksr@gmail.com", "sri@mithraai.in"];
 import { cn } from "@/lib/cn";
 import MithraChat from "@/components/chatbot/MithraChat";
+import CreditsBadge from "@/components/ui/CreditsBadge";
+import OutOfCreditsModal from "@/components/ui/OutOfCreditsModal";
 import { useUser, logout } from "@/lib/auth";
 import { getLimits } from "@/lib/planLimits";
 import { useUsageTracker } from "@/lib/useUsageTracker";
@@ -20,6 +22,7 @@ import { UsagePill } from "@/components/ui/UpgradeNudge";
 import { trackPage } from "@/lib/analytics";
 
 const NAV_ITEMS = [
+  { href: "/dashboard",      icon: Home,     label: "Dashboard",      color: "#0F6E55", description: "Your search at a glance — credits, pipeline, next moves." },
   { href: "/resume-builder", icon: FileText, label: "Resume Builder", color: "#0F6E55", description: "Every line you write is a promise to your future self." },
   { href: "/resume-score",   icon: Award,    label: "Resume Score",   color: "#10b981", description: "See exactly where your resume wins and where it loses.", badge: "Free" },
   { href: "/resume-adaptor", icon: Target,   label: "Resume Adaptor", color: "#06b6d4", description: "A single role, seen through a thousand lenses." },
@@ -257,6 +260,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <p className="text-xs" style={{ color: "#8A8474", fontStyle: "italic" }}>{currentPage?.description}</p>
           </div>
           <div className="flex items-center gap-2">
+            <CreditsBadge />
             <Link href="/referral" title="Referrals & Rewards"
               className="relative w-8 h-8 rounded-lg flex items-center justify-center transition-all"
               style={{ color: "#888888" }}
@@ -370,6 +374,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
+            <CreditsBadge compact />
             {showUsagePill && (
               <UsagePill
                 adaptationsUsed={usage.adaptationsUsed}
@@ -586,6 +591,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Mithra Chatbot */}
       <MithraChat />
+
+      {/* Global out-of-credits top-up modal (triggered by any 402) */}
+      <OutOfCreditsModal />
     </div>
   );
 }

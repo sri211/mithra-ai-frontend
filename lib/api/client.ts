@@ -49,6 +49,13 @@ api.interceptors.response.use(
   async (error) => {
     const req = error.config;
 
+    // 402 = insufficient credits — surface the global top-up modal
+    if (error.response?.status === 402 && typeof window !== "undefined") {
+      const detail = error.response?.data?.detail || {};
+      window.dispatchEvent(new CustomEvent("mithra:out-of-credits", { detail }));
+      return Promise.reject(error);
+    }
+
     // Only handle 401, and don't retry auth endpoints or already-retried calls
     if (
       error.response?.status !== 401 ||

@@ -358,18 +358,27 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
               if (event.screenshot) setLiveScreenshot(event.screenshot);
               setSt((p) => ({ ...p, uiStatus: "needs_credentials" }));
             } else if (event.type === "done") {
-              setSt((p) => ({
-                ...p,
-                uiStatus: "autoresult",
-                autoResult: {
-                  success:      event.success ?? false,
-                  portal:       event.portal  || "",
-                  fields_filled: event.fields_filled || 0,
-                  message:      event.message || "",
-                  screenshot:   event.screenshot,
-                  apply_url:    event.apply_url || st.url || st.portal_url,
-                },
-              }));
+              if (event.needs_credentials) {
+                // Session ended because portal login is required — show the
+                // credentials prompt instead of a generic failure card
+                setNeededPortal(event.needs_credentials);
+                if (event.screenshot) setLiveScreenshot(event.screenshot);
+                setWaitingMsg(event.message || "");
+                setSt((p) => ({ ...p, uiStatus: "needs_credentials" }));
+              } else {
+                setSt((p) => ({
+                  ...p,
+                  uiStatus: "autoresult",
+                  autoResult: {
+                    success:      event.success ?? false,
+                    portal:       event.portal  || "",
+                    fields_filled: event.fields_filled || 0,
+                    message:      event.message || "",
+                    screenshot:   event.screenshot,
+                    apply_url:    event.apply_url || st.url || st.portal_url,
+                  },
+                }));
+              }
             }
           } catch { /* malformed SSE line */ }
         }

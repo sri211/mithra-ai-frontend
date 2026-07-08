@@ -222,8 +222,8 @@ export default function TrackerPage() {
       }
       setApps(allApps);
     } catch {
-      // Backend not running — start with empty board
-      setApps([]);
+      // Fetch failed (offline / token refresh in flight) — KEEP existing board.
+      // Clearing here made temporary auth blips look like permanent data loss.
     } finally {
       setIsLoading(false);
     }

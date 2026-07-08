@@ -83,7 +83,7 @@ export default function LoginPage() {
           const ok = await loginWithGoogle(res.credential);
           if (ok) {
             const params = new URLSearchParams(window.location.search);
-            router.push(params.get("callbackUrl") || "/resume-builder");
+            router.push(params.get("callbackUrl") || "/dashboard");
           } else {
             setError("Google sign-in failed. Please try again or use email login.");
             setIsGoogleLoading(false);
@@ -104,7 +104,7 @@ export default function LoginPage() {
     const ok = await login(email, password);
     if (ok) {
       const params = new URLSearchParams(window.location.search);
-      router.push(params.get("callbackUrl") || "/resume-builder");
+      router.push(params.get("callbackUrl") || "/dashboard");
     } else {
       const storeError = useAuthStore.getState().error;
       setError(storeError || "Invalid email or password. Please try again.");
@@ -127,7 +127,7 @@ export default function LoginPage() {
           const ok = await loginWithGoogleAccessToken(response.access_token);
           if (ok) {
             const params = new URLSearchParams(window.location.search);
-            router.push(params.get("callbackUrl") || "/resume-builder");
+            router.push(params.get("callbackUrl") || "/dashboard");
           } else {
             setError("Google sign-in failed. Please try again or use email login.");
             setIsGoogleLoading(false);
