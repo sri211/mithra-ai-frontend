@@ -324,6 +324,7 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
         job_url: st.url || st.portal_url, job_id: st.id,
         company: st.company, role: st.title,
         match_score: st.match_score, profile,
+        resume: resume || {},
       });
       const sid: string = data.session_id;
       setActiveSessionId(sid);
