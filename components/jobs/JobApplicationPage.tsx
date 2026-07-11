@@ -122,8 +122,13 @@ function formatCtc(min: number, max: number) {
 }
 function daysAgo(d: string) {
   try {
-    const n = Math.floor((Date.now() - new Date(d).getTime()) / 86_400_000);
-    return n === 0 ? "Today" : n === 1 ? "Yesterday" : `${n}d ago`;
+    const t = new Date(d).getTime();
+    if (!d || Number.isNaN(t)) return "";
+    const n = Math.floor((Date.now() - t) / 86_400_000);
+    if (n < 0) return "";
+    if (n < 30) return n === 0 ? "Today" : n === 1 ? "Yesterday" : `${n}d ago`;
+    if (n < 365) return `${Math.floor(n / 30)}mo ago`;
+    return `${Math.floor(n / 365)}y ago`;
   } catch { return ""; }
 }
 function getAuthToken(): string {
@@ -396,7 +401,7 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
     try {
       await api.post(`/auto-apply/submit/input/${activeSessionId}`, { value: otpValue.trim() });
       setSt((p) => ({ ...p, uiStatus: "autosubmitting" }));
-      setAutoMsg("OTP submitted — logging in…");
+      setAutoMsg(waitingField === "otp" ? "OTP submitted — logging in…" : "Detail sent — continuing the form…");
       setOtpValue("");
     } catch { /* ignore, stream will handle timeout */ }
   };
@@ -501,7 +506,10 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "10px" }}>
             <div style={{ padding: "12px 14px", borderRadius: "10px", background: waitingField === "confirm_submit" ? "rgba(16,185,129,0.07)" : "rgba(245,158,11,0.07)", border: waitingField === "confirm_submit" ? "1px solid rgba(16,185,129,0.3)" : "1px solid rgba(245,158,11,0.3)" }}>
               <p style={{ fontSize: "13px", fontWeight: 700, color: "#111", margin: "0 0 4px" }}>
-                {waitingField === "confirm_submit" ? "✅ Ready to submit" : waitingField === "otp" ? "🔐 OTP required" : "⚠️ Login issue"}
+                {waitingField === "confirm_submit" ? "✅ Ready to submit"
+                  : waitingField === "otp" ? "🔐 OTP required"
+                  : waitingField === "missing_info" ? "✍️ One more detail needed"
+                  : "⚠️ Login issue"}
               </p>
               <p style={{ fontSize: "12px", color: "#666", margin: 0, lineHeight: "1.6" }}>{waitingMsg}</p>
             </div>
@@ -533,17 +541,18 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
                 </button>
               </div>
             )}
-            {waitingField === "otp" && (
+            {(waitingField === "otp" || waitingField === "missing_info") && (
               <div style={{ display: "flex", gap: "8px" }}>
                 <input
                   type="text" value={otpValue} onChange={(e) => setOtpValue(e.target.value)}
-                  placeholder="Enter OTP…" maxLength={10}
+                  placeholder={waitingField === "otp" ? "Enter OTP…" : "Type the requested detail…"}
+                  maxLength={waitingField === "otp" ? 10 : 120}
                   onKeyDown={(e) => e.key === "Enter" && submitOtp()}
-                  style={{ flex: 1, padding: "10px 14px", borderRadius: "10px", border: "1.5px solid rgba(15,110,85,0.4)", fontSize: "16px", color: "#111", outline: "none", fontFamily: "inherit", letterSpacing: "0.15em", textAlign: "center" }}
+                  style={{ flex: 1, padding: "10px 14px", borderRadius: "10px", border: "1.5px solid rgba(15,110,85,0.4)", fontSize: waitingField === "otp" ? "16px" : "14px", color: "#111", outline: "none", fontFamily: "inherit", letterSpacing: waitingField === "otp" ? "0.15em" : "normal", textAlign: waitingField === "otp" ? "center" : "left" }}
                 />
                 <button onClick={submitOtp} disabled={!otpValue.trim()}
                   style={{ padding: "10px 16px", borderRadius: "10px", border: "none", background: otpValue.trim() ? `linear-gradient(135deg,${VIOLET},#084434)` : "rgba(0,0,0,0.07)", color: otpValue.trim() ? "#fff" : "#bbb", fontSize: "13px", fontWeight: 700, cursor: otpValue.trim() ? "pointer" : "not-allowed" }}>
-                  Submit
+                  Send
                 </button>
               </div>
             )}
@@ -614,7 +623,11 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
                     <Camera style={{ width: "13px", height: "13px", color: VIOLET }} />
                     <span style={{ fontSize: "11px", fontWeight: 700, color: VIOLET, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                      {st.uiStatus === "waiting_input" ? "Browser — OTP required" : "Server Browser View"}
+                      {st.uiStatus === "waiting_input"
+                        ? (waitingField === "otp" ? "Browser — OTP required"
+                           : waitingField === "missing_info" ? "Browser — info needed"
+                           : "Browser — review & confirm")
+                        : "Server Browser View"}
                     </span>
                     {(st.autoResult?.fields_filled || 0) > 0 && (
                       <span style={{ marginLeft: "auto", fontSize: "11px", padding: "2px 8px", borderRadius: "20px", background: "rgba(16,185,129,0.1)", color: GREEN, fontWeight: 600 }}>
