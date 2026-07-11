@@ -316,6 +316,8 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
       phone:    resume?.personal?.phone    || "",
       location: resume?.personal?.location || "",
       linkedin: resume?.personal?.linkedin || "",
+      role:     resume?.personal?.title    || "",
+      _has_experience: (resume?.experience?.length ?? 0) > 0,
     };
 
     try {
