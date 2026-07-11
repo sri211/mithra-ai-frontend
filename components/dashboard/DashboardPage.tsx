@@ -17,10 +17,10 @@ interface TrackerApp {
 
 const QUICK_ACTIONS = [
   { href: "/resume-adaptor", icon: Target, label: "Adapt Resume", desc: "Tailor your resume to a JD", cost: "25 cr", accent: "#0F6E55" },
-  { href: "/job-finder", icon: Search, label: "Find Jobs", desc: "Real listings matched to you", cost: "1 cr", accent: "#0A66C2" },
-  { href: "/job-application", icon: Zap, label: "Auto Apply", desc: "Assistant fills & submits", cost: "5 cr", accent: "#D97706" },
+  { href: "/job-finder", icon: Search, label: "Find Jobs", desc: "Real listings matched to you", cost: "2 cr", accent: "#0A66C2" },
+  { href: "/job-application", icon: Zap, label: "Auto Apply", desc: "Assistant fills & submits", cost: "8 cr", accent: "#D97706" },
   { href: "/interview-prep", icon: Brain, label: "Interview Prep", desc: "Mock questions + feedback", cost: "10 cr", accent: "#7A3E9D" },
-  { href: "/resume-builder", icon: FileText, label: "Resume Builder", desc: "Build or import a resume", cost: "10 cr", accent: "#0F766E" },
+  { href: "/resume-builder", icon: FileText, label: "Resume Builder", desc: "Build or import a resume", cost: "15 cr", accent: "#0F766E" },
   { href: "/resume-score", icon: Award, label: "Resume Score", desc: "7-dimension ATS audit", cost: "FREE", accent: "#10B981" },
 ];
 
@@ -43,14 +43,23 @@ export default function DashboardPage() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    api.get("/tracker/")
-      .then(({ data }) => {
-        const board = data.board || {};
-        const all: TrackerApp[] = Object.values(board).flat() as TrackerApp[];
-        setApps(all);
-      })
-      .catch(() => {})
-      .finally(() => setLoaded(true));
+    const load = () => {
+      api.get("/tracker/")
+        .then(({ data }) => {
+          const board = data.board || {};
+          const all: TrackerApp[] = Object.values(board).flat() as TrackerApp[];
+          setApps(all);
+        })
+        .catch(() => {})
+        .finally(() => setLoaded(true));
+    };
+    load();
+    window.addEventListener("focus", load);
+    window.addEventListener("mithra:tracker-changed", load);
+    return () => {
+      window.removeEventListener("focus", load);
+      window.removeEventListener("mithra:tracker-changed", load);
+    };
   }, []);
 
   const stats = [

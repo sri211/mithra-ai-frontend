@@ -8,7 +8,9 @@ import {
   Building2, IndianRupee, X, Camera, KeyRound, Shield, Lock,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
+import CoinCost from "@/components/ui/CoinCost";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { useJobStore } from "@/lib/stores/jobStore";
 import { useResumeStore } from "@/lib/stores/resumeStore";
 import { useUser } from "@/lib/auth";
 import { getLimits } from "@/lib/planLimits";
@@ -366,6 +368,7 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
                 setWaitingMsg(event.message || "");
                 setSt((p) => ({ ...p, uiStatus: "needs_credentials" }));
               } else {
+                if (event.success) window.dispatchEvent(new Event("mithra:tracker-changed"));
                 setSt((p) => ({
                   ...p,
                   uiStatus: "autoresult",
@@ -454,7 +457,7 @@ function JobCard({ job, resume, savedPortals, onNeedsCredentials, onApplied, onS
             <button onClick={autoSubmit}
               title="Server opens the job page, logs in with your saved credentials, and auto-fills the form"
               style={{ padding: "10px 12px", borderRadius: "10px", border: `1.5px solid ${VIOLET}`, background: "rgba(15,110,85,0.06)", color: VIOLET, fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}>
-              <Bot style={{ width: "13px", height: "13px" }} /> Auto Submit
+              <Bot style={{ width: "13px", height: "13px" }} /> Auto Submit <CoinCost n={8} onDark />
             </button>
             <button onClick={() => setExpanded((p) => !p)} style={{ padding: "10px 11px", borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", cursor: "pointer", color: "#666" }}>
               <ChevronDown style={{ width: "15px", height: "15px", transform: expanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
@@ -702,6 +705,27 @@ export default function JobApplicationPage() {
     const localApps = loadAppsLocally();
     if (localApps.length) setAppliedList(localApps);
     const localCamp = loadCampaignLocally();
+
+    // Job handed over from Job Finder's "Auto-Apply" button — apply to THAT job,
+    // shown alone at the top of the queue, regardless of campaign state
+    const handedOver = useJobStore.getState().selectedJob;
+    if (handedOver) {
+      useJobStore.getState().clearSelectedJob();
+      setView("dashboard");
+      setJobs([{ ...(handedOver as unknown as Job), uiStatus: "idle" as CardStatus } as JobWithState]);
+      if (localCamp) {
+        setCampaign(localCamp); setRole(localCamp.role); setLocation(localCamp.location);
+        setCtcMin(localCamp.ctc_min); setCtcMax(localCamp.ctc_max); setExpLevel(localCamp.experience_level);
+      } else {
+        // Minimal implicit campaign so the dashboard renders
+        const c: Campaign = { role: handedOver.title, location: handedOver.location || "Any", ctc_min: 5, ctc_max: 50, experience_level: "mid" };
+        setCampaign(c);
+      }
+      syncFromBackend(localApps, localCamp || ({} as Campaign));
+      loadCredentials();
+      return;
+    }
+
     if (localCamp) {
       setCampaign(localCamp); setRole(localCamp.role); setLocation(localCamp.location);
       setCtcMin(localCamp.ctc_min); setCtcMax(localCamp.ctc_max); setExpLevel(localCamp.experience_level);
@@ -781,6 +805,8 @@ export default function JobApplicationPage() {
       if (data.id) {
         setAppliedList((prev) => { const next = prev.map((a) => a.job_id === job.id ? { ...a, id: data.id, _local: false } : a); saveAppsLocally(next); return next; });
       }
+      // Tell Tracker + Dashboard to refetch immediately
+      window.dispatchEvent(new Event("mithra:tracker-changed"));
     } catch { /* localStorage saved */ }
   };
 

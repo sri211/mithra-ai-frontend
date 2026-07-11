@@ -54,13 +54,13 @@ const PLANS = [
 
 const CREDIT_MENU = [
   { label: "Resume Adaptation", cost: 25 },
-  { label: "AI Resume Build", cost: 10 },
+  { label: "AI Resume Build", cost: 15 },
   { label: "Interview Session", cost: 10 },
   { label: "Cover Letter", cost: 5 },
-  { label: "Auto-Apply Session", cost: 5 },
+  { label: "Auto-Apply Session", cost: 8 },
   { label: "Answer Feedback", cost: 3 },
   { label: "PDF Download", cost: 2 },
-  { label: "Job Search", cost: 1 },
+  { label: "Job Search", cost: 2 },
   { label: "Chat Message", cost: 1 },
   { label: "Resume Score", cost: 0 },
 ];

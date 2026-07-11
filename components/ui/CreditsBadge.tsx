@@ -21,11 +21,10 @@ export default function CreditsBadge({ compact = false }: { compact?: boolean })
         borderRadius: "20px", background: bg, border: `1px solid ${border}`,
         textDecoration: "none", flexShrink: 0,
       }}>
-      <Coins style={{ width: "13px", height: "13px", color }} />
+      <Coins style={{ width: compact ? "13px" : "15px", height: compact ? "13px" : "15px", color }} />
       <span style={{ fontSize: compact ? "12px" : "13px", fontWeight: 700, color, lineHeight: 1 }}>
         {credits.balance.toLocaleString("en-IN")}
       </span>
-      {!compact && <span style={{ fontSize: "11px", color: "#8A8474", lineHeight: 1 }}>cr</span>}
     </Link>
   );
 }

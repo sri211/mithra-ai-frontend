@@ -7,6 +7,7 @@ import {
   Zap, Star, Briefcase, Globe, X, Sparkles,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
+import CoinCost from "@/components/ui/CoinCost";
 import { Job } from "@/lib/types";
 import { useAgentStore } from "@/lib/stores/agentStore";
 import { useJobStore } from "@/lib/stores/jobStore";
@@ -538,7 +539,7 @@ export default function JobFinderPage() {
             ) : (
               <Search style={{ width: "14px", height: "14px" }} />
             )}
-            {isSearching ? "Searching..." : "Search"}
+            {isSearching ? "Searching..." : <>Search <CoinCost n={2} onDark /></>}
           </button>
           </div>{/* end jf-search-inner */}
           {/* Match My Resume button — shows when resume has data */}
@@ -550,7 +551,7 @@ export default function JobFinderPage() {
                 style={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 18px", background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", borderRadius: "10px", color: "#0f0a1e", fontSize: "13px", fontWeight: 700, cursor: isSearching ? "not-allowed" : "pointer", boxShadow: "0 4px 14px rgba(245,158,11,0.3)" }}
               >
                 <Sparkles style={{ width: "14px", height: "14px" }} />
-                Find Jobs For My Resume
+                Find Jobs For My Resume <CoinCost n={2} onDark />
               </button>
               <span style={{ fontSize: "12px", color: "#888" }}>
                 AI-matched jobs based on your {resume?.personal?.title || "resume"}
@@ -682,7 +683,7 @@ export default function JobFinderPage() {
               <JobDetailPanel
                 job={selectedJob}
                 onClose={() => setSelectedJob(null)}
-                onAutoApply={() => router.push("/job-application")}
+                onAutoApply={() => { storeSelectedJob(selectedJob); router.push("/job-application"); }}
                 onAdaptResume={() => { storeSelectedJob(selectedJob); router.push("/resume-adaptor"); }}
               />
             </motion.div>
@@ -710,7 +711,7 @@ export default function JobFinderPage() {
               <JobDetailPanel
                 job={selectedJob}
                 onClose={() => { setMobileDetailOpen(false); setSelectedJob(null); }}
-                onAutoApply={() => { setMobileDetailOpen(false); router.push("/job-application"); }}
+                onAutoApply={() => { storeSelectedJob(selectedJob); setMobileDetailOpen(false); router.push("/job-application"); }}
                 onAdaptResume={() => { storeSelectedJob(selectedJob); setMobileDetailOpen(false); router.push("/resume-adaptor"); }}
               />
             </motion.div>

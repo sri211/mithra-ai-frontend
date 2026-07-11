@@ -182,15 +182,18 @@ export default function TrackerPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [newApp, setNewApp] = useState({ company: "", role: "", location: "", salary: "", portal: "", nextStep: "" });
 
-  // Load from backend on mount + auto-refresh whenever the tab regains focus
+  // Load from backend on mount + auto-refresh on focus and whenever any apply
+  // action fires the tracker-changed event
   useEffect(() => {
     loadApplications();
     const onFocus = () => loadApplications();
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onFocus);
+    window.addEventListener("mithra:tracker-changed", onFocus);
     return () => {
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onFocus);
+      window.removeEventListener("mithra:tracker-changed", onFocus);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

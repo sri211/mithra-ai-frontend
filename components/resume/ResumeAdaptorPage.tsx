@@ -1,4 +1,5 @@
 ﻿"use client";
+import CoinCost from "@/components/ui/CoinCost";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -662,7 +663,7 @@ export default function ResumeAdaptorPage() {
                     <><motion.div style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />{loadingStep || "Adapting..."}</>
                   ) : (
                     <><Wand2 style={{ width: "16px", height: "16px" }} />
-                      Adapt My Resume
+                      Adapt My Resume <CoinCost n={25} onDark />
                       {adaptCap !== -1 && <span style={{ fontSize: "10px", opacity: 0.7, marginLeft: "4px" }}>({adaptCap - adaptUsed} left)</span>}
                     </>
                   )}

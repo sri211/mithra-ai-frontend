@@ -1,4 +1,5 @@
 ﻿"use client";
+import CoinCost from "@/components/ui/CoinCost";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -380,7 +381,7 @@ export default function InterviewPrepPage() {
 
                       <button onClick={startSession} style={{ ...btnPrimary, width: "100%" }}>
                         <Play style={{ width: "16px", height: "16px" }} />
-                        Generate AI Questions &amp; Start Session
+                        Generate AI Questions &amp; Start Session <CoinCost n={10} onDark />
                       </button>
                     </div>
                   </div>

@@ -1,4 +1,5 @@
 "use client";
+import CoinCost from "@/components/ui/CoinCost";
 import { useState, useRef, useEffect, useId } from "react";
 import { useResumeStore } from "@/lib/stores/resumeStore";
 import { useAgentStore } from "@/lib/stores/agentStore";
@@ -998,7 +999,7 @@ export default function ResumeBuilderPage() {
                   </div>
                   <button onClick={buildFromChat} disabled={isBuilding || chatMessages.length < 3}
                     style={{ ...btnGold, opacity: chatMessages.length < 3 ? 0.4 : 1, borderRadius: "12px" }}>
-                    {isBuilding ? <><Spinner /> Generating…</> : "✨ Generate Resume from Chat"}
+                    {isBuilding ? <><Spinner /> Generating…</> : <>✨ Generate Resume from Chat <CoinCost n={15} onDark /></>}
                   </button>
                 </div>
               </div>
@@ -1342,7 +1343,7 @@ The more text you paste, the more complete your resume will be.`}
                     </button>
                   ) : (
                     <button onClick={downloadPDF} disabled={isPdfLoading} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 16px", borderRadius: "8px", border: "none", fontSize: "13px", fontWeight: 700, background: "linear-gradient(135deg,#0F6E55,#0A523F)", color: "white", cursor: isPdfLoading ? "not-allowed" : "pointer", opacity: isPdfLoading ? 0.7 : 1, boxShadow: "0 4px 12px rgba(15,110,85,0.3)" }}>
-                      {isPdfLoading ? "⏳ Generating..." : <>⬇ Export PDF {pdfCap !== -1 && <span style={{ fontSize: "10px", opacity: 0.7 }}>({pdfCap - pdfUsed} left)</span>}</>}
+                      {isPdfLoading ? "⏳ Generating..." : <>⬇ Export PDF <CoinCost n={2} onDark /> {pdfCap !== -1 && <span style={{ fontSize: "10px", opacity: 0.7 }}>({pdfCap - pdfUsed} left)</span>}</>}
                     </button>
                   );
                 })()}
