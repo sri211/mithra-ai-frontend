@@ -7,7 +7,7 @@ import {
   FileText, Target, Search, Zap, Users, Brain, BarChart3,
   Sparkles, ChevronLeft, ChevronRight, LogOut, Crown,
   Home, MoreHorizontal, X, Bell, Settings, ChevronDown,
-  Award, Gift, ShieldCheck,
+  Award, Gift, ShieldCheck, Building2,
 } from "lucide-react";
 
 const ADMIN_EMAILS = ["srinathreddy.ksr@gmail.com", "sri@mithraai.in"];
@@ -27,6 +27,7 @@ const NAV_ITEMS = [
   { href: "/resume-score",   icon: Award,    label: "Resume Score",   color: "#10b981", description: "See exactly where your resume wins and where it loses.", badge: "Free" },
   { href: "/resume-adaptor", icon: Target,   label: "Resume Adaptor", color: "#06b6d4", description: "A single role, seen through a thousand lenses." },
   { href: "/job-finder",     icon: Search,   label: "Job Finder",     color: "#10b981", description: "Somewhere in the noise, one job was written for you." },
+  { href: "/company-intel",  icon: Building2, label: "Company Intel",  color: "#7A3E9D", description: "Know them before they know you." },
   { href: "/job-application",icon: Zap,      label: "Auto Apply",     color: "#f59e0b", description: "While you sleep, Mithra knocks on doors." },
   { href: "/network",        icon: Users,    label: "Network",        color: "#ec4899", description: "Your next colleague exists. You just haven't met yet." },
   { href: "/interview-prep", icon: Brain,    label: "Interview Prep", color: "#f97316", description: "The question is asked once. The answer is prepared a thousand times." },
@@ -45,6 +46,7 @@ const MORE_ITEMS = [
   { href: "/job-finder",     icon: Search,   label: "Job Finder",     color: "#10b981", emoji: "🔍" },
   { href: "/tracker",        icon: BarChart3,label: "Tracker",        color: "#6366f1", emoji: "📊" },
   { href: "/referral",       icon: Gift,     label: "Refer & Earn",   color: "#10b981", emoji: "🎁" },
+  { href: "/company-intel",  icon: Building2,label: "Company Intel",  color: "#7A3E9D", emoji: "🏢" },
   { href: "/job-application",icon: Zap,      label: "Auto Apply",     color: "#f59e0b", emoji: "⚡", beta: true },
 ];
 

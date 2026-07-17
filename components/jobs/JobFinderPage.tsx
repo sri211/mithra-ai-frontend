@@ -1,10 +1,10 @@
 ﻿"use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, MapPin, DollarSign, Clock, ExternalLink, Bookmark,
-  Zap, Star, Briefcase, Globe, X, Sparkles,
+  Zap, Star, Briefcase, Globe, X, Sparkles, Building2, Check,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
 import CoinCost from "@/components/ui/CoinCost";
@@ -20,7 +20,23 @@ import { UsageProgressNudge, TeaserNudge } from "@/components/ui/UpgradeNudge";
 const PORTAL_COLORS: Record<string, string> = {
   LinkedIn: "#0a66c2", Indeed: "#2164f3", Glassdoor: "#0caa41",
   Naukri: "#ff7555", Instahyre: "#5c2d91", AngelList: "#ff4500",
-  JSearch: "#6366f1",
+  JSearch: "#6366f1", Google: "#ea4335",
+};
+
+// Platforms the user can narrow the search to (multi-select)
+const PLATFORMS = ["LinkedIn", "Naukri", "Indeed", "Google", "Glassdoor", "Instahyre"];
+
+// Company size buckets — classified server-side by brand + employee scale
+const COMPANY_TYPES = [
+  { id: "small", label: "Small",  color: "#0891b2", hint: "Startups & <200 employees" },
+  { id: "mid",   label: "Mid",    color: "#7A3E9D", hint: "200–5,000 · funded growth-stage" },
+  { id: "large", label: "Large",  color: "#0F6E55", hint: "5,000+ · enterprises & known brands" },
+];
+
+const COMPANY_TYPE_META: Record<string, { label: string; color: string }> = {
+  small: { label: "Small", color: "#0891b2" },
+  mid:   { label: "Mid",   color: "#7A3E9D" },
+  large: { label: "Large", color: "#0F6E55" },
 };
 
 function formatPostedDate(dateStr: string): string {
@@ -147,6 +163,16 @@ function JobCard({ job, isSelected, onClick, onSave, onApply, onTrack }: {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" as const }}>
               <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "12px", background: `${portalColor}20`, color: portalColor }}>{job.portal}</span>
+              {(job as any).company_type && COMPANY_TYPE_META[(job as any).company_type] && (
+                <span style={{
+                  fontSize: "10px", padding: "2px 7px", borderRadius: "12px",
+                  background: `${COMPANY_TYPE_META[(job as any).company_type].color}15`,
+                  color: COMPANY_TYPE_META[(job as any).company_type].color,
+                  border: `1px solid ${COMPANY_TYPE_META[(job as any).company_type].color}30`,
+                }}>
+                  {COMPANY_TYPE_META[(job as any).company_type].label}
+                </span>
+              )}
               {job.is_real_listing
                 ? <span style={{ fontSize: "10px", padding: "2px 7px", borderRadius: "12px", background: "rgba(16,185,129,0.12)", color: "#10b981", border: "1px solid rgba(16,185,129,0.25)" }}>Real listing</span>
                 : <span style={{ fontSize: "10px", padding: "2px 7px", borderRadius: "12px", background: "rgba(148,163,184,0.1)", color: "#888888", border: "1px solid rgba(148,163,184,0.2)" }}>Search result</span>
@@ -369,17 +395,34 @@ export default function JobFinderPage() {
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
   const [salaryFilter, setSalaryFilter] = useState("");
   const [expFilter, setExpFilter] = useState("");
+  const [platforms, setPlatforms] = useState<string[]>([]);   // multi-select
+  const [companyType, setCompanyType] = useState<string[]>([]); // small | mid | large
+  const [companyName, setCompanyName] = useState("");
   const [jobs, setJobs] = useState<Job[]>(lastJobs);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [resumeSearched, setResumeSearched] = useState(false);
+  const searchRef = useRef<(() => void) | null>(null);
 
   const hasResumeData = !!(
     resume?.personal?.name ||
     resume?.personal?.title ||
     (resume?.experience?.length ?? 0) > 0
   );
+
+  // Deep-link from Company Intel: /job-finder?q=Role&company=Name → run that search
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    const dq = sp.get("q"), dc = sp.get("company");
+    if (!dq && !dc) return;
+    if (dq) setQuery(dq);
+    if (dc) setCompanyName(dc);
+    window.history.replaceState({}, "", window.location.pathname);
+    setTimeout(() => searchRef.current?.(), 350);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Auto-populate search from resume only when there's no stored query and no stored results
   useEffect(() => {
@@ -428,6 +471,9 @@ export default function JobFinderPage() {
         remote,
         salary_min: salaryMap[salaryFilter] || 0,
         experience_years: expMap[expFilter] || 0,
+        portals: platforms,
+        company_type: companyType.join(","),
+        company_name: companyName.trim(),
         resume_profile: resume,
       });
       if (data.jobs?.length) {
@@ -465,6 +511,9 @@ export default function JobFinderPage() {
         remote,
         salary_min: salaryMap[salaryFilter] || 0,
         experience_years: expMap[expFilter] || 0,
+        portals: platforms,
+        company_type: companyType.join(","),
+        company_name: companyName.trim(),
         resume_profile: hasResumeData ? resume : undefined,
       });
       if (data.jobs?.length) {
@@ -489,6 +538,8 @@ export default function JobFinderPage() {
       status,
     }).catch(() => { /* guest or offline — ignore */ });
   };
+
+  searchRef.current = search;
 
   const toggleSave = (id: string) => {
     const job = jobs.find((j) => j.id === id);
@@ -542,6 +593,31 @@ export default function JobFinderPage() {
             {isSearching ? "Searching..." : <>Search <CoinCost n={2} onDark /></>}
           </button>
           </div>{/* end jf-search-inner */}
+
+          {/* Company name — optional: pin the search to one employer */}
+          <div style={{ marginTop: "10px", display: "flex", alignItems: "center", gap: "8px", background: "#FFFFFF", border: `1px solid ${companyName ? "rgba(15,110,85,0.4)" : "rgba(0,0,0,0.12)"}`, borderRadius: "10px", padding: "8px 12px" }}>
+            <Building2 style={{ width: "15px", height: "15px", color: companyName ? "#0F6E55" : "#475569", flexShrink: 0 }} />
+            <input
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && search()}
+              style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "13px", color: "#111111", fontFamily: "inherit" }}
+              placeholder="Target a specific company (optional) — e.g. Flipkart"
+            />
+            {companyName && (
+              <button onClick={() => setCompanyName("")} title="Clear"
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#888", display: "flex", padding: 0 }}>
+                <X style={{ width: "13px", height: "13px" }} />
+              </button>
+            )}
+          </div>
+          {companyName && (
+            <div style={{ marginTop: "6px", fontSize: "11.5px", color: "#0F6E55", display: "flex", alignItems: "center", gap: "5px" }}>
+              <Sparkles style={{ width: "11px", height: "11px" }} />
+              Showing only <strong>{companyName}</strong> roles matched to your resume
+            </div>
+          )}
+
           {/* Match My Resume button — shows when resume has data */}
           {hasResumeData && (
             <div style={{ marginTop: "10px", display: "flex", alignItems: "center", gap: "10px" }}>
@@ -576,6 +652,42 @@ export default function JobFinderPage() {
           {["0-2yr", "2-5yr", "5yr+"].map((e) => (
             <button key={e} onClick={() => setExpFilter(expFilter === e ? "" : e)} style={chip(expFilter === e, "#06b6d4")}>{e}</button>
           ))}
+        </div>
+
+        {/* Platforms (multi-select) + Company size */}
+        <div className="jf-filter-row" style={{ display: "flex", flexWrap: "wrap" as const, gap: "8px", marginTop: "10px", alignItems: "center" }}>
+          <span style={{ fontSize: "12px", color: "#475569", marginRight: "4px" }}>Platforms:</span>
+          {PLATFORMS.map((p) => {
+            const on = platforms.includes(p);
+            return (
+              <button key={p}
+                onClick={() => setPlatforms((prev) => on ? prev.filter((x) => x !== p) : [...prev, p])}
+                style={{ ...chip(on, PORTAL_COLORS[p] || "#0F6E55"), display: "flex", alignItems: "center", gap: "5px" }}>
+                {on && <Check style={{ width: "11px", height: "11px" }} />}
+                {p}
+              </button>
+            );
+          })}
+          {platforms.length > 0 && (
+            <button onClick={() => setPlatforms([])}
+              style={{ fontSize: "11px", color: "#888", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+              clear
+            </button>
+          )}
+
+          <div style={{ width: "1px", height: "20px", background: "rgba(0,0,0,0.08)", margin: "0 4px" }} />
+          <span style={{ fontSize: "12px", color: "#475569", marginRight: "4px" }}>Company:</span>
+          {COMPANY_TYPES.map((c) => {
+            const on = companyType.includes(c.id);
+            return (
+              <button key={c.id} title={c.hint}
+                onClick={() => setCompanyType((prev) => on ? prev.filter((x) => x !== c.id) : [...prev, c.id])}
+                style={{ ...chip(on, c.color), display: "flex", alignItems: "center", gap: "5px" }}>
+                {on && <Check style={{ width: "11px", height: "11px" }} />}
+                {c.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 

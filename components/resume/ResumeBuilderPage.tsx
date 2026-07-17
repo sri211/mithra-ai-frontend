@@ -740,7 +740,14 @@ export default function ResumeBuilderPage() {
       const data = await response.json();
       if (!data.resume) throw new Error("Backend returned empty resume data");
 
-      setPdfUploadStatus(`✅ Extracted ${data.chars_extracted?.toLocaleString() || "all"} chars — building resume...`);
+      // Match the template to the uploaded file's design so adaptations keep its look
+      if (data.detected_template) {
+        useResumeStore.getState().setTemplate(data.detected_template);
+      }
+      setPdfUploadStatus(
+        `✅ Extracted ${data.chars_extracted?.toLocaleString() || "all"} chars` +
+        (data.detected_template ? ` — matched your ${data.detected_template} style` : "") + "..."
+      );
       setResume(data.resume);
       setAtsScore(84);
       setTimeout(() => {

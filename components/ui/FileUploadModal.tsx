@@ -20,6 +20,7 @@ export function FileUploadModal({ isOpen, onClose, onResumeParsed }: FileUploadM
   const [isParsing, setIsParsing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [detectedTemplate, setDetectedTemplate] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const resetInput = () => {
@@ -90,9 +91,18 @@ export function FileUploadModal({ isOpen, onClose, onResumeParsed }: FileUploadM
           throw new Error(detail || `Upload failed (${response.status}). Please try again.`);
         }
         const data = await response.json();
+        // Match the template to the design of the file they uploaded, so an
+        // adapted resume comes back looking like their original.
+        if (data.detected_template) {
+          try {
+            const { useResumeStore } = await import("@/lib/stores/resumeStore");
+            useResumeStore.getState().setTemplate(data.detected_template);
+            setDetectedTemplate(data.detected_template);
+          } catch { /* non-critical */ }
+        }
         setSuccess(true);
         resetInput();
-        setTimeout(() => { onResumeParsed(data.resume); onClose(); setFile(null); setSuccess(false); }, 800);
+        setTimeout(() => { onResumeParsed(data.resume); onClose(); setFile(null); setSuccess(false); }, 1100);
       } else {
         let text = "";
         try { text = await readFileText(file); } catch { text = ""; }
@@ -260,7 +270,10 @@ export function FileUploadModal({ isOpen, onClose, onResumeParsed }: FileUploadM
                 ? { background: "linear-gradient(135deg,#0F6E55,#0A523F)", boxShadow: "0 4px 20px rgba(15,110,85,0.4)" }
                 : { background: "rgba(255,255,255,0.05)" }}>
               {success ? (
-                <><Check className="w-4 h-4 text-emerald-400" /> <span className="text-emerald-400">Parsed successfully!</span></>
+                <><Check className="w-4 h-4 text-emerald-400" />
+                  <span className="text-emerald-400">
+                    Parsed successfully!{detectedTemplate ? ` Matched your ${detectedTemplate} style.` : ""}
+                  </span></>
               ) : isParsing ? (
                 <><motion.div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
                   animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} />
