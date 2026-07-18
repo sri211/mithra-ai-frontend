@@ -75,6 +75,23 @@ const inputStyle: React.CSSProperties = {
   fontSize: "13px", outline: "none", fontFamily: "inherit", boxSizing: "border-box",
 };
 
+// Module-level so its identity is STABLE across re-renders. When this lived inside
+// ResumeBuilderPage, every keystroke created a new component type → React remounted
+// the whole form → inputs lost focus and the panel scrolled to the top.
+function AccordionSection({ label, open, onToggle, children }: {
+  label: string; open: boolean; onToggle: () => void; children: React.ReactNode;
+}) {
+  return (
+    <div style={{ borderBottom: `1px solid ${C.border}` }}>
+      <button onClick={onToggle} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "none", border: "none", cursor: "pointer", color: C.text, fontSize: "13px", fontWeight: 600, textAlign: "left" }}>
+        {label}
+        <span style={{ color: C.muted, fontSize: "16px" }}>{open ? "−" : "+"}</span>
+      </button>
+      {open && <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>{children}</div>}
+    </div>
+  );
+}
+
 const btnPrimary: React.CSSProperties = {
   display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
   background: "#0F6E55", color: "white",
@@ -590,6 +607,28 @@ export default function ResumeBuilderPage() {
   const usage = useUsageTracker(user?.id ?? "guest");
   const [mode, setMode] = useState<BuildMode>("linkedin");
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"" | "saving" | "saved" | "error">("");
+
+  // Save the current resume to the account (so it persists, feeds the Adaptor,
+  // and is available to the browser extension). The form itself already keeps a
+  // live local copy via updateSection; this makes it durable.
+  const saveResumeToCloud = async () => {
+    if (!accessToken) { window.location.href = "/login"; return; }
+    setSaveStatus("saving");
+    try {
+      await api.post("/user/resumes", {
+        name: resume.personal?.name ? `${resume.personal.name}'s Resume` : "My Resume",
+        resume_json: resume,
+        template: selectedTemplate || "modern",
+        ats_score: atsScore || 0,
+      }, { headers: { Authorization: `Bearer ${accessToken}` } });
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus(""), 2500);
+    } catch {
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus(""), 3000);
+    }
+  };
   const [chatMessages, setChatMessages] = useState([
     { role: "assistant", content: "Hi! I'm Mithra. Let's build your perfect resume.\n\nStart with: **What's your full name, current job title, and email?**" }
   ]);
@@ -902,19 +941,6 @@ export default function ResumeBuilderPage() {
   const resetResume = () => {
     const empty: ResumeData = { personal: { name: "", email: "", phone: "", location: "", linkedin: "", github: "", website: "", title: "" }, summary: "", experience: [], education: [], skills: { technical: [], soft: [], languages: [], certifications: [] }, projects: [], achievements: [], volunteer: [] };
     setResume(empty); setAtsScore(0);
-  };
-
-  const AccordionSection = ({ id, label, children }: { id: string; label: string; children: React.ReactNode }) => {
-    const open = expandedSection === id;
-    return (
-      <div style={{ borderBottom: `1px solid ${C.border}` }}>
-        <button onClick={() => setExpandedSection(open ? "" : id)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "none", border: "none", cursor: "pointer", color: C.text, fontSize: "13px", fontWeight: 600, textAlign: "left" }}>
-          {label}
-          <span style={{ color: C.muted, fontSize: "16px" }}>{open ? "−" : "+"}</span>
-        </button>
-        {open && <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>{children}</div>}
-      </div>
-    );
   };
 
   return (
@@ -1241,7 +1267,7 @@ The more text you paste, the more complete your resume will be.`}
             {/* ── FORM MODE ── */}
             {mode === "form" && (
               <div style={{ display: "flex", flexDirection: "column" }}>
-                <AccordionSection id="personal" label="👤 Personal Info">
+                <AccordionSection label="👤 Personal Info" open={expandedSection === "personal"} onToggle={() => setExpandedSection(expandedSection === "personal" ? "" : "personal")}>
                   {[["name", "Full Name"], ["title", "Job Title"], ["email", "Email"], ["phone", "Phone"], ["location", "City, Country"], ["linkedin", "LinkedIn URL"], ["github", "GitHub URL"]].map(([f, l]) => (
                     <div key={f}>
                       <label style={{ fontSize: "11px", color: C.muted, display: "block", marginBottom: "4px" }}>{l}</label>
@@ -1250,13 +1276,13 @@ The more text you paste, the more complete your resume will be.`}
                   ))}
                 </AccordionSection>
 
-                <AccordionSection id="summary" label="📝 Professional Summary">
+                <AccordionSection label="📝 Professional Summary" open={expandedSection === "summary"} onToggle={() => setExpandedSection(expandedSection === "summary" ? "" : "summary")}>
                   <textarea rows={5} style={{ ...inputStyle, resize: "vertical" as const, lineHeight: 1.6 }}
                     value={resume.summary} onChange={(e) => updateSection("summary", e.target.value)}
                     placeholder="3 sentences: Who you are + years exp + domain, Top 2-3 achievements, What you seek next." />
                 </AccordionSection>
 
-                <AccordionSection id="experience" label="💼 Work Experience">
+                <AccordionSection label="💼 Work Experience" open={expandedSection === "experience"} onToggle={() => setExpandedSection(expandedSection === "experience" ? "" : "experience")}>
                   {resume.experience.map((exp, i) => (
                     <div key={i} style={{ padding: "12px", borderRadius: "10px", border: `1px solid ${C.border}`, background: C.card, display: "flex", flexDirection: "column", gap: "8px" }}>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
@@ -1276,7 +1302,7 @@ The more text you paste, the more complete your resume will be.`}
                     style={{ ...btnOutline, borderStyle: "dashed" }}>+ Add Experience</button>
                 </AccordionSection>
 
-                <AccordionSection id="skills" label="⚡ Skills">
+                <AccordionSection label="⚡ Skills" open={expandedSection === "skills"} onToggle={() => setExpandedSection(expandedSection === "skills" ? "" : "skills")}>
                   {[["technical", "Technical Skills (comma-separated)"], ["languages", "Programming Languages"], ["certifications", "Certifications (comma-separated)"]].map(([f, l]) => (
                     <div key={f}>
                       <label style={{ fontSize: "11px", color: C.muted, display: "block", marginBottom: "4px" }}>{l}</label>
@@ -1288,7 +1314,7 @@ The more text you paste, the more complete your resume will be.`}
                   ))}
                 </AccordionSection>
 
-                <AccordionSection id="education" label="🎓 Education">
+                <AccordionSection label="🎓 Education" open={expandedSection === "education"} onToggle={() => setExpandedSection(expandedSection === "education" ? "" : "education")}>
                   {resume.education.map((ed, i) => (
                     <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", padding: "12px", borderRadius: "10px", border: `1px solid ${C.border}`, background: C.card }}>
                       {[["institution", "University / Institution", "col-span-2"], ["degree", "Degree (B.Tech, MBA...)"], ["field", "Field of Study"], ["start", "Start Year"], ["end", "End Year"], ["gpa", "GPA (optional)"]].map(([f, l, span]) => (
@@ -1305,14 +1331,26 @@ The more text you paste, the more complete your resume will be.`}
                     style={{ ...btnOutline, borderStyle: "dashed" }}>+ Add Education</button>
                 </AccordionSection>
 
-                <AccordionSection id="achievements" label="🏆 Achievements & Certifications">
+                <AccordionSection label="🏆 Achievements & Certifications" open={expandedSection === "achievements"} onToggle={() => setExpandedSection(expandedSection === "achievements" ? "" : "achievements")}>
                   <textarea rows={4} style={{ ...inputStyle, resize: "vertical" as const, lineHeight: 1.6 }}
                     value={resume.achievements.join("\n")}
                     onChange={(e) => updateSection("achievements", e.target.value.split("\n").filter(Boolean))}
                     placeholder="One achievement per line (awards, patents, publications, hackathon wins...)" />
                 </AccordionSection>
 
-                <div style={{ padding: "16px" }}>
+                <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <button onClick={saveResumeToCloud} disabled={saveStatus === "saving"}
+                    style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "none", cursor: saveStatus === "saving" ? "wait" : "pointer",
+                      background: saveStatus === "saved" ? "#10b981" : "linear-gradient(135deg,#0F6E55,#0A523F)",
+                      color: "#fff", fontSize: "14px", fontWeight: 700 }}>
+                    {saveStatus === "saving" ? "Saving…"
+                      : saveStatus === "saved" ? "✓ Saved to your account"
+                      : saveStatus === "error" ? "Couldn't save — retry"
+                      : "💾 Save Resume"}
+                  </button>
+                  <p style={{ fontSize: "11px", color: C.muted, textAlign: "center", margin: 0 }}>
+                    Changes apply live to the preview. Save to keep them on your account and use them in Resume Adaptor & Auto-Apply.
+                  </p>
                   <button onClick={() => setMode("editor")} style={btnGold}>🤖 Continue Editing with AI</button>
                 </div>
               </div>
