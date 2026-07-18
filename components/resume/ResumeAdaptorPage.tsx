@@ -322,7 +322,12 @@ export default function ResumeAdaptorPage() {
   // Full adaptation — gated at 3/month for free users
   const analyze = async () => {
     const jd = jdForRequest();
-    if (!jd.trim()) return;
+    // Company mode needs a company or role; other modes need JD text.
+    if (inputMode === "company") {
+      if (!companyName.trim() && !roleName.trim()) { setLoadingStep("Enter a company and/or role first."); return; }
+    } else if (!jd.trim()) {
+      return;
+    }
 
     // Gate: check cap before calling API (but only increment on success)
     if (limits.resumeAdaptations !== -1) {
@@ -357,11 +362,18 @@ export default function ResumeAdaptorPage() {
     }
 
     setIsAnalyzing(true); setResult(null); setAdaptedResume(null); setSuggestedChanges([]); setSelectedChangeIdxs(new Set());
-    const requestBody: Record<string, unknown> = { resume, jd_text: jd };
-    if (inputMode === "company" && companyName.trim()) {
+    // In Company+Role mode send an EMPTY jd_text so the backend generates a full
+    // job description from the company + role. Sending the synthesized
+    // "Company: X, Role: Y" string here would make the backend adapt against those
+    // few words instead of a real JD.
+    const requestBody: Record<string, unknown> = {
+      resume,
+      jd_text: inputMode === "company" ? "" : jd,
+    };
+    if (inputMode === "company" && (companyName.trim() || roleName.trim())) {
       requestBody.company_name = companyName.trim();
       requestBody.role_name = roleName.trim();
-      setLoadingStep(`Researching ${companyName.trim()} hiring patterns...`);
+      setLoadingStep(`Researching ${companyName.trim() || roleName.trim()} hiring patterns...`);
       await new Promise((r) => setTimeout(r, 800));
     }
     setLoadingStep("Adapting your resume — this takes ~30s...");
