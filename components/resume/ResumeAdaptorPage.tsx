@@ -10,6 +10,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { api, API_BASE } from "@/lib/api/client";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import { useResumeStore } from "@/lib/stores/resumeStore";
 import { useAgentStore } from "@/lib/stores/agentStore";
 import { useJobStore } from "@/lib/stores/jobStore";
@@ -82,9 +83,48 @@ function ScoreRing({ score, label }: { score: number; label: string }) {
   );
 }
 
+// Guarantees every field the preview reads exists with the right type. The AI's
+// adapted resume sometimes omits a key (e.g. education/skills); without this the
+// preview threw "Cannot read properties of undefined" mid-render and killed the page.
+function normalizeResume(input: unknown): ResumeData {
+  const src = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
+  const p = (src.personal && typeof src.personal === "object" ? src.personal : {}) as Record<string, unknown>;
+  const sk = (src.skills && typeof src.skills === "object" ? src.skills : {}) as Record<string, unknown>;
+  const arr = (v: unknown): string[] => Array.isArray(v) ? v.filter((x) => typeof x === "string") : [];
+  const objArr = (v: unknown): Record<string, unknown>[] =>
+    Array.isArray(v) ? v.filter((x) => x && typeof x === "object") as Record<string, unknown>[] : [];
+  const str = (v: unknown): string => (typeof v === "string" ? v : "");
+
+  return {
+    personal: {
+      name: str(p.name), title: str(p.title), email: str(p.email), phone: str(p.phone),
+      location: str(p.location), linkedin: str(p.linkedin), github: str(p.github), website: str(p.website),
+    },
+    summary: str(src.summary),
+    experience: objArr(src.experience).map((e) => ({
+      company: str(e.company), role: str(e.role), start: str(e.start), end: str(e.end),
+      location: str(e.location), current: Boolean(e.current), bullets: arr(e.bullets),
+    })),
+    education: objArr(src.education).map((e) => ({
+      institution: str(e.institution), degree: str(e.degree), field: str(e.field),
+      start: str(e.start), end: str(e.end), gpa: str(e.gpa),
+    })),
+    skills: {
+      technical: arr(sk.technical), soft: arr(sk.soft),
+      languages: arr(sk.languages), certifications: arr(sk.certifications),
+    },
+    projects: objArr(src.projects).map((pr) => ({
+      name: str(pr.name), description: str(pr.description),
+      tech: arr(pr.tech), link: str(pr.link), bullets: arr(pr.bullets),
+    })),
+    achievements: arr(src.achievements),
+    volunteer: arr(src.volunteer),
+  };
+}
+
 // Template-aware resume preview — matches the builder templates
 function AdaptedResumePreview({ resume, template = "modern" }: { resume: ResumeData; template?: string }) {
-  const r = resume;
+  const r = normalizeResume(resume);
   const contact = [r.personal.email, r.personal.phone, r.personal.location, r.personal.linkedin?.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "")].filter(Boolean);
 
   const Section = ({ title, children, accent }: { title: string; children: React.ReactNode; accent: string }) => (
@@ -392,7 +432,7 @@ export default function ResumeAdaptorPage() {
         setSelectedChangeIdxs(new Set(changes.map((_: SuggestedChange, i: number) => i)));
         setRightTab("changes");
       } else if (data.adapted_resume) {
-        setAdaptedResume(data.adapted_resume as ResumeData);
+        setAdaptedResume(normalizeResume(data.adapted_resume));
         setRightTab("results");
       }
       if ((data.ats_score_after ?? 0) >= 70) {
@@ -416,8 +456,10 @@ export default function ResumeAdaptorPage() {
 
   const applySelectedChanges = () => {
     if (!result?.adapted_resume) return;
-    setAdaptedResume({ ...result.adapted_resume });
-    if (result) setAtsScore(result.ats_score_after);
+    // Normalize before it enters state — a missing key from the AI output would
+    // otherwise throw during preview render and take the whole page down.
+    setAdaptedResume(normalizeResume(result.adapted_resume));
+    setAtsScore(result.ats_score_after ?? 0);
     setRightTab("results");
   };
 
@@ -981,7 +1023,7 @@ export default function ResumeAdaptorPage() {
                         ) : myAdaptedResumes.map((ar) => (
                           <div key={ar.id}
                             onClick={() => {
-                              setAdaptedResume(ar.adapted_json);
+                              setAdaptedResume(normalizeResume(ar.adapted_json));
                               if (ar.template) useResumeStore.getState().setTemplate(ar.template);
                               setRightTab("preview");
                             }}
@@ -1018,7 +1060,9 @@ export default function ResumeAdaptorPage() {
                   </button>
                 </div>
                 <div id="adapted-resume-preview" style={{ borderRadius: "8px", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
-                  <AdaptedResumePreview resume={adaptedResume || resume} template={previewTemplate} />
+                  <ErrorBoundary label="the resume preview">
+                    <AdaptedResumePreview resume={adaptedResume || resume} template={previewTemplate} />
+                  </ErrorBoundary>
                 </div>
               </motion.div>
             )}
