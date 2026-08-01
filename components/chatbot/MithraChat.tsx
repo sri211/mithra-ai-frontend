@@ -59,7 +59,8 @@ function renderInline(line: string, onNavigate: (href: string) => void): React.R
         </a>
       );
     } else if (m[3] !== undefined) {
-      nodes.push(<strong key={`b${key++}`} style={{ color: "#f1f5f9", fontWeight: 700 }}>{m[3]}</strong>);
+      // Bold may itself wrap a link, e.g. **[Job Finder](/job-finder)** — render inner too
+      nodes.push(<strong key={`b${key++}`} style={{ color: "#f1f5f9", fontWeight: 700 }}>{renderInline(m[3], onNavigate)}</strong>);
     }
     last = re.lastIndex;
   }
@@ -214,11 +215,24 @@ export default function MithraChat() {
         },
         (chunk) => appendToLast(chunk),
         undefined,
-        (meta) => setLastMeta({ entryId: String(meta.entry_id || ""), query: msg }),
+        (meta) => {
+          setLastMeta({ entryId: String(meta.entry_id || ""), query: msg });
+          // Orchestrator: the bot asked us to run a feature
+          const act = meta.action as { type?: string; value?: string } | undefined;
+          if (act?.type) {
+            setTimeout(() => {
+              if (act.type === "navigate") { dispatchAction({ type: "navigate", tab: act.value || "" }); router.push(`/${act.value || ""}`); }
+              else if (act.type === "search_jobs") { dispatchAction({ type: "search_jobs", query: act.value || "" }); router.push("/job-finder"); }
+              else if (act.type === "adapt_resume") { dispatchAction({ type: "adapt_resume", jd: act.value || "" }); router.push("/resume-adaptor"); }
+              else if (act.type === "build_resume") { dispatchAction({ type: "build_resume" }); router.push("/resume-builder"); }
+              setOpen(false);
+            }, 700);
+          }
+        },
       );
     } catch { appendToLast("Sorry — I couldn't reach the server. Please try again in a moment."); }
     finally { setLoading(false); }
-  }, [input, isLoading, addMessage, setLoading, appendToLast, setLastMeta, messages, pathname, profile, resumeLoaded]);
+  }, [input, isLoading, addMessage, setLoading, appendToLast, setLastMeta, dispatchAction, router, setOpen, messages, pathname, profile, resumeLoaded]);
 
   // 👍/👎 — the learning signal. Sends to backend which boosts/logs the answer.
   const sendFeedback = useCallback((m: { id: string; content: string; entryId?: string; query?: string }, helpful: boolean) => {
