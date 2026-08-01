@@ -26,6 +26,47 @@ function parseWorkflowActions(text: string) {
   return { clean: text.replace(/\[WORKFLOW:[^\]]+\]/g, "").trim(), actions };
 }
 
+// ─── Lightweight markdown renderer for chat bubbles ──────────────────────────
+// Renders **bold**, [text](link) (internal links navigate in-app), and keeps
+// line breaks / bullets. Avoids showing raw markdown syntax to the user.
+function renderRich(text: string, onNavigate: (href: string) => void): React.ReactNode {
+  const lines = text.split("\n");
+  return lines.map((line, li) => (
+    <span key={li}>
+      {renderInline(line, onNavigate)}
+      {li < lines.length - 1 && <br />}
+    </span>
+  ));
+}
+
+function renderInline(line: string, onNavigate: (href: string) => void): React.ReactNode[] {
+  const nodes: React.ReactNode[] = [];
+  // token pattern: links [text](url) OR **bold**
+  const re = /\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*/g;
+  let last = 0, m: RegExpExecArray | null, key = 0;
+  while ((m = re.exec(line)) !== null) {
+    if (m.index > last) nodes.push(line.slice(last, m.index));
+    if (m[1] !== undefined) {
+      // link
+      const label = m[1], href = m[2];
+      const internal = href.startsWith("/");
+      nodes.push(
+        <a key={`l${key++}`} href={href}
+           onClick={(e) => { if (internal) { e.preventDefault(); onNavigate(href); } }}
+           target={internal ? undefined : "_blank"} rel="noopener"
+           style={{ color: "#5FAE93", fontWeight: 700, textDecoration: "underline", cursor: "pointer" }}>
+          {label}
+        </a>
+      );
+    } else if (m[3] !== undefined) {
+      nodes.push(<strong key={`b${key++}`} style={{ color: "#f1f5f9", fontWeight: 700 }}>{m[3]}</strong>);
+    }
+    last = re.lastIndex;
+  }
+  if (last < line.length) nodes.push(line.slice(last));
+  return nodes;
+}
+
 // ─── Quick actions ────────────────────────────────────────────────────────────
 const QUICK = [
   { label: "Build my resume", route: "/resume-builder" },
@@ -309,7 +350,9 @@ export default function MithraChat() {
                     border: msg.role === "assistant" ? "1px solid rgba(15,110,85,0.18)" : "none",
                     whiteSpace: "pre-wrap", wordBreak: "break-word",
                   }}>
-                    {msg.content || (isLoading && i === messages.length - 1 ? (
+                    {msg.content
+                      ? (msg.role === "assistant" ? renderRich(msg.content, (href) => { setOpen(false); router.push(href); }) : msg.content)
+                      : (isLoading && i === messages.length - 1 ? (
                       <div style={{ display: "flex", gap: "4px", padding: "2px 0" }}>
                         {[0, 0.15, 0.3].map((d) => (
                           <div key={d} style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#0F6E55", animation: `pulse 0.8s ${d}s ease-in-out infinite` }} />
