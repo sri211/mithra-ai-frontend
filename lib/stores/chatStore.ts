@@ -18,6 +18,8 @@ interface ChatStore {
   isLoading: boolean;
   addMessage: (msg: Omit<ChatMessage, "id" | "timestamp">) => void;
   appendToLast: (text: string) => void;
+  setLastMeta: (meta: Partial<ChatMessage>) => void;
+  setMessageFeedback: (id: string, fb: "up" | "down") => void;
   setOpen: (open: boolean) => void;
   setLoading: (loading: boolean) => void;
   clear: () => void;
@@ -45,6 +47,16 @@ export const useChatStore = create<ChatStore>()(
           }
           return { messages: msgs };
         }),
+      setLastMeta: (meta) =>
+        set((s) => {
+          const msgs = [...s.messages];
+          for (let i = msgs.length - 1; i >= 0; i--) {
+            if (msgs[i].role === "assistant") { msgs[i] = { ...msgs[i], ...meta }; break; }
+          }
+          return { messages: msgs };
+        }),
+      setMessageFeedback: (id, fb) =>
+        set((s) => ({ messages: s.messages.map((m) => (m.id === id ? { ...m, feedback: fb } : m)) })),
       setOpen: (isOpen) => set({ isOpen }),
       setLoading: (isLoading) => set({ isLoading }),
       clear: () =>

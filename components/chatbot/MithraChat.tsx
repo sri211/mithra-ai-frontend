@@ -5,7 +5,7 @@ import { useChatStore } from "@/lib/stores/chatStore";
 import { useAgentStore } from "@/lib/stores/agentStore";
 import { useUserProfileStore } from "@/lib/stores/userProfileStore";
 import { useResumeStore } from "@/lib/stores/resumeStore";
-import { streamSSE } from "@/lib/api/client";
+import { streamSSE, api } from "@/lib/api/client";
 import { useUser } from "@/lib/auth";
 import { getLimits } from "@/lib/planLimits";
 import { useUsageTracker } from "@/lib/useUsageTracker";
@@ -42,7 +42,7 @@ const S = {
 };
 
 export default function MithraChat() {
-  const { messages, isOpen, isLoading, setOpen, setLoading, addMessage, appendToLast, clear } = useChatStore();
+  const { messages, isOpen, isLoading, setOpen, setLoading, addMessage, appendToLast, setLastMeta, setMessageFeedback, clear } = useChatStore();
   const { dispatchAction } = useAgentStore();
   const { profile, setProfile, markSetupDone } = useUserProfileStore();
   const { resume } = useResumeStore();
@@ -147,18 +147,7 @@ export default function MithraChat() {
     if (!msg || isLoading) return;
 
     // ── Daily message cap for free users ─────────────────────────────────────
-    if (limits.chatMessagesPerDay !== -1) {
-      const newCount = usage.incrementChatMessages();
-      if (newCount > limits.chatMessagesPerDay) {
-        addMessage({ role: "user", content: msg });
-        addMessage({
-          role: "assistant",
-          content: `You've reached your **${limits.chatMessagesPerDay} free messages** for today. Upgrade to Pro for unlimited Mithra conversations — no daily cap, ever.\n\n[Upgrade to Pro →](/pricing)`,
-        });
-        return;
-      }
-    }
-
+    // Chat is FREE now (self-hosted knowledge base) — no daily cap.
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "20px";
     addMessage({ role: "user", content: msg });
@@ -183,10 +172,23 @@ export default function MithraChat() {
           ...(userProfile ? { user_profile: userProfile } : {}),
         },
         (chunk) => appendToLast(chunk),
+        undefined,
+        (meta) => setLastMeta({ entryId: String(meta.entry_id || ""), query: msg }),
       );
-    } catch { appendToLast("Connection error — make sure the backend is running at localhost:8000."); }
+    } catch { appendToLast("Sorry — I couldn't reach the server. Please try again in a moment."); }
     finally { setLoading(false); }
-  }, [input, isLoading, addMessage, setLoading, appendToLast, messages, pathname, profile]);
+  }, [input, isLoading, addMessage, setLoading, appendToLast, setLastMeta, messages, pathname, profile, resumeLoaded]);
+
+  // 👍/👎 — the learning signal. Sends to backend which boosts/logs the answer.
+  const sendFeedback = useCallback((m: { id: string; content: string; entryId?: string; query?: string }, helpful: boolean) => {
+    setMessageFeedback(m.id, helpful ? "up" : "down");
+    api.post("/chat/feedback", {
+      query: m.query || "",
+      answer: m.content || "",
+      entry_id: m.entryId || "",
+      helpful,
+    }).catch(() => { /* non-critical */ });
+  }, [setMessageFeedback]);
 
   const toggleVoice = () => {
     if (isListening) { recRef.current?.stop(); setIsListening(false); return; }
@@ -298,20 +300,43 @@ export default function MithraChat() {
                     ✨
                   </div>
                 )}
-                <div style={{
-                  maxWidth: "88%", padding: "10px 14px", fontSize: "13px", lineHeight: 1.65,
-                  borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-                  background: msg.role === "user" ? "linear-gradient(135deg,#0F6E55,#0A523F)" : "rgba(26,16,51,0.9)",
-                  color: msg.role === "user" ? "white" : "#cbd5e1",
-                  border: msg.role === "assistant" ? "1px solid rgba(15,110,85,0.18)" : "none",
-                }}>
-                  {msg.content || (isLoading && i === messages.length - 1 ? (
-                    <div style={{ display: "flex", gap: "4px", padding: "2px 0" }}>
-                      {[0, 0.15, 0.3].map((d) => (
-                        <div key={d} style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#0F6E55", animation: `pulse 0.8s ${d}s ease-in-out infinite` }} />
-                      ))}
+                <div style={{ display: "flex", flexDirection: "column", maxWidth: "88%", alignItems: "flex-start" }}>
+                  <div style={{
+                    padding: "10px 14px", fontSize: "13px", lineHeight: 1.65,
+                    borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                    background: msg.role === "user" ? "linear-gradient(135deg,#0F6E55,#0A523F)" : "rgba(26,16,51,0.9)",
+                    color: msg.role === "user" ? "white" : "#cbd5e1",
+                    border: msg.role === "assistant" ? "1px solid rgba(15,110,85,0.18)" : "none",
+                    whiteSpace: "pre-wrap", wordBreak: "break-word",
+                  }}>
+                    {msg.content || (isLoading && i === messages.length - 1 ? (
+                      <div style={{ display: "flex", gap: "4px", padding: "2px 0" }}>
+                        {[0, 0.15, 0.3].map((d) => (
+                          <div key={d} style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#0F6E55", animation: `pulse 0.8s ${d}s ease-in-out infinite` }} />
+                        ))}
+                      </div>
+                    ) : "")}
+                  </div>
+                  {/* 👍/👎 feedback — only on real KB answers, not greetings/live/streaming */}
+                  {msg.role === "assistant" && msg.content && msg.entryId &&
+                    !["greeting", "live", "empty", "welcome"].includes(msg.entryId) &&
+                    !(isLoading && i === messages.length - 1) && (
+                    <div style={{ display: "flex", gap: "6px", alignItems: "center", marginTop: "5px", paddingLeft: "4px" }}>
+                      {msg.feedback ? (
+                        <span style={{ fontSize: "11px", color: "#5FAE93" }}>
+                          {msg.feedback === "up" ? "Thanks for the 👍" : "Thanks — I'll improve this"}
+                        </span>
+                      ) : (
+                        <>
+                          <span style={{ fontSize: "11px", color: "#64748b" }}>Helpful?</span>
+                          <button onClick={() => sendFeedback(msg, true)} title="Helpful"
+                            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", padding: "2px", opacity: 0.7 }}>👍</button>
+                          <button onClick={() => sendFeedback(msg, false)} title="Not helpful"
+                            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", padding: "2px", opacity: 0.7 }}>👎</button>
+                        </>
+                      )}
                     </div>
-                  ) : "")}
+                  )}
                 </div>
               </div>
             ))}

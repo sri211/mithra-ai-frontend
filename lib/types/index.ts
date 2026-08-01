@@ -58,6 +58,9 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  entryId?: string;      // which KB entry answered (for 👍/👎 feedback)
+  query?: string;        // the user question this answered
+  feedback?: "up" | "down";
 }
 
 export interface Connection {

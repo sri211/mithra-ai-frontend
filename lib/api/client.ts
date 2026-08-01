@@ -110,7 +110,8 @@ export async function streamSSE(
   url: string,
   body: object,
   onChunk: (text: string) => void,
-  onDone?: () => void
+  onDone?: () => void,
+  onMeta?: (meta: Record<string, unknown>) => void
 ) {
   const raw = typeof window !== "undefined" ? localStorage.getItem("mithra-auth") : null;
   const token = raw ? JSON.parse(raw)?.state?.accessToken : null;
@@ -139,7 +140,8 @@ export async function streamSSE(
         if (data === "[DONE]") { onDone?.(); return; }
         try {
           const parsed = JSON.parse(data);
-          if (parsed.text) onChunk(parsed.text);
+          if (parsed.meta) onMeta?.(parsed.meta);
+          else if (parsed.text) onChunk(parsed.text);
           else onChunk(data);
         } catch {
           onChunk(data);
