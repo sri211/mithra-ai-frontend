@@ -129,25 +129,37 @@ export async function streamSSE(
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
 
+  // Buffer across reads: a network chunk can split an SSE line in half, so we
+  // only process lines terminated by "\n" and keep the trailing partial for the
+  // next read. Without this, the final meta/action line can be silently dropped.
+  let buffer = "";
+
+  const handleLine = (line: string): boolean => {
+    if (!line.startsWith("data: ")) return false;
+    const data = line.slice(6).trim();
+    if (data === "[DONE]") { onDone?.(); return true; }
+    try {
+      const parsed = JSON.parse(data);
+      if (parsed.meta) onMeta?.(parsed.meta);
+      else if (parsed.text) onChunk(parsed.text);
+      else onChunk(data);
+    } catch {
+      onChunk(data);
+    }
+    return false;
+  };
+
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    const chunk = decoder.decode(value, { stream: true });
-    const lines = chunk.split("\n");
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? ""; // keep the last (possibly incomplete) line
     for (const line of lines) {
-      if (line.startsWith("data: ")) {
-        const data = line.slice(6).trim();
-        if (data === "[DONE]") { onDone?.(); return; }
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.meta) onMeta?.(parsed.meta);
-          else if (parsed.text) onChunk(parsed.text);
-          else onChunk(data);
-        } catch {
-          onChunk(data);
-        }
-      }
+      if (handleLine(line)) return; // [DONE] seen
     }
   }
+  // flush any trailing complete line left in the buffer
+  if (buffer.trim() && handleLine(buffer.trim())) return;
   onDone?.();
 }
