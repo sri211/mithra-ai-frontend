@@ -422,7 +422,7 @@ export default function InterviewPrepPage() {
 
                       <button onClick={startSession} style={{ ...btnPrimary, width: "100%" }}>
                         <Play style={{ width: "16px", height: "16px" }} />
-                        Generate AI Questions &amp; Start Session <CoinCost n={10} onDark />
+                        Generate AI Questions &amp; Start Session <CoinCost n={15} onDark />
                       </button>
                     </div>
                   </div>
