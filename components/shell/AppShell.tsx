@@ -28,10 +28,10 @@ const NAV_ITEMS = [
   { href: "/resume-adaptor", icon: Target,   label: "Resume Adaptor", color: "#06b6d4", description: "A single role, seen through a thousand lenses." },
   { href: "/job-finder",     icon: Search,   label: "Job Finder",     color: "#10b981", description: "Somewhere in the noise, one job was written for you." },
   { href: "/company-intel",  icon: Building2, label: "Company Intel",  color: "#7A3E9D", description: "Know them before they know you." },
-  { href: "/job-application",icon: Zap,      label: "Auto Apply",     color: "#f59e0b", description: "While you sleep, Mithra knocks on doors." },
+  { href: "/job-application",icon: Zap,      label: "Auto Apply",     color: "#f59e0b", description: "While you sleep, Mithra knocks on doors.", adminOnly: true },
   { href: "/network",        icon: Users,    label: "Network",        color: "#ec4899", description: "Your next colleague exists. You just haven't met yet." },
   { href: "/interview-prep", icon: Brain,    label: "Interview Prep", color: "#f97316", description: "The question is asked once. The answer is prepared a thousand times." },
-  { href: "/tracker",        icon: BarChart3,label: "Tracker",        color: "#6366f1", description: "Every application is a seed. This is your garden." },
+  { href: "/tracker",        icon: BarChart3,label: "Tracker",        color: "#6366f1", description: "Every application is a seed. This is your garden.", adminOnly: true },
 ];
 
 const BOTTOM_PRIMARY = [
@@ -44,10 +44,10 @@ const BOTTOM_PRIMARY = [
 const MORE_ITEMS = [
   { href: "/resume-builder", icon: FileText, label: "Resume Builder", color: "#0F6E55", emoji: "📄" },
   { href: "/job-finder",     icon: Search,   label: "Job Finder",     color: "#10b981", emoji: "🔍" },
-  { href: "/tracker",        icon: BarChart3,label: "Tracker",        color: "#6366f1", emoji: "📊" },
+  { href: "/tracker",        icon: BarChart3,label: "Tracker",        color: "#6366f1", emoji: "📊", adminOnly: true },
   { href: "/referral",       icon: Gift,     label: "Refer & Earn",   color: "#10b981", emoji: "🎁" },
   { href: "/company-intel",  icon: Building2,label: "Company Intel",  color: "#7A3E9D", emoji: "🏢" },
-  { href: "/job-application",icon: Zap,      label: "Auto Apply",     color: "#f59e0b", emoji: "⚡", beta: true },
+  { href: "/job-application",icon: Zap,      label: "Auto Apply",     color: "#f59e0b", emoji: "⚡", beta: true, adminOnly: true },
 ];
 
 const PLAN_COLORS: Record<string, { bg: string; color: string; label: string }> = {
@@ -154,7 +154,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 py-4 px-2 space-y-0.5 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
+          {NAV_ITEMS.filter((item) => !("adminOnly" in item && item.adminOnly) || isAdmin).map((item) => {
             const active = pathname?.startsWith(item.href);
             return (
               <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined}
@@ -556,7 +556,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </div>
 
               <div style={{ padding: "0 16px 24px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
-                {[...MORE_ITEMS, ...(isAdmin ? [{ href: "/admin", icon: ShieldCheck, label: "Admin", color: "#0F6E55", emoji: "🛡️" }] : [])].map((item) => {
+                {[...MORE_ITEMS.filter((it) => !("adminOnly" in it && it.adminOnly) || isAdmin), ...(isAdmin ? [{ href: "/admin", icon: ShieldCheck, label: "Admin", color: "#0F6E55", emoji: "🛡️" }] : [])].map((item) => {
                   const active = pathname?.startsWith(item.href);
                   const typedItem = item as typeof item & { badge?: string };
                   return (

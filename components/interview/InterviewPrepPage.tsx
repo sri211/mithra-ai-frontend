@@ -1,6 +1,6 @@
 ﻿"use client";
 import CoinCost from "@/components/ui/CoinCost";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Brain, Play, ChevronRight, Check, X, Sparkles,
@@ -163,6 +163,45 @@ export default function InterviewPrepPage() {
   const [loadError, setLoadError] = useState("");
   const [showHints, setShowHints] = useState(false);
 
+  // ── Voice recording (speech-to-text into the answer box) ───────────────────
+  const [isRecording, setIsRecording] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recRef = useRef<any>(null);
+  // Stop any active recognition when the component unmounts.
+  useEffect(() => () => { try { recRef.current?.stop(); } catch { /* noop */ } }, []);
+
+  const toggleRecord = () => {
+    if (isRecording) { try { recRef.current?.stop(); } catch { /* noop */ } setIsRecording(false); return; }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any;
+    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!SR) {
+      alert("Voice input isn't supported in this browser. Please use Chrome, Edge, or Safari — or type your answer.");
+      return;
+    }
+    const r = new SR();
+    r.lang = "en-US";
+    r.continuous = true;
+    r.interimResults = true;
+    // Whatever is already typed stays as a fixed prefix; the session's speech is appended.
+    const prefix = answer ? answer.replace(/\s*$/, "") + " " : "";
+    let finalChunk = "";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    r.onresult = (e: any) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalChunk += t + " ";
+        else interim += t;
+      }
+      setAnswer((prefix + finalChunk + interim).trimStart());
+    };
+    r.onerror = () => setIsRecording(false);
+    r.onend = () => setIsRecording(false);
+    recRef.current = r;
+    try { r.start(); setIsRecording(true); } catch { setIsRecording(false); }
+  };
+
   const startSession = async () => {
     if (!role.trim()) {
       setLoadError("Please enter the target role to generate relevant questions.");
@@ -198,6 +237,7 @@ export default function InterviewPrepPage() {
 
   const evaluateAnswer = async () => {
     if (!answer.trim() || isEvaluating) return;
+    if (isRecording) { try { recRef.current?.stop(); } catch { /* noop */ } setIsRecording(false); }
     setIsEvaluating(true);
     try {
       const { data } = await api.post("/interview/evaluate", {
@@ -259,6 +299,7 @@ export default function InterviewPrepPage() {
   };
 
   const nextQuestion = () => {
+    if (isRecording) { try { recRef.current?.stop(); } catch { /* noop */ } setIsRecording(false); }
     setPhase("practice");
     setAnswer("");
     setFeedback(null);
@@ -514,8 +555,30 @@ export default function InterviewPrepPage() {
                         )}
                         {isEvaluating ? "Evaluating..." : "Get AI Feedback"}
                       </button>
-                      <button style={btnOutline}>
-                        <Mic style={{ width: "15px", height: "15px" }} />Record
+                      <button
+                        onClick={toggleRecord}
+                        style={{
+                          ...btnOutline,
+                          ...(isRecording
+                            ? { color: "#DC2626", borderColor: "rgba(220,38,38,0.4)", background: "rgba(220,38,38,0.06)" }
+                            : {}),
+                        }}
+                        title={isRecording ? "Stop recording" : "Record your answer by voice"}
+                      >
+                        {isRecording ? (
+                          <>
+                            <motion.span
+                              style={{ width: "9px", height: "9px", borderRadius: "50%", background: "#DC2626", display: "inline-block" }}
+                              animate={{ opacity: [1, 0.3, 1] }}
+                              transition={{ repeat: Infinity, duration: 1 }}
+                            />
+                            Stop
+                          </>
+                        ) : (
+                          <>
+                            <Mic style={{ width: "15px", height: "15px" }} />Record
+                          </>
+                        )}
                       </button>
                       <button
                         onClick={nextQuestion}

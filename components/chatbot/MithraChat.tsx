@@ -74,7 +74,7 @@ const QUICK = [
   { label: "Find SDE jobs Bangalore", route: "/job-finder" },
   { label: "Adapt resume to JD", route: "/resume-adaptor" },
   { label: "Mock interview", route: "/interview-prep" },
-  { label: "Track applications", route: "/tracker" },
+  { label: "Research a company", route: "/company-intel" },
 ];
 
 // ─── Styles ──────────────────────────────────────────────────────────────────

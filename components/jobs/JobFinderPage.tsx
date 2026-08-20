@@ -207,9 +207,13 @@ function JobCard({ job, isSelected, onClick, onSave, onApply, onTrack }: {
   );
 }
 
+const ADMIN_EMAILS = ["srinathreddy.ksr@gmail.com", "sri@mithraai.in"];
+
 function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
   job: Job; onClose: () => void; onAutoApply: () => void; onAdaptResume: () => void;
 }) {
+  const { user } = useUser();
+  const isAdmin = ADMIN_EMAILS.includes(user?.email ?? "");
   const portalColor = PORTAL_COLORS[job.portal] || "#6366f1";
   const salary = (job.salary_min || job.salary_max)
     ? `₹${Math.round((job.salary_min || 0) / 100000)}L – ₹${Math.round((job.salary_max || 0) / 100000)}L`
@@ -370,10 +374,12 @@ function JobDetailPanel({ job, onClose, onAutoApply, onAdaptResume }: {
           <button onClick={onAdaptResume} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "10px", background: "none", border: "1px solid rgba(15,110,85,0.4)", borderRadius: "10px", color: "#0F6E55", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
             Adapt Resume
           </button>
-          <button onClick={onAutoApply} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", padding: "10px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: "10px", color: "#f59e0b", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
-            <Zap style={{ width: "13px", height: "13px" }} />Auto-Apply
-            <span style={{ fontSize: "9px", padding: "1px 4px", borderRadius: "4px", background: "rgba(245,158,11,0.15)", marginLeft: "2px" }}>Beta</span>
-          </button>
+          {isAdmin && (
+            <button onClick={onAutoApply} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "5px", padding: "10px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: "10px", color: "#f59e0b", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
+              <Zap style={{ width: "13px", height: "13px" }} />Auto-Apply
+              <span style={{ fontSize: "9px", padding: "1px 4px", borderRadius: "4px", background: "rgba(245,158,11,0.15)", marginLeft: "2px" }}>Beta</span>
+            </button>
+          )}
         </div>
       </div>
     </motion.div>

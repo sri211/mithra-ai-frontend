@@ -15,11 +15,13 @@ interface TrackerApp {
   id: string; company: string; role: string; status: string; applied_date: string;
 }
 
+const ADMIN_EMAILS = ["srinathreddy.ksr@gmail.com", "sri@mithraai.in"];
+
 const QUICK_ACTIONS = [
   { href: "/resume-adaptor", icon: Target, label: "Adapt Resume", desc: "Tailor your resume to a JD", cost: "25 cr", accent: "#0F6E55" },
   { href: "/job-finder", icon: Search, label: "Find Jobs", desc: "Real listings matched to you", cost: "2 cr", accent: "#0A66C2" },
-  { href: "/job-application", icon: Zap, label: "Auto Apply", desc: "Assistant fills & submits", cost: "8 cr", accent: "#D97706" },
-  { href: "/interview-prep", icon: Brain, label: "Interview Prep", desc: "Mock questions + feedback", cost: "10 cr", accent: "#7A3E9D" },
+  { href: "/job-application", icon: Zap, label: "Auto Apply", desc: "Assistant fills & submits", cost: "8 cr", accent: "#D97706", adminOnly: true },
+  { href: "/interview-prep", icon: Brain, label: "Interview Prep", desc: "Mock questions + feedback", cost: "15 cr", accent: "#7A3E9D" },
   { href: "/resume-builder", icon: FileText, label: "Resume Builder", desc: "Build or import a resume", cost: "15 cr", accent: "#0F766E" },
   { href: "/resume-score", icon: Award, label: "Resume Score", desc: "7-dimension ATS audit", cost: "FREE", accent: "#10B981" },
 ];
@@ -39,10 +41,13 @@ function greeting(): string {
 export default function DashboardPage() {
   const { user } = useUser();
   const { credits } = useCredits();
+  const isAdmin = ADMIN_EMAILS.includes(user?.email ?? "");
   const [apps, setApps] = useState<TrackerApp[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    // Tracker is admin-only — non-admins never call it.
+    if (!isAdmin) { setLoaded(true); return; }
     const load = () => {
       api.get("/tracker/")
         .then(({ data }) => {
@@ -60,7 +65,7 @@ export default function DashboardPage() {
       window.removeEventListener("focus", load);
       window.removeEventListener("mithra:tracker-changed", load);
     };
-  }, []);
+  }, [isAdmin]);
 
   const stats = [
     { label: "Applications", value: apps.length, Icon: Briefcase },
@@ -123,7 +128,7 @@ export default function DashboardPage() {
             <span style={{ fontSize: "11px", color: "#8A8474" }}>credit cost shown per action</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "12px", marginBottom: "32px" }}>
-            {QUICK_ACTIONS.map(({ href, icon: Icon, label, desc, cost, accent }) => (
+            {QUICK_ACTIONS.filter((a) => !("adminOnly" in a && a.adminOnly) || isAdmin).map(({ href, icon: Icon, label, desc, cost, accent }) => (
               <Link key={href} href={href} style={{ textDecoration: "none" }}>
                 <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.99 }}
                   style={{
@@ -150,7 +155,8 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* Recent applications */}
+        {/* Recent applications — tracker is admin-only */}
+        {isAdmin && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "12px" }}>
             <h2 style={{ fontSize: "17px", fontWeight: 600, color: "#14281E" }}>Recent applications</h2>
@@ -195,6 +201,7 @@ export default function DashboardPage() {
             </div>
           )}
         </motion.div>
+        )}
       </div>
     </div>
   );

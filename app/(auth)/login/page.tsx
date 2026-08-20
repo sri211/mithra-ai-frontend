@@ -133,13 +133,18 @@ export default function LoginPage() {
             setIsGoogleLoading(false);
           }
         } else {
-          setError("Google sign-in was cancelled.");
+          // No token and no error — user simply closed the picker. Reset quietly.
           setIsGoogleLoading(false);
         }
       },
-      error_callback: () => {
-        setError("Google sign-in failed. Please try again or use email login.");
-        setIsGoogleLoading(false);
+      error_callback: (err) => {
+        // Closing the popup (or a blocker) shouldn't read as a hard failure.
+        if (err?.type === "popup_closed" || err?.type === "popup_failed_to_open") {
+          setIsGoogleLoading(false);
+        } else {
+          setError("Google sign-in failed. Please try again or use email login.");
+          setIsGoogleLoading(false);
+        }
       },
     });
     // requestAccessToken must be called synchronously inside a click handler
@@ -150,27 +155,17 @@ export default function LoginPage() {
   const handleGoogle = () => {
     setError("");
     const google = (window as Window & { google?: GIS }).google;
-    if (!gisReady.current || !google?.accounts?.id) {
+    if (!gisReady.current || !google?.accounts?.oauth2) {
       setError("Google sign-in is loading. Please wait a moment and try again.");
       return;
     }
     setIsGoogleLoading(true);
-    google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed()) {
-        const reason = notification.getNotDisplayedReason();
-        if (reason === "unregistered_origin") {
-          setError("Google sign-in is not enabled for this domain yet. Please use email login.");
-          setIsGoogleLoading(false);
-        } else {
-          // One Tap blocked (opt_out_or_no_session, cookies_disabled, etc.)
-          // Auto-fallback to full OAuth2 popup — works on all mobile browsers
-          triggerOAuthPopup(google);
-        }
-      } else if (notification.isSkippedMoment() || notification.isDismissedMoment()) {
-        setError("Google sign-in was cancelled.");
-        setIsGoogleLoading(false);
-      }
-    });
+    // Go straight to the OAuth2 popup on click. One Tap's prompt() reports
+    // isSkippedMoment()/isDismissedMoment() for many non-cancellation cases
+    // (auto-dismiss, existing session, cookie state), which produced a spurious
+    // "Google sign-in was cancelled" message on normal logins. The popup only
+    // reports a real cancel when the user actually closes it.
+    triggerOAuthPopup(google);
   };
 
   const input: React.CSSProperties = {
