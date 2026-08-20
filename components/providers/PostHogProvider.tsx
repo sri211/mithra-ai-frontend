@@ -1,6 +1,6 @@
 "use client";
 import posthog from "posthog-js";
-import { PostHogProvider as PHProvider, usePostHog } from "posthog-js/react";
+import { PostHogProvider as PHProvider } from "posthog-js/react";
 import { Suspense, useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
@@ -16,7 +16,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     if (!posthog.__loaded) {
       posthog.init(KEY, {
         api_host: HOST,
-        capture_pageview: false,      // we capture manually for App Router SPA navigations
+        capture_pageview: false,      // captured manually below for App Router SPA navigations
         capture_pageleave: true,
         person_profiles: "identified_only",
         defaults: "2025-05-24",
@@ -35,20 +35,32 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// App Router: route changes are client-side, so Next fires no full page load.
-// Capture $pageview on every pathname/search change instead.
+// App Router: route changes are client-side, so Next fires no full page load —
+// capture $pageview on every pathname/search change instead. Because the provider
+// init runs in a parent effect (which fires AFTER this child effect on first
+// mount), PostHog may not be loaded yet on the very first pageview; poll briefly
+// so the initial landing pageview is never dropped.
 function PageViewTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const ph = usePostHog();
 
   useEffect(() => {
-    if (!pathname || !ph) return;
+    if (!pathname || typeof window === "undefined") return;
     let url = window.location.origin + pathname;
     const qs = searchParams?.toString();
     if (qs) url += `?${qs}`;
-    ph.capture("$pageview", { $current_url: url });
-  }, [pathname, searchParams, ph]);
+
+    const fire = () => posthog.capture("$pageview", { $current_url: url });
+
+    if (posthog.__loaded) { fire(); return; }
+    // wait for init (parent effect) to complete, then fire once
+    let tries = 0;
+    const iv = setInterval(() => {
+      if (posthog.__loaded) { fire(); clearInterval(iv); }
+      else if (++tries > 40) clearInterval(iv); // give up after ~4s
+    }, 100);
+    return () => clearInterval(iv);
+  }, [pathname, searchParams]);
 
   return null;
 }
