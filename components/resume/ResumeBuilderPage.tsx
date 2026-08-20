@@ -5,7 +5,7 @@ import { useResumeStore } from "@/lib/stores/resumeStore";
 import { useAgentStore } from "@/lib/stores/agentStore";
 import { FileUploadModal } from "@/components/ui/FileUploadModal";
 import ResumeViewerModal from "@/components/ui/ResumeViewerModal";
-import { api, streamSSE, API_BASE } from "@/lib/api/client";
+import { api, API_BASE } from "@/lib/api/client";
 import { ResumeData } from "@/lib/types";
 import { useUser } from "@/lib/auth";
 import { getLimits } from "@/lib/planLimits";
@@ -630,8 +630,22 @@ export default function ResumeBuilderPage() {
     }
   };
   const [chatMessages, setChatMessages] = useState([
-    { role: "assistant", content: "Hi! I'm Mithra. Let's build your perfect resume.\n\nStart with: **What's your full name, current job title, and email?**" }
+    { role: "assistant", content: "Hi! I'm Mithra. Let's build your perfect resume — I'll ask a few quick questions, then generate it for you.\n\nStart with: **What's your full name, current job title, and email?**" }
   ]);
+  // Guided resume interview — a scripted question sequence (instant, free). Each
+  // user answer advances to the next prompt; the conversation is sent to
+  // /resume/build/qa when they hit "Generate Resume from Chat".
+  const [chatStep, setChatStep] = useState(0);
+  const RESUME_STEP_PROMPTS = [
+    "Perfect! 📱 What's your **phone number and location** (city, country)?",
+    "Got it. Give me a **short professional summary** — or just tell me your **years of experience and target role**, and I'll craft one for you.",
+    "Now your **work experience**. For your most recent role, share: **company, job title, dates, and 2–3 achievements** (add numbers where you can — e.g. 'grew sales 30%').",
+    "Great. **Any earlier roles?** Add them the same way, or type **'done'** to continue.",
+    "Now your **education** — highest degree, institution, and year of graduation.",
+    "Almost there! List your **key skills** (comma-separated) — tools, technologies, and strengths.",
+    "Last one — any **certifications, awards, or notable projects**? (or type **'skip'**)",
+    "🎉 That's everything I need! Tap **✨ Generate Resume from Chat** below and I'll build your polished, ATS-friendly resume. You can also keep adding details in your answers first.",
+  ];
   const [chatInput, setChatInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [linkedinInput, setLinkedinInput] = useState("");
@@ -821,21 +835,24 @@ export default function ResumeBuilderPage() {
     finally { setIsBuilding(false); }
   };
 
-  const sendChat = async () => {
+  const sendChat = () => {
     if (!chatInput.trim() || isStreaming) return;
     const msg = chatInput.trim(); setChatInput("");
     setChatMessages((p) => [...p, { role: "user", content: msg }]);
+    // Advance the scripted interview. No API call — instant and free. The full
+    // conversation is what /resume/build/qa turns into a resume later.
+    const idx = Math.min(chatStep, RESUME_STEP_PROMPTS.length - 1);
+    setChatStep((s) => s + 1);
     setIsStreaming(true);
     setChatMessages((p) => [...p, { role: "assistant", content: "" }]);
-    try {
-      await streamSSE("/chat/stream",
-        { message: msg, page_context: "resume-builder", history: chatMessages.slice(-8) },
-        (chunk) => setChatMessages((p) => { const m = [...p]; m[m.length - 1] = { ...m[m.length - 1], content: m[m.length - 1].content + chunk }; return m; })
-      );
-    } catch {
-      setChatMessages((p) => { const m = [...p]; m[m.length - 1] = { ...m[m.length - 1], content: "Connection error." }; return m; });
-    }
-    finally { setIsStreaming(false); }
+    setTimeout(() => {
+      setChatMessages((p) => {
+        const m = [...p];
+        m[m.length - 1] = { role: "assistant", content: RESUME_STEP_PROMPTS[idx] };
+        return m;
+      });
+      setIsStreaming(false);
+    }, 350);
   };
 
   const sendEditorInstruction = async () => {
