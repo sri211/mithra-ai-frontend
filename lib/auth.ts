@@ -28,6 +28,14 @@ export function useRequireAuth() {
 }
 
 export async function logout() {
+  // Detach PostHog analytics from this user so the next person on this device
+  // starts a fresh anonymous session (no-op if PostHog isn't configured).
+  if (process.env.NEXT_PUBLIC_POSTHOG_KEY && typeof window !== "undefined") {
+    try {
+      const { default: posthog } = await import("posthog-js");
+      if (posthog.__loaded) posthog.reset();
+    } catch { /* analytics is non-critical */ }
+  }
   // authStore.logout() handles cookie removal and redirect
   useAuthStore.getState().logout();
 }

@@ -96,6 +96,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user } = useUser();
 
   const isAdmin = ADMIN_EMAILS.includes(user?.email ?? "");
+
+  // Link PostHog analytics events to the signed-in user (no-op without the key).
+  useEffect(() => {
+    if (!process.env.NEXT_PUBLIC_POSTHOG_KEY || !user?.id) return;
+    import("posthog-js").then(({ default: posthog }) => {
+      if (posthog.__loaded) {
+        posthog.identify(user.id, { email: user.email, name: user.name, plan: user.plan });
+      }
+    }).catch(() => { /* analytics is non-critical */ });
+  }, [user?.id, user?.email, user?.name, user?.plan]);
+
   const currentPage = NAV_ITEMS.find((n) => pathname?.startsWith(n.href));
   const plan = (user?.plan ?? "free") as keyof typeof PLAN_COLORS;
   const planStyle = PLAN_COLORS[plan] ?? PLAN_COLORS.free;
