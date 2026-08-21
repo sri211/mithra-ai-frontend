@@ -10,10 +10,10 @@ const PLANS = [
     plan: "free" as const,
     name: "Free",
     price: 0,
-    tagline: "30 credits every month",
+    tagline: "60 credits every month",
     accent: "#10b981",
     features: [
-      "30 credits/month — try everything",
+      "60 credits/month — try everything",
       "Resume Score always free (0 credits)",
       "3 resume templates",
       "Job Finder with real listings",

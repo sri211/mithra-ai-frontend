@@ -6,6 +6,7 @@ import { useEffect } from "react";
 
 export interface MithraUser {
   id: string; name: string; email: string; plan: "free" | "pro" | "elite";
+  welcome_seen?: number; // 0 = brand-new account → show the "60 free credits" popup once
 }
 
 export function useUser() {

@@ -15,6 +15,7 @@ import { cn } from "@/lib/cn";
 import MithraChat from "@/components/chatbot/MithraChat";
 import CreditsBadge from "@/components/ui/CreditsBadge";
 import OutOfCreditsModal from "@/components/ui/OutOfCreditsModal";
+import WelcomeCreditsModal from "@/components/ui/WelcomeCreditsModal";
 import { useUser, logout } from "@/lib/auth";
 import { getLimits } from "@/lib/planLimits";
 import { useUsageTracker } from "@/lib/useUsageTracker";
@@ -603,6 +604,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </AnimatePresence>
 
       {/* Mithra Chatbot */}
+      <WelcomeCreditsModal />
       <MithraChat />
 
       {/* Global out-of-credits top-up modal (triggered by any 402) */}

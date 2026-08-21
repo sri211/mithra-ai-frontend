@@ -57,6 +57,7 @@ interface AuthUser {
   email: string;
   name: string;
   plan: "free" | "pro" | "elite";
+  welcome_seen?: number; // 0 = new account → show the "60 free credits" popup once
 }
 
 interface AuthStore {
@@ -74,6 +75,7 @@ interface AuthStore {
   refreshAccessToken: () => Promise<string | null>;
   logout: () => void;
   clearError: () => void;
+  markWelcomeSeen: () => void;
 }
 
 function setAuthCookie(days: number) {
@@ -268,6 +270,10 @@ export const useAuthStore = create<AuthStore>()(
         if (typeof window !== "undefined") {
           window.location.href = "/login";
         }
+      },
+      markWelcomeSeen: () => {
+        const u = get().user;
+        if (u) set({ user: { ...u, welcome_seen: 1 } });
       },
 
       clearError: () => set({ error: null }),
